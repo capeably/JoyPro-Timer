@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JoyPro Timer</title>
+<link rel="icon" type="image/png" href="joypro-logo-dark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@600&family=DM+Mono:wght@400;500&family=Rethink+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════
+   DESIGN TOKENS
+   ═══════════════════════════════════════════════════ */
+:root {
+  /* Brand */
+  --coral: #f19766;
+  --teal: #2a7c73;
+  --light-teal: #6faf9c;
+  --navy: #07273F;
+  --charcoal: #3d474d;
+  --cream: #f6f3ee;
+  --track-light: #e8e4de;
+  --track-dark: #2a3a4a;
+
+  /* Light theme (default) */
+  --bg: var(--cream);
+  --bg-sidebar: #eee9e2;
+  --text: var(--charcoal);
+  --text-muted: #8a9099;
+  --accent: var(--coral);
+  --ring-track: var(--track-light);
+  --completed: var(--teal);
+  --border: #ddd6cc;
+  --modal-bg: #fff;
+  --modal-overlay: rgba(0,0,0,0.35);
+  --hover-bg: rgba(241,151,102,0.08);
+  --active-bg: rgba(241,151,102,0.14);
+  --btn-bg: var(--cream);
+  --btn-hover: #ece7e0;
+  --toast-bg: var(--charcoal);
+  --toast-text: var(--cream);
+  --danger: #d96b5a;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+}
+
+[data-theme="dark"] {
+  --bg: var(--navy);
+  --bg-sidebar: #0a2e47;
+  --text: var(--cream);
+  --text-muted: #8a9aaa;
+  --accent: var(--coral);
+  --ring-track: var(--track-dark);
+  --completed: var(--light-teal);
+  --border: #1a3a54;
+  --modal-bg: #0d2d44;
+  --modal-overlay: rgba(0,0,0,0.55);
+  --hover-bg: rgba(241,151,102,0.08);
+  --active-bg: rgba(241,151,102,0.14);
+  --btn-bg: #0d2d44;
+  --btn-hover: #143d5a;
+  --toast-bg: var(--cream);
+  --toast-text: var(--navy);
+  --danger: #e07a6a;
+  --shadow: 0 2px 12px rgba(0,0,0,0.25);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+/* ═══════════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Rethink Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 0;
+  transition: background 0.3s, color 0.3s;
+  -webkit-font-smoothing: antialiased;
+}
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, select { font-family: inherit; color: inherit; }
+
+/* ═══════════════════════════════════════════════════
+   APP SHELL
+   ═══════════════════════════════════════════════════ */
+.app {
+  width: 100%;
+  max-width: 720px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+/* ═══════════════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════════════ */
+.header {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-family: 'Abhaya Libre', serif;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  flex: 1;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.header-actions {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.header-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: background 0.15s;
+  position: relative;
+}
+.header-btn:hover { background: var(--hover-bg); }
+.header-btn.active { color: var(--accent); }
+.header-btn.muted { opacity: 0.4; }
+
+/* ═══════════════════════════════════════════════════
+   MAIN LAYOUT
+   ═══════════════════════════════════════════════════ */
+.main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ═══════════════════════════════════════════════════
+   SIDEBAR
+   ═══════════════════════════════════════════════════ */
+.sidebar {
+  width: 180px;
+  min-width: 180px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 8px 0;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+  line-height: 1.3;
+}
+.session-item:hover { background: var(--hover-bg); }
+.session-item.active { background: var(--active-bg); font-weight: 500; }
+
+.session-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 14px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.session-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+}
+
+.session-icon.completed { color: var(--completed); }
+.session-icon.playing { color: var(--accent); }
+
+.session-title-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-duration {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════
+   TIMER AREA
+   ═══════════════════════════════════════════════════ */
+.timer-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  position: relative;
+  min-width: 0;
+}
+
+.current-session-title {
+  font-family: 'Abhaya Libre', serif;
+  font-weight: 600;
+  font-size: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+
+.timer-ring-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin-bottom: 24px;
+}
+
+.timer-ring-svg {
+  width: 180px;
+  height: 180px;
+  transform: rotate(-90deg);
+}
+
+.ring-track {
+  fill: none;
+  stroke: var(--ring-track);
+  stroke-width: 6;
+}
+
+.ring-progress {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s linear, stroke 0.5s;
+  filter: drop-shadow(0 0 6px rgba(241,151,102,0.3));
+}
+
+.ring-progress.urgent {
+  stroke: var(--danger);
+  filter: drop-shadow(0 0 8px rgba(217,107,90,0.4));
+}
+
+@keyframes pulse-ring {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.ring-progress.urgent.pulsing {
+  animation: pulse-ring 1.5s ease-in-out infinite;
+}
+
+.timer-digits {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'DM Mono', monospace;
+  font-size: 38px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.ctrl-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: background 0.15s, transform 0.1s;
+  background: var(--btn-bg);
+  border: 1px solid var(--border);
+}
+.ctrl-btn:hover { background: var(--btn-hover); }
+.ctrl-btn:active { transform: scale(0.95); }
+
+.ctrl-btn.primary {
+  width: 52px;
+  height: 52px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 20px;
+}
+.ctrl-btn.primary:hover { background: #e8884f; }
+
+/* ═══════════════════════════════════════════════════
+   TRANSITION OVERLAY
+   ═══════════════════════════════════════════════════ */
+.transition-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 5;
+}
+.transition-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.transition-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.transition-title {
+  font-family: 'Abhaya Libre', serif;
+  font-weight: 600;
+  font-size: 22px;
+}
+
+.transition-countdown {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.transition-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.transition-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.transition-btn.start {
+  background: var(--accent);
+  color: #fff;
+}
+.transition-btn.start:hover { background: #e8884f; }
+.transition-btn.skip {
+  background: var(--btn-bg);
+  border: 1px solid var(--border);
+}
+.transition-btn.skip:hover { background: var(--btn-hover); }
+
+/* ═══════════════════════════════════════════════════
+   SEQUENCE COMPLETE
+   ═══════════════════════════════════════════════════ */
+.complete-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 5;
+}
+.complete-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.complete-icon { font-size: 36px; color: var(--completed); }
+.complete-title {
+  font-family: 'Abhaya Libre', serif;
+  font-weight: 600;
+  font-size: 22px;
+}
+.complete-sub { font-size: 13px; color: var(--text-muted); }
+
+/* ═══════════════════════════════════════════════════
+   EMPTY STATE
+   ═══════════════════════════════════════════════════ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 40px;
+}
+.empty-state-icon { font-size: 32px; opacity: 0.5; }
+.empty-state-text { font-size: 14px; }
+.empty-state-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--accent);
+  color: #fff;
+}
+.empty-state-btn:hover { background: #e8884f; }
+
+/* ═══════════════════════════════════════════════════
+   MODALS
+   ═══════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  background: var(--modal-bg);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(8px);
+  transition: transform 0.2s;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  font-family: 'Abhaya Libre', serif;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.modal-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.modal-close:hover { background: var(--hover-bg); }
+
+.modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modal-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.modal-btn.primary { background: var(--accent); color: #fff; }
+.modal-btn.primary:hover { background: #e8884f; }
+.modal-btn.secondary { background: var(--btn-bg); border: 1px solid var(--border); }
+.modal-btn.secondary:hover { background: var(--btn-hover); }
+.modal-btn.danger { background: var(--danger); color: #fff; }
+.modal-btn.danger:hover { opacity: 0.9; }
+
+/* Editor form */
+.editor-sequence-name {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--bg);
+  margin-bottom: 12px;
+  outline: none;
+}
+.editor-sequence-name:focus { border-color: var(--accent); }
+
+.editor-session {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  background: var(--bg);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+}
+
+.editor-session .drag-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  font-size: 14px;
+  flex-shrink: 0;
+  user-select: none;
+}
+.editor-session .drag-handle:active { cursor: grabbing; }
+
+.editor-session-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.editor-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.editor-session input[type="text"] {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--modal-bg);
+  min-width: 0;
+  outline: none;
+}
+.editor-session input[type="text"]:focus { border-color: var(--accent); }
+
+.editor-session input[type="number"] {
+  width: 50px;
+  padding: 6px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: 'DM Mono', monospace;
+  text-align: center;
+  background: var(--modal-bg);
+  outline: none;
+  -moz-appearance: textfield;
+}
+.editor-session input[type="number"]::-webkit-inner-spin-button,
+.editor-session input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+.editor-session input[type="number"]:focus { border-color: var(--accent); }
+
+.editor-time-sep {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.editor-session-options {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.editor-session-options label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.editor-session-options input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+.editor-remove-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.editor-remove-btn:hover { background: rgba(217,107,90,0.1); color: var(--danger); }
+
+.editor-add-btn {
+  width: 100%;
+  padding: 10px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+.editor-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Custom sound upload */
+.sound-upload-btn {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.sound-upload-btn:hover { color: var(--accent); }
+
+/* Saved sequences */
+.saved-seq-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.saved-seq-item:hover { background: var(--hover-bg); }
+
+.saved-seq-info { flex: 1; min-width: 0; }
+.saved-seq-name {
+  font-weight: 500;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.saved-seq-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.saved-seq-delete {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.saved-seq-delete:hover { background: rgba(217,107,90,0.1); color: var(--danger); }
+
+/* ═══════════════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════════════ */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--toast-bg);
+  color: var(--toast-text);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: auto;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ═══════════════════════════════════════════════════
+   CONFIRM DIALOG
+   ═══════════════════════════════════════════════════ */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 150;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.confirm-overlay.open { opacity: 1; pointer-events: auto; }
+
+.confirm-box {
+  background: var(--modal-bg);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+  max-width: 340px;
+  width: 90%;
+  text-align: center;
+}
+.confirm-msg { font-size: 14px; margin-bottom: 16px; line-height: 1.5; }
+.confirm-actions { display: flex; gap: 8px; justify-content: center; }
+
+/* ═══════════════════════════════════════════════════
+   KEYBOARD HINT
+   ═══════════════════════════════════════════════════ */
+.keyboard-hint {
+  position: fixed;
+  bottom: 8px;
+  right: 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+.keyboard-hint kbd {
+  font-family: 'DM Mono', monospace;
+  background: var(--btn-bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 10px;
+}
+
+/* ═══════════════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════════════ */
+.sidebar::-webkit-scrollbar, .modal-body::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-track, .modal-body::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb, .modal-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════ */
+@media (max-width: 520px) {
+  .main { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 140px;
+    padding: 4px 0;
+  }
+  .timer-area { padding: 20px 16px; }
+  .current-session-title { font-size: 18px; }
+  .timer-ring-container { width: 150px; height: 150px; }
+  .timer-ring-svg { width: 150px; height: 150px; }
+  .timer-digits { font-size: 32px; }
+  .keyboard-hint { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-title"><img src="joypro-logo-dark.png" alt="JoyPro" class="header-logo">JoyPro Timer</div>
+    <div class="header-actions">
+      <button class="header-btn" id="themeToggle" title="Toggle theme">&#9789;</button>
+      <button class="header-btn" id="muteToggle" title="Toggle sound (M)">&#128276;</button>
+      <button class="header-btn" id="editBtn" title="Edit sequence (E)">&#9998;</button>
+      <button class="header-btn" id="menuBtn" title="Saved sequences">&#9776;</button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- Timer Area -->
+    <div class="timer-area" id="timerArea">
+      <div class="current-session-title" id="currentTitle">Focus Block 1</div>
+
+      <div class="timer-ring-container">
+        <svg class="timer-ring-svg" viewBox="0 0 180 180">
+          <circle class="ring-track" cx="90" cy="90" r="80"/>
+          <circle class="ring-progress" id="ringProgress" cx="90" cy="90" r="80"
+            stroke-dasharray="502.65" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-digits" id="timerDigits">25:00</div>
+      </div>
+
+      <div class="timer-controls">
+        <button class="ctrl-btn" id="resetBtn" title="Reset sequence (R)">&#8634;</button>
+        <button class="ctrl-btn primary" id="playBtn" title="Play/Pause (Space)">&#9654;</button>
+        <button class="ctrl-btn" id="skipBtn" title="Next session (N)">&#9197;</button>
+      </div>
+
+      <!-- Transition overlay -->
+      <div class="transition-overlay" id="transitionOverlay">
+        <div class="transition-label">Next up</div>
+        <div class="transition-title" id="transitionTitle"></div>
+        <div class="transition-countdown" id="transitionCountdown">Starting in 3...</div>
+        <div class="transition-actions">
+          <button class="transition-btn start" id="transitionStart">Start Now</button>
+          <button class="transition-btn skip" id="transitionSkipBtn">Skip</button>
+        </div>
+      </div>
+
+      <!-- Complete overlay -->
+      <div class="complete-overlay" id="completeOverlay">
+        <div class="complete-icon">&#10003;</div>
+        <div class="complete-title">Sequence Complete!</div>
+        <div class="complete-sub">Great session. Take a moment to breathe.</div>
+        <button class="modal-btn primary" id="restartBtn" style="margin-top:12px">Start Over</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDITOR MODAL -->
+<div class="modal-overlay" id="editorModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Sequence</div>
+      <button class="modal-close" id="editorClose">&times;</button>
+    </div>
+    <div class="modal-body" id="editorBody">
+      <input type="text" class="editor-sequence-name" id="editorSeqName" placeholder="Sequence name" spellcheck="false">
+      <div id="editorSessions"></div>
+      <button class="editor-add-btn" id="editorAdd">+ Add Session</button>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" id="editorCancel">Cancel</button>
+      <button class="modal-btn primary" id="editorSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVED SEQUENCES MODAL -->
+<div class="modal-overlay" id="savedModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Saved Sequences</div>
+      <button class="modal-close" id="savedClose">&times;</button>
+    </div>
+    <div class="modal-body" id="savedBody"></div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" id="savedCloseBtn">Close</button>
+      <button class="modal-btn primary" id="savedSaveCurrentBtn">Save Current</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-actions">
+      <button class="modal-btn secondary" id="confirmNo">Cancel</button>
+      <button class="modal-btn primary" id="confirmYes">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- KEYBOARD HINT -->
+<div class="keyboard-hint">
+  <kbd>Space</kbd> play &nbsp; <kbd>N</kbd> next &nbsp; <kbd>M</kbd> mute &nbsp; <kbd>E</kbd> edit
+</div>
+
+<!-- Hidden file input for custom sound upload -->
+<input type="file" id="soundFileInput" accept="audio/*" style="display:none">
+
+<script>
+/* ═══════════════════════════════════════════════════
+   CONSTANTS
+   ═══════════════════════════════════════════════════ */
+const CIRCUMFERENCE = 2 * Math.PI * 80; // 502.65
+const STORAGE_STATE = 'joypro_state';
+const STORAGE_SEQUENCES = 'joypro_sequences';
+const STORAGE_SOUNDS = 'joypro_custom_sounds';
+const AUTO_ADVANCE_DELAY = 3; // seconds
+
+const DEFAULT_SEQUENCE = {
+  name: "JoyPro Coworking Session",
+  sessions: [
+    { title: "Intention Setting \u{1F9D8}\u200D\u2642\uFE0F", durationMinutes: 3, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+    { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+    { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+    { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+    { title: "\u{1F64F} Closing", durationMinutes: 2, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: false }
+  ]
+};
+
+/* ═══════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════ */
+let state = {
+  currentSequenceName: DEFAULT_SEQUENCE.name,
+  currentSessionIndex: 0,
+  timerSeconds: 1500,
+  timerTotal: 1500,
+  globalMute: false,
+  theme: "light"
+};
+
+let sequences = [JSON.parse(JSON.stringify(DEFAULT_SEQUENCE))];
+let customSounds = {};
+
+let running = false;
+let timerInterval = null;
+let transitionTimer = null;
+let audioCtx = null;
+let dirtyTimeout = null;
+let currentEditSoundIndex = -1;
+
+/* ═══════════════════════════════════════════════════
+   DOM REFS
+   ═══════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const sidebar = $('sidebar');
+const timerDigits = $('timerDigits');
+const ringProgress = $('ringProgress');
+const currentTitle = $('currentTitle');
+const playBtn = $('playBtn');
+const skipBtn = $('skipBtn');
+const resetBtn = $('resetBtn');
+const themeToggle = $('themeToggle');
+const muteToggle = $('muteToggle');
+const editBtn = $('editBtn');
+const menuBtn = $('menuBtn');
+const timerArea = $('timerArea');
+const transitionOverlay = $('transitionOverlay');
+const transitionTitle = $('transitionTitle');
+const transitionCountdown = $('transitionCountdown');
+const transitionStart = $('transitionStart');
+const transitionSkipBtn = $('transitionSkipBtn');
+const completeOverlay = $('completeOverlay');
+const restartBtn = $('restartBtn');
+const editorModal = $('editorModal');
+const editorClose = $('editorClose');
+const editorBody = $('editorBody');
+const editorSeqName = $('editorSeqName');
+const editorSessions = $('editorSessions');
+const editorAdd = $('editorAdd');
+const editorCancel = $('editorCancel');
+const editorSave = $('editorSave');
+const savedModal = $('savedModal');
+const savedClose = $('savedClose');
+const savedBody = $('savedBody');
+const savedCloseBtn = $('savedCloseBtn');
+const savedSaveCurrentBtn = $('savedSaveCurrentBtn');
+const confirmOverlay = $('confirmOverlay');
+const confirmMsg = $('confirmMsg');
+const confirmYes = $('confirmYes');
+const confirmNo = $('confirmNo');
+const soundFileInput = $('soundFileInput');
+
+/* ═══════════════════════════════════════════════════
+   PERSISTENCE
+   ═══════════════════════════════════════════════════ */
+function saveState() {
+  try { localStorage.setItem(STORAGE_STATE, JSON.stringify(state)); } catch(e) {}
+}
+
+function saveSequences() {
+  try { localStorage.setItem(STORAGE_SEQUENCES, JSON.stringify(sequences)); } catch(e) {}
+}
+
+function saveSounds() {
+  try { localStorage.setItem(STORAGE_SOUNDS, JSON.stringify(customSounds)); }
+  catch(e) { showToast('Sound too large to save locally'); }
+}
+
+function loadAll() {
+  try {
+    const s = localStorage.getItem(STORAGE_STATE);
+    if (s) state = { ...state, ...JSON.parse(s) };
+    const sq = localStorage.getItem(STORAGE_SEQUENCES);
+    if (sq) sequences = JSON.parse(sq);
+    const snd = localStorage.getItem(STORAGE_SOUNDS);
+    if (snd) customSounds = JSON.parse(snd);
+  } catch(e) {}
+  // Ensure at least the default sequence exists
+  if (!sequences.length) sequences = [JSON.parse(JSON.stringify(DEFAULT_SEQUENCE))];
+}
+
+function markDirty() {
+  clearTimeout(dirtyTimeout);
+  dirtyTimeout = setTimeout(saveState, 300);
+}
+
+/* ═══════════════════════════════════════════════════
+   THEME
+   ═══════════════════════════════════════════════════ */
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', state.theme);
+  themeToggle.innerHTML = state.theme === 'dark' ? '&#9788;' : '&#9789;';
+}
+
+themeToggle.addEventListener('click', () => {
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  applyTheme();
+  saveState();
+});
+
+/* ═══════════════════════════════════════════════════
+   SOUND SYSTEM
+   ═══════════════════════════════════════════════════ */
+function ensureAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playChime() {
+  if (state.globalMute) return;
+  ensureAudioCtx();
+
+  const seq = getCurrentSequence();
+  const session = seq?.sessions[state.currentSessionIndex];
+  if (session && !session.soundEnabled) return;
+
+  // Check for custom sound
+  const soundKey = state.currentSessionIndex + '_' + state.currentSequenceName;
+  if (customSounds[soundKey]) {
+    playCustomSound(customSounds[soundKey]);
+    return;
+  }
+
+  // Synthesized two-tone bell
+  const now = audioCtx.currentTime;
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain1 = audioCtx.createGain();
+  const gain2 = audioCtx.createGain();
+
+  osc1.type = 'sine';
+  osc1.frequency.value = 830;
+  osc2.type = 'sine';
+  osc2.frequency.value = 1100;
+
+  gain1.gain.setValueAtTime(0.3, now);
+  gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+  gain2.gain.setValueAtTime(0.2, now + 0.15);
+  gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+
+  osc1.connect(gain1).connect(audioCtx.destination);
+  osc2.connect(gain2).connect(audioCtx.destination);
+
+  osc1.start(now);
+  osc1.stop(now + 0.8);
+  osc2.start(now + 0.15);
+  osc2.stop(now + 0.9);
+}
+
+function playCustomSound(dataUrl) {
+  ensureAudioCtx();
+  fetch(dataUrl)
+    .then(r => r.arrayBuffer())
+    .then(buf => audioCtx.decodeAudioData(buf))
+    .then(decoded => {
+      const src = audioCtx.createBufferSource();
+      src.buffer = decoded;
+      src.connect(audioCtx.destination);
+      src.start();
+    })
+    .catch(() => {});
+}
+
+function updateMuteBtn() {
+  muteToggle.innerHTML = state.globalMute ? '&#128264;' : '&#128276;';
+  muteToggle.classList.toggle('muted', state.globalMute);
+}
+
+muteToggle.addEventListener('click', () => {
+  ensureAudioCtx();
+  state.globalMute = !state.globalMute;
+  updateMuteBtn();
+  saveState();
+  showToast(state.globalMute ? 'Sound muted' : 'Sound on');
+});
+
+/* ═══════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════ */
+function getCurrentSequence() {
+  return sequences.find(s => s.name === state.currentSequenceName) || sequences[0];
+}
+
+function formatTime(secs) {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function sessionTotalSeconds(session) {
+  return (session.durationMinutes || 0) * 60 + (session.durationSeconds || 0);
+}
+
+function sequenceTotalMinutes(seq) {
+  return seq.sessions.reduce((acc, s) => acc + sessionTotalSeconds(s), 0) / 60;
+}
+
+/* ═══════════════════════════════════════════════════
+   UI RENDERING
+   ═══════════════════════════════════════════════════ */
+function renderSidebar() {
+  const seq = getCurrentSequence();
+  if (!seq || !seq.sessions.length) {
+    sidebar.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128203;</div><div class="empty-state-text">No sessions yet</div><button class="empty-state-btn" onclick="openEditor()">Add Sessions</button></div>';
+    return;
+  }
+
+  sidebar.innerHTML = seq.sessions.map((s, i) => {
+    const isActive = i === state.currentSessionIndex;
+    const isCompleted = i < state.currentSessionIndex;
+    const isFuture = i > state.currentSessionIndex;
+    let iconHtml = '';
+    if (isCompleted) iconHtml = '<span class="session-icon completed">&#10003;</span>';
+    else if (isActive && running) iconHtml = '<span class="session-icon playing">&#9654;</span>';
+    else if (isActive) iconHtml = '<span class="session-icon playing">&#9646;&#9646;</span>';
+    else iconHtml = '<span class="session-icon"></span>';
+
+    const dur = sessionTotalSeconds(s);
+    const durStr = formatTime(dur);
+
+    return `<div class="session-item ${isActive ? 'active' : ''}" data-index="${i}">
+      <span class="session-num">${i + 1}</span>
+      ${iconHtml}
+      <span class="session-title-text">${escHtml(s.title)}</span>
+      <span class="session-duration">${durStr}</span>
+    </div>`;
+  }).join('');
+
+  // Click to jump
+  sidebar.querySelectorAll('.session-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.dataset.index);
+      if (idx !== state.currentSessionIndex) {
+        advanceToSession(idx);
+      }
+    });
+  });
+}
+
+function renderTimer() {
+  timerDigits.textContent = formatTime(state.timerSeconds);
+
+  // Ring
+  const fraction = state.timerTotal > 0 ? state.timerSeconds / state.timerTotal : 1;
+  const offset = CIRCUMFERENCE * (1 - fraction);
+  ringProgress.style.strokeDashoffset = offset;
+
+  // Urgent state (< 20% remaining)
+  const isUrgent = state.timerTotal > 0 && (state.timerSeconds / state.timerTotal) < 0.2;
+  ringProgress.classList.toggle('urgent', isUrgent);
+  ringProgress.classList.toggle('pulsing', isUrgent && running);
+
+  // Play button icon
+  playBtn.innerHTML = running ? '&#9646;&#9646;' : '&#9654;';
+
+  // Session title
+  const seq = getCurrentSequence();
+  if (seq && seq.sessions[state.currentSessionIndex]) {
+    currentTitle.textContent = seq.sessions[state.currentSessionIndex].title;
+  }
+
+  // Document title
+  if (running) {
+    document.title = formatTime(state.timerSeconds) + ' - ' + currentTitle.textContent + ' | JoyPro Timer';
+  } else {
+    document.title = 'JoyPro Timer';
+  }
+}
+
+function escHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+/* ═══════════════════════════════════════════════════
+   TIMER ENGINE
+   ═══════════════════════════════════════════════════ */
+function startTimer() {
+  if (running) return;
+  ensureAudioCtx();
+  const seq = getCurrentSequence();
+  if (!seq || !seq.sessions.length) return;
+
+  running = true;
+  hideOverlays();
+  renderSidebar();
+  renderTimer();
+
+  timerInterval = setInterval(tick, 1000);
+}
+
+function pauseTimer() {
+  running = false;
+  clearInterval(timerInterval);
+  timerInterval = null;
+  renderSidebar();
+  renderTimer();
+  markDirty();
+}
+
+function tick() {
+  if (state.timerSeconds <= 0) {
+    onSessionComplete();
+    return;
+  }
+  state.timerSeconds--;
+  renderTimer();
+  markDirty();
+}
+
+function onSessionComplete() {
+  pauseTimer();
+  playChime();
+
+  const seq = getCurrentSequence();
+  if (!seq) return;
+
+  const nextIndex = state.currentSessionIndex + 1;
+  if (nextIndex >= seq.sessions.length) {
+    // Sequence complete
+    showCompleteOverlay();
+    return;
+  }
+
+  const currentSession = seq.sessions[state.currentSessionIndex];
+  const nextSession = seq.sessions[nextIndex];
+
+  if (currentSession.autoAdvance) {
+    showTransitionOverlay(nextSession.title, nextIndex, true);
+  } else {
+    showTransitionOverlay(nextSession.title, nextIndex, false);
+  }
+}
+
+function advanceToSession(index) {
+  const seq = getCurrentSequence();
+  if (!seq || index < 0 || index >= seq.sessions.length) return;
+
+  pauseTimer();
+  hideOverlays();
+
+  state.currentSessionIndex = index;
+  const s = seq.sessions[index];
+  state.timerTotal = sessionTotalSeconds(s);
+  state.timerSeconds = state.timerTotal;
+
+  renderSidebar();
+  renderTimer();
+  markDirty();
+}
+
+function resetSequence() {
+  pauseTimer();
+  hideOverlays();
+  advanceToSession(0);
+}
+
+/* ═══════════════════════════════════════════════════
+   TRANSITION & COMPLETE OVERLAYS
+   ═══════════════════════════════════════════════════ */
+function showTransitionOverlay(nextTitle, nextIndex, autoStart) {
+  transitionTitle.textContent = nextTitle;
+  transitionOverlay.classList.add('visible');
+
+  if (autoStart) {
+    let count = AUTO_ADVANCE_DELAY;
+    transitionCountdown.textContent = `Starting in ${count}...`;
+    transitionCountdown.style.display = '';
+
+    transitionTimer = setInterval(() => {
+      count--;
+      if (count <= 0) {
+        clearInterval(transitionTimer);
+        transitionTimer = null;
+        advanceToSession(nextIndex);
+        startTimer();
+      } else {
+        transitionCountdown.textContent = `Starting in ${count}...`;
+      }
+    }, 1000);
+  } else {
+    transitionCountdown.style.display = 'none';
+  }
+
+  transitionStart.onclick = () => {
+    clearInterval(transitionTimer);
+    transitionTimer = null;
+    advanceToSession(nextIndex);
+    startTimer();
+  };
+
+  transitionSkipBtn.onclick = () => {
+    clearInterval(transitionTimer);
+    transitionTimer = null;
+    // Skip to session after next
+    const seq = getCurrentSequence();
+    if (seq && nextIndex + 1 < seq.sessions.length) {
+      advanceToSession(nextIndex + 1);
+    } else {
+      advanceToSession(nextIndex);
+    }
+  };
+}
+
+function showCompleteOverlay() {
+  completeOverlay.classList.add('visible');
+  document.title = 'Complete! | JoyPro Timer';
+}
+
+function hideOverlays() {
+  transitionOverlay.classList.remove('visible');
+  completeOverlay.classList.remove('visible');
+  clearInterval(transitionTimer);
+  transitionTimer = null;
+}
+
+/* ═══════════════════════════════════════════════════
+   CONTROLS
+   ═══════════════════════════════════════════════════ */
+playBtn.addEventListener('click', () => {
+  if (running) pauseTimer();
+  else startTimer();
+});
+
+skipBtn.addEventListener('click', () => {
+  const seq = getCurrentSequence();
+  if (!seq) return;
+  const next = state.currentSessionIndex + 1;
+  if (next >= seq.sessions.length) {
+    showToast('Already on last session');
+    return;
+  }
+  if (running || state.timerSeconds < state.timerTotal) {
+    showConfirm('Skip to next session?', () => {
+      advanceToSession(next);
+    });
+  } else {
+    advanceToSession(next);
+  }
+});
+
+resetBtn.addEventListener('click', () => {
+  if (running || state.currentSessionIndex > 0 || state.timerSeconds < state.timerTotal) {
+    showConfirm('Reset entire sequence?', () => {
+      resetSequence();
+    });
+  } else {
+    resetSequence();
+  }
+});
+
+restartBtn.addEventListener('click', () => {
+  resetSequence();
+});
+
+/* ═══════════════════════════════════════════════════
+   CONFIRM DIALOG
+   ═══════════════════════════════════════════════════ */
+let confirmCallback = null;
+
+function showConfirm(msg, onConfirm) {
+  confirmMsg.textContent = msg;
+  confirmCallback = onConfirm;
+  confirmOverlay.classList.add('open');
+}
+
+confirmYes.addEventListener('click', () => {
+  confirmOverlay.classList.remove('open');
+  if (confirmCallback) confirmCallback();
+  confirmCallback = null;
+});
+
+confirmNo.addEventListener('click', () => {
+  confirmOverlay.classList.remove('open');
+  confirmCallback = null;
+});
+
+/* ═══════════════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════════════ */
+function showToast(msg) {
+  const container = $('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+/* ═══════════════════════════════════════════════════
+   SEQUENCE EDITOR
+   ═══════════════════════════════════════════════════ */
+let editorData = [];
+
+function openEditor() {
+  const seq = getCurrentSequence();
+  editorSeqName.value = seq.name;
+  editorData = seq.sessions.map(s => ({ ...s }));
+  renderEditorSessions();
+  editorModal.classList.add('open');
+}
+
+function closeEditor() {
+  editorModal.classList.remove('open');
+}
+
+function renderEditorSessions() {
+  editorSessions.innerHTML = editorData.map((s, i) => `
+    <div class="editor-session" data-index="${i}" draggable="true">
+      <span class="drag-handle">&#9776;</span>
+      <div class="editor-session-fields">
+        <div class="editor-row">
+          <input type="text" value="${escHtml(s.title)}" data-field="title" placeholder="Session name">
+          <input type="number" value="${s.durationMinutes || 0}" data-field="min" min="0" max="999" title="Minutes">
+          <span class="editor-time-sep">:</span>
+          <input type="number" value="${String(s.durationSeconds || 0).padStart(2,'0')}" data-field="sec" min="0" max="59" title="Seconds">
+        </div>
+        <div class="editor-session-options">
+          <label><input type="checkbox" data-field="sound" ${s.soundEnabled ? 'checked' : ''}> Sound</label>
+          <label><input type="checkbox" data-field="auto" ${s.autoAdvance ? 'checked' : ''}> Auto-advance</label>
+          <span class="sound-upload-btn" data-field="upload" data-index="${i}">Custom sound</span>
+        </div>
+      </div>
+      <button class="editor-remove-btn" data-action="remove" data-index="${i}">&times;</button>
+    </div>
+  `).join('');
+
+  // Input listeners
+  editorSessions.querySelectorAll('input, .sound-upload-btn').forEach(el => {
+    const session = el.closest('.editor-session');
+    if (!session) return;
+    const idx = parseInt(session.dataset.index);
+
+    if (el.dataset.field === 'title') {
+      el.addEventListener('input', () => { editorData[idx].title = el.value; });
+    } else if (el.dataset.field === 'min') {
+      el.addEventListener('input', () => { editorData[idx].durationMinutes = parseInt(el.value) || 0; });
+    } else if (el.dataset.field === 'sec') {
+      el.addEventListener('input', () => { editorData[idx].durationSeconds = Math.min(59, Math.max(0, parseInt(el.value) || 0)); });
+    } else if (el.dataset.field === 'sound') {
+      el.addEventListener('change', () => { editorData[idx].soundEnabled = el.checked; });
+    } else if (el.dataset.field === 'auto') {
+      el.addEventListener('change', () => { editorData[idx].autoAdvance = el.checked; });
+    } else if (el.dataset.field === 'upload') {
+      el.addEventListener('click', () => {
+        currentEditSoundIndex = parseInt(el.dataset.index);
+        soundFileInput.click();
+      });
+    }
+  });
+
+  // Remove buttons
+  editorSessions.querySelectorAll('[data-action="remove"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.index);
+      editorData.splice(idx, 1);
+      renderEditorSessions();
+    });
+  });
+
+  // Drag and drop reordering
+  setupDragReorder();
+}
+
+function setupDragReorder() {
+  let dragSrcIdx = null;
+  editorSessions.querySelectorAll('.editor-session').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      dragSrcIdx = parseInt(el.dataset.index);
+      el.style.opacity = '0.4';
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => {
+      el.style.opacity = '';
+      editorSessions.querySelectorAll('.editor-session').forEach(x => x.style.borderTop = '');
+    });
+    el.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      el.style.borderTop = '2px solid var(--accent)';
+    });
+    el.addEventListener('dragleave', () => {
+      el.style.borderTop = '';
+    });
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      el.style.borderTop = '';
+      const dropIdx = parseInt(el.dataset.index);
+      if (dragSrcIdx !== null && dragSrcIdx !== dropIdx) {
+        const [moved] = editorData.splice(dragSrcIdx, 1);
+        editorData.splice(dropIdx, 0, moved);
+        renderEditorSessions();
+      }
+    });
+  });
+}
+
+editorAdd.addEventListener('click', () => {
+  editorData.push({
+    title: "New Session",
+    durationMinutes: 25,
+    durationSeconds: 0,
+    soundEnabled: true,
+    soundKey: "default",
+    autoAdvance: true
+  });
+  renderEditorSessions();
+  // Scroll to bottom
+  editorSessions.parentElement.scrollTop = editorSessions.parentElement.scrollHeight;
+});
+
+editorSave.addEventListener('click', () => {
+  const name = editorSeqName.value.trim() || "Untitled";
+  // Validate: minimum 1 second per session
+  for (const s of editorData) {
+    const total = (s.durationMinutes || 0) * 60 + (s.durationSeconds || 0);
+    if (total < 1) {
+      showToast('Each session needs at least 1 second');
+      return;
+    }
+  }
+
+  const seq = getCurrentSequence();
+  seq.name = name;
+  seq.sessions = editorData.map(s => ({ ...s }));
+  state.currentSequenceName = name;
+
+  // Reset to beginning
+  state.currentSessionIndex = 0;
+  if (seq.sessions.length) {
+    state.timerTotal = sessionTotalSeconds(seq.sessions[0]);
+    state.timerSeconds = state.timerTotal;
+  }
+  running = false;
+  clearInterval(timerInterval);
+
+  saveSequences();
+  saveState();
+  renderSidebar();
+  renderTimer();
+  hideOverlays();
+  closeEditor();
+  showToast('Sequence saved');
+});
+
+editorCancel.addEventListener('click', closeEditor);
+editorClose.addEventListener('click', closeEditor);
+
+editBtn.addEventListener('click', openEditor);
+
+// Custom sound file handler
+soundFileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 500000) {
+    showToast('Sound file too large (max 500KB)');
+    soundFileInput.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const key = currentEditSoundIndex + '_' + state.currentSequenceName;
+    customSounds[key] = reader.result;
+    saveSounds();
+    showToast('Custom sound set');
+  };
+  reader.readAsDataURL(file);
+  soundFileInput.value = '';
+});
+
+/* ═══════════════════════════════════════════════════
+   SAVED SEQUENCES MODAL
+   ═══════════════════════════════════════════════════ */
+function openSavedModal() {
+  renderSavedList();
+  savedModal.classList.add('open');
+}
+
+function closeSavedModal() {
+  savedModal.classList.remove('open');
+}
+
+function renderSavedList() {
+  if (!sequences.length) {
+    savedBody.innerHTML = '<div class="empty-state"><div class="empty-state-text">No saved sequences</div></div>';
+    return;
+  }
+
+  savedBody.innerHTML = sequences.map((seq, i) => {
+    const totalMins = Math.round(sequenceTotalMinutes(seq));
+    const sessCount = seq.sessions.length;
+    const isCurrent = seq.name === state.currentSequenceName;
+    return `<div class="saved-seq-item" data-index="${i}">
+      <div class="saved-seq-info">
+        <div class="saved-seq-name">${escHtml(seq.name)}${isCurrent ? ' (active)' : ''}</div>
+        <div class="saved-seq-meta">${sessCount} session${sessCount !== 1 ? 's' : ''} &middot; ${totalMins} min</div>
+      </div>
+      <button class="saved-seq-delete" data-action="delete" data-index="${i}" title="Delete">&times;</button>
+    </div>`;
+  }).join('');
+
+  // Click to load
+  savedBody.querySelectorAll('.saved-seq-item').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('[data-action="delete"]')) return;
+      const idx = parseInt(el.dataset.index);
+      loadSequence(idx);
+      closeSavedModal();
+    });
+  });
+
+  // Delete
+  savedBody.querySelectorAll('[data-action="delete"]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.index);
+      if (sequences.length <= 1) {
+        showToast('Cannot delete last sequence');
+        return;
+      }
+      showConfirm(`Delete "${sequences[idx].name}"?`, () => {
+        const wasActive = sequences[idx].name === state.currentSequenceName;
+        sequences.splice(idx, 1);
+        saveSequences();
+        if (wasActive) {
+          loadSequence(0);
+        }
+        renderSavedList();
+      });
+    });
+  });
+}
+
+function loadSequence(index) {
+  if (index < 0 || index >= sequences.length) return;
+  pauseTimer();
+  hideOverlays();
+
+  const seq = sequences[index];
+  state.currentSequenceName = seq.name;
+  state.currentSessionIndex = 0;
+  if (seq.sessions.length) {
+    state.timerTotal = sessionTotalSeconds(seq.sessions[0]);
+    state.timerSeconds = state.timerTotal;
+  }
+
+  saveState();
+  renderSidebar();
+  renderTimer();
+  showToast(`Loaded "${seq.name}"`);
+}
+
+savedSaveCurrentBtn.addEventListener('click', () => {
+  // Duplicate current sequence with a new name
+  const seq = getCurrentSequence();
+  const newName = seq.name + ' (copy)';
+  const copy = JSON.parse(JSON.stringify(seq));
+  copy.name = newName;
+  sequences.push(copy);
+  saveSequences();
+  renderSavedList();
+  showToast('Sequence duplicated');
+});
+
+savedClose.addEventListener('click', closeSavedModal);
+savedCloseBtn.addEventListener('click', closeSavedModal);
+menuBtn.addEventListener('click', openSavedModal);
+
+/* ═══════════════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+   ═══════════════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  // Don't trigger while typing in inputs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  // Don't trigger with modals open
+  const anyModalOpen = editorModal.classList.contains('open') || savedModal.classList.contains('open') || confirmOverlay.classList.contains('open');
+
+  if (e.code === 'Space' && !anyModalOpen) {
+    e.preventDefault();
+    if (running) pauseTimer();
+    else startTimer();
+  } else if (e.code === 'KeyN' && !anyModalOpen) {
+    skipBtn.click();
+  } else if (e.code === 'KeyM') {
+    muteToggle.click();
+  } else if (e.code === 'KeyE' && !anyModalOpen) {
+    openEditor();
+  } else if (e.code === 'KeyR' && !anyModalOpen && !e.ctrlKey && !e.metaKey) {
+    resetBtn.click();
+  } else if (e.code === 'Escape') {
+    if (editorModal.classList.contains('open')) closeEditor();
+    else if (savedModal.classList.contains('open')) closeSavedModal();
+    else if (confirmOverlay.classList.contains('open')) { confirmOverlay.classList.remove('open'); confirmCallback = null; }
+  }
+});
+
+/* ═══════════════════════════════════════════════════
+   MODAL CLOSE ON BACKDROP
+   ═══════════════════════════════════════════════════ */
+editorModal.addEventListener('click', e => { if (e.target === editorModal) closeEditor(); });
+savedModal.addEventListener('click', e => { if (e.target === savedModal) closeSavedModal(); });
+confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay) { confirmOverlay.classList.remove('open'); confirmCallback = null; }});
+
+/* ═══════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════ */
+function init() {
+  loadAll();
+  applyTheme();
+  updateMuteBtn();
+
+  // Validate state against current sequence
+  const seq = getCurrentSequence();
+  if (!seq) {
+    state.currentSequenceName = sequences[0].name;
+  }
+  const currentSeq = getCurrentSequence();
+  if (state.currentSessionIndex >= currentSeq.sessions.length) {
+    state.currentSessionIndex = 0;
+  }
+
+  // Set timer from state (restored or fresh)
+  const currentSession = currentSeq.sessions[state.currentSessionIndex];
+  if (currentSession) {
+    const total = sessionTotalSeconds(currentSession);
+    // If timerTotal doesn't match, reset
+    if (state.timerTotal !== total) {
+      state.timerTotal = total;
+      state.timerSeconds = total;
+    }
+    // Clamp seconds
+    if (state.timerSeconds > state.timerTotal) state.timerSeconds = state.timerTotal;
+    if (state.timerSeconds < 0) state.timerSeconds = 0;
+  }
+
+  renderSidebar();
+  renderTimer();
+  saveState();
+}
+
+init();
+</script>
+</body>
+</html>
