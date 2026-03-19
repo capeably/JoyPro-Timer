@@ -53,50 +53,44 @@
   --accent: var(--coral);
   --ring-track: var(--track-dark);
   --completed: var(--light-teal);
-  --border: #1a3a54;
-  --modal-bg: #0d2d44;
+  --border: #1e3a52;
+  --modal-bg: #0e3355;
   --modal-overlay: rgba(0,0,0,0.55);
-  --hover-bg: rgba(241,151,102,0.08);
-  --active-bg: rgba(241,151,102,0.14);
-  --btn-bg: #0d2d44;
+  --hover-bg: rgba(241,151,102,0.1);
+  --active-bg: rgba(241,151,102,0.18);
+  --btn-bg: #0a2e47;
   --btn-hover: #143d5a;
   --toast-bg: var(--cream);
   --toast-text: var(--navy);
-  --danger: #e07a6a;
   --shadow: 0 2px 12px rgba(0,0,0,0.25);
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
 }
 
 /* ═══════════════════════════════════════════════════
-   RESET & BASE
+   BASE
    ═══════════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+html, body { height: 100%; }
 body {
   font-family: 'Rethink Sans', sans-serif;
   background: var(--bg);
   color: var(--text);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  min-height: 100vh;
-  padding: 0;
   transition: background 0.3s, color 0.3s;
-  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
 }
-
-button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
-input, select { font-family: inherit; color: inherit; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; color: inherit; }
+input { font-family: inherit; color: inherit; }
 
 /* ═══════════════════════════════════════════════════
-   APP SHELL
+   APP LAYOUT
    ═══════════════════════════════════════════════════ */
 .app {
-  width: 100%;
   max-width: 720px;
-  min-height: 100vh;
+  margin: 0 auto;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  box-shadow: var(--shadow);
   background: var(--bg);
 }
 
@@ -104,10 +98,10 @@ input, select { font-family: inherit; color: inherit; }
    HEADER
    ═══════════════════════════════════════════════════ */
 .header {
-  height: 42px;
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  justify-content: space-between;
+  padding: 6px 12px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -116,85 +110,162 @@ input, select { font-family: inherit; color: inherit; }
   font-family: 'Abhaya Libre', serif;
   font-weight: 600;
   font-size: 15px;
-  letter-spacing: 0.01em;
-  flex: 1;
-  white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  letter-spacing: 0.01em;
 }
 
 .header-logo {
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  object-fit: cover;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
-.header-actions {
-  display: flex;
-  gap: 2px;
-  align-items: center;
-}
-
+.header-actions { display: flex; gap: 2px; }
 .header-btn {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 15px;
   transition: background 0.15s;
-  position: relative;
 }
 .header-btn:hover { background: var(--hover-bg); }
-.header-btn.active { color: var(--accent); }
-.header-btn.muted { opacity: 0.4; }
+.header-btn.muted { opacity: 0.5; }
 
 /* ═══════════════════════════════════════════════════
-   MAIN LAYOUT
+   MAIN
    ═══════════════════════════════════════════════════ */
 .main {
-  display: flex;
   flex: 1;
+  display: flex;
+  overflow: hidden;
   min-height: 0;
+  position: relative;
 }
 
 /* ═══════════════════════════════════════════════════
-   SIDEBAR
+   SIDEBAR PANEL
    ═══════════════════════════════════════════════════ */
-.sidebar {
-  width: 180px;
-  min-width: 180px;
-  background: var(--bg-sidebar);
+.sidebar-panel {
+  flex: 0 0 200px;
+  max-width: 200px;
+  display: flex;
+  flex-direction: column;
   border-right: 1px solid var(--border);
-  overflow-y: auto;
-  padding: 8px 0;
+  background: var(--bg-sidebar);
+  transition: flex-basis 0.25s ease, max-width 0.25s ease, opacity 0.2s ease;
+  overflow: hidden;
+}
+
+.sidebar-panel.collapsed {
+  flex-basis: 0px;
+  max-width: 0px;
+  border-right: none;
+  opacity: 0;
+}
+
+/* Floating expand button — visible only when panel is collapsed */
+.sidebar-expand-btn {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 0 5px 5px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border);
+  border-left: none;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, background 0.15s;
+}
+.sidebar-expand-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.sidebar-expand-btn:hover { background: var(--hover-bg); }
+
+/* Sidebar header */
+.sidebar-header {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  transition: background 0.3s;
+  transition: opacity 0.15s;
+}
+
+.sidebar-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.sidebar-seq-name {
+  font-family: 'Abhaya Libre', serif;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.3;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.sidebar-toolbar {
+  display: flex;
+  gap: 1px;
+  align-items: center;
+}
+
+.sidebar-btn {
+  width: 28px;
+  height: 26px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.sidebar-btn:hover { background: var(--hover-bg); }
+
+/* Session list */
+.sidebar-sessions {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
 }
 
 .session-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 12px;
-  font-size: 12.5px;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
   cursor: pointer;
-  transition: background 0.15s;
-  position: relative;
-  line-height: 1.3;
+  transition: background 0.1s;
+  white-space: nowrap;
 }
 .session-item:hover { background: var(--hover-bg); }
 .session-item.active { background: var(--active-bg); font-weight: 500; }
 
 .session-num {
   font-family: 'DM Mono', monospace;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
   width: 14px;
-  text-align: right;
+  text-align: center;
   flex-shrink: 0;
 }
 
@@ -702,18 +773,24 @@ input, select { font-family: inherit; color: inherit; }
   margin-top: 2px;
 }
 
-.saved-seq-delete {
+.saved-seq-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.saved-seq-action-btn {
   width: 28px;
   height: 28px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-muted);
-  flex-shrink: 0;
 }
-.saved-seq-delete:hover { background: rgba(217,107,90,0.1); color: var(--danger); }
+.saved-seq-action-btn:hover { background: var(--hover-bg); color: var(--accent); }
+.saved-seq-action-btn.delete-btn:hover { background: rgba(217,107,90,0.1); color: var(--danger); }
 
 /* ═══════════════════════════════════════════════════
    TOAST
@@ -766,12 +843,102 @@ input, select { font-family: inherit; color: inherit; }
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
   padding: 24px;
-  max-width: 340px;
+  max-width: 380px;
   width: 90%;
   text-align: center;
 }
 .confirm-msg { font-size: 14px; margin-bottom: 16px; line-height: 1.5; }
-.confirm-actions { display: flex; gap: 8px; justify-content: center; }
+.confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════════════
+   SAVE PROMPT DIALOG (4 buttons)
+   ═══════════════════════════════════════════════════ */
+.save-prompt-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 160;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.save-prompt-overlay.open { opacity: 1; pointer-events: auto; }
+
+.save-prompt-box {
+  background: var(--modal-bg);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+.save-prompt-msg {
+  font-size: 14px;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+.save-prompt-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════════════
+   SAVE AS NAME PROMPT
+   ═══════════════════════════════════════════════════ */
+.name-prompt-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 170;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.name-prompt-overlay.open { opacity: 1; pointer-events: auto; }
+
+.name-prompt-box {
+  background: var(--modal-bg);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+  max-width: 360px;
+  width: 90%;
+}
+.name-prompt-label {
+  font-size: 14px;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+.name-prompt-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--bg);
+  margin-bottom: 14px;
+  outline: none;
+}
+.name-prompt-input:focus { border-color: var(--accent); }
+.name-prompt-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
 
 /* ═══════════════════════════════════════════════════
    KEYBOARD HINT
@@ -796,9 +963,9 @@ input, select { font-family: inherit; color: inherit; }
 /* ═══════════════════════════════════════════════════
    SCROLLBAR
    ═══════════════════════════════════════════════════ */
-.sidebar::-webkit-scrollbar, .modal-body::-webkit-scrollbar { width: 4px; }
-.sidebar::-webkit-scrollbar-track, .modal-body::-webkit-scrollbar-track { background: transparent; }
-.sidebar::-webkit-scrollbar-thumb, .modal-body::-webkit-scrollbar-thumb {
+.sidebar-sessions::-webkit-scrollbar, .modal-body::-webkit-scrollbar { width: 4px; }
+.sidebar-sessions::-webkit-scrollbar-track, .modal-body::-webkit-scrollbar-track { background: transparent; }
+.sidebar-sessions::-webkit-scrollbar-thumb, .modal-body::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 2px;
 }
@@ -808,13 +975,32 @@ input, select { font-family: inherit; color: inherit; }
    ═══════════════════════════════════════════════════ */
 @media (max-width: 520px) {
   .main { flex-direction: column; }
-  .sidebar {
+  .sidebar-panel {
+    flex: 0 0 auto !important;
+    max-width: 100% !important;
     width: 100%;
-    min-width: 100%;
     border-right: none;
-    border-bottom: 1px solid var(--border);
-    max-height: 140px;
-    padding: 4px 0;
+    border-top: 1px solid var(--border);
+    max-height: 180px;
+    transition: max-height 0.25s ease, opacity 0.2s ease;
+    overflow: hidden;
+  }
+  .sidebar-panel.collapsed {
+    flex-basis: 0 !important;
+    max-width: 100% !important;
+    max-height: 0;
+    border-top: none;
+    opacity: 0;
+  }
+  .sidebar-expand-btn {
+    position: absolute;
+    left: 50%;
+    top: auto;
+    bottom: 0;
+    transform: translateX(-50%);
+    border-radius: 5px 5px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
   }
   .timer-area { padding: 20px 16px; }
   .current-session-title { font-size: 18px; }
@@ -834,21 +1020,38 @@ input, select { font-family: inherit; color: inherit; }
     <div class="header-actions">
       <button class="header-btn" id="themeToggle" title="Toggle theme">&#9789;</button>
       <button class="header-btn" id="muteToggle" title="Toggle sound (M)">&#128276;</button>
-      <button class="header-btn" id="editBtn" title="Edit sequence (E)">&#9998;</button>
-      <button class="header-btn" id="menuBtn" title="Saved sequences">&#9776;</button>
+      <button class="header-btn" id="popoutBtn" title="Open popout window">&#10064;</button>
     </div>
   </header>
 
   <!-- MAIN -->
   <div class="main">
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar"></aside>
+    <!-- Sidebar Panel -->
+    <aside class="sidebar-panel" id="sidebarPanel">
+      <div class="sidebar-header">
+        <div class="sidebar-name-row">
+          <div class="sidebar-seq-name" id="sidebarSeqName"></div>
+          <button class="sidebar-btn" id="panelCollapseBtn" title="Collapse panel">&#8249;</button>
+        </div>
+        <div class="sidebar-toolbar">
+          <button class="sidebar-btn" id="panelEditBtn" title="Edit sequence (E)">&#9998;</button>
+          <button class="sidebar-btn" id="panelSaveBtn" title="Save sequence">&#128190;</button>
+          <button class="sidebar-btn" id="panelSaveAsBtn" title="Save as new sequence">&#128203;</button>
+          <button class="sidebar-btn" id="panelNewBtn" title="New sequence">&#43;</button>
+          <button class="sidebar-btn" id="panelMenuBtn" title="Load saved sequence">&#9776;</button>
+        </div>
+      </div>
+      <div class="sidebar-sessions" id="sidebarSessions"></div>
+    </aside>
+
+    <!-- Expand button (visible when panel collapsed) -->
+    <button class="sidebar-expand-btn" id="sidebarExpandBtn">&#8250;</button>
 
     <!-- Timer Area -->
     <div class="timer-area" id="timerArea">
-      <div class="current-session-title" id="currentTitle">Focus Block 1</div>
+        <div class="current-session-title" id="currentTitle">Focus Block 1</div>
 
-      <div class="timer-ring-container">
+        <div class="timer-ring-container">
         <svg class="timer-ring-svg" viewBox="0 0 180 180">
           <circle class="ring-track" cx="90" cy="90" r="80"/>
           <circle class="ring-progress" id="ringProgress" cx="90" cy="90" r="80"
@@ -881,15 +1084,15 @@ input, select { font-family: inherit; color: inherit; }
         <div class="complete-sub">Great session. Take a moment to breathe.</div>
         <button class="modal-btn primary" id="restartBtn" style="margin-top:12px">Start Over</button>
       </div>
-    </div>
-  </div>
-</div>
+    </div><!-- /.timer-area -->
+  </div><!-- /.main -->
+</div><!-- /.app -->
 
 <!-- EDITOR MODAL -->
 <div class="modal-overlay" id="editorModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Edit Sequence</div>
+      <div class="modal-title" id="editorModalTitle">Edit Sequence</div>
       <button class="modal-close" id="editorClose">&times;</button>
     </div>
     <div class="modal-body" id="editorBody">
@@ -914,7 +1117,6 @@ input, select { font-family: inherit; color: inherit; }
     <div class="modal-body" id="savedBody"></div>
     <div class="modal-footer">
       <button class="modal-btn secondary" id="savedCloseBtn">Close</button>
-      <button class="modal-btn primary" id="savedSaveCurrentBtn">Save Current</button>
     </div>
   </div>
 </div>
@@ -926,6 +1128,31 @@ input, select { font-family: inherit; color: inherit; }
     <div class="confirm-actions">
       <button class="modal-btn secondary" id="confirmNo">Cancel</button>
       <button class="modal-btn primary" id="confirmYes">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE PROMPT DIALOG (unsaved changes) -->
+<div class="save-prompt-overlay" id="savePromptOverlay">
+  <div class="save-prompt-box">
+    <div class="save-prompt-msg" id="savePromptMsg">Save changes to this sequence?</div>
+    <div class="save-prompt-actions">
+      <button class="modal-btn secondary" id="savePromptCancel">Cancel</button>
+      <button class="modal-btn secondary" id="savePromptDiscard">Don't Save</button>
+      <button class="modal-btn secondary" id="savePromptSaveAs">Save As</button>
+      <button class="modal-btn primary" id="savePromptSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE AS NAME PROMPT -->
+<div class="name-prompt-overlay" id="namePromptOverlay">
+  <div class="name-prompt-box">
+    <div class="name-prompt-label">Save sequence as:</div>
+    <input type="text" class="name-prompt-input" id="namePromptInput" placeholder="Sequence name" spellcheck="false">
+    <div class="name-prompt-actions">
+      <button class="modal-btn secondary" id="namePromptCancel">Cancel</button>
+      <button class="modal-btn primary" id="namePromptOk">Save</button>
     </div>
   </div>
 </div>
@@ -968,10 +1195,11 @@ const DEFAULT_SEQUENCE = {
 let state = {
   currentSequenceName: DEFAULT_SEQUENCE.name,
   currentSessionIndex: 0,
-  timerSeconds: 1500,
-  timerTotal: 1500,
+  timerSeconds: 180,
+  timerTotal: 180,
   globalMute: false,
-  theme: "light"
+  theme: "light",
+  panelCollapsed: false
 };
 
 let sequences = [JSON.parse(JSON.stringify(DEFAULT_SEQUENCE))];
@@ -984,11 +1212,18 @@ let audioCtx = null;
 let dirtyTimeout = null;
 let currentEditSoundIndex = -1;
 
+// Dirty tracking
+let savedSnapshot = null;
+let isNewSequenceMode = false; // true when creating a brand new sequence via "+"
+
 /* ═══════════════════════════════════════════════════
    DOM REFS
    ═══════════════════════════════════════════════════ */
 const $ = id => document.getElementById(id);
-const sidebar = $('sidebar');
+const sidebarPanel = $('sidebarPanel');
+const sidebarSessions = $('sidebarSessions');
+const sidebarSeqName = $('sidebarSeqName');
+const sidebarExpandBtn = $('sidebarExpandBtn');
 const timerDigits = $('timerDigits');
 const ringProgress = $('ringProgress');
 const currentTitle = $('currentTitle');
@@ -997,8 +1232,12 @@ const skipBtn = $('skipBtn');
 const resetBtn = $('resetBtn');
 const themeToggle = $('themeToggle');
 const muteToggle = $('muteToggle');
-const editBtn = $('editBtn');
-const menuBtn = $('menuBtn');
+const panelEditBtn = $('panelEditBtn');
+const panelSaveBtn = $('panelSaveBtn');
+const panelSaveAsBtn = $('panelSaveAsBtn');
+const panelNewBtn = $('panelNewBtn');
+const panelMenuBtn = $('panelMenuBtn');
+const panelCollapseBtn = $('panelCollapseBtn');
 const timerArea = $('timerArea');
 const transitionOverlay = $('transitionOverlay');
 const transitionTitle = $('transitionTitle');
@@ -1008,6 +1247,7 @@ const transitionSkipBtn = $('transitionSkipBtn');
 const completeOverlay = $('completeOverlay');
 const restartBtn = $('restartBtn');
 const editorModal = $('editorModal');
+const editorModalTitle = $('editorModalTitle');
 const editorClose = $('editorClose');
 const editorBody = $('editorBody');
 const editorSeqName = $('editorSeqName');
@@ -1019,12 +1259,22 @@ const savedModal = $('savedModal');
 const savedClose = $('savedClose');
 const savedBody = $('savedBody');
 const savedCloseBtn = $('savedCloseBtn');
-const savedSaveCurrentBtn = $('savedSaveCurrentBtn');
 const confirmOverlay = $('confirmOverlay');
 const confirmMsg = $('confirmMsg');
 const confirmYes = $('confirmYes');
 const confirmNo = $('confirmNo');
+const savePromptOverlay = $('savePromptOverlay');
+const savePromptMsg = $('savePromptMsg');
+const savePromptSave = $('savePromptSave');
+const savePromptSaveAs = $('savePromptSaveAs');
+const savePromptDiscard = $('savePromptDiscard');
+const savePromptCancel = $('savePromptCancel');
+const namePromptOverlay = $('namePromptOverlay');
+const namePromptInput = $('namePromptInput');
+const namePromptOk = $('namePromptOk');
+const namePromptCancel = $('namePromptCancel');
 const soundFileInput = $('soundFileInput');
+const popoutBtn = $('popoutBtn');
 
 /* ═══════════════════════════════════════════════════
    PERSISTENCE
@@ -1058,6 +1308,26 @@ function loadAll() {
 function markDirty() {
   clearTimeout(dirtyTimeout);
   dirtyTimeout = setTimeout(saveState, 300);
+}
+
+/* ═══════════════════════════════════════════════════
+   DIRTY TRACKING (snapshot comparison)
+   ═══════════════════════════════════════════════════ */
+function takeSnapshot() {
+  const seq = getCurrentSequence();
+  if (seq) {
+    savedSnapshot = JSON.stringify({ name: seq.name, sessions: seq.sessions });
+  } else {
+    savedSnapshot = null;
+  }
+}
+
+function hasUnsavedChanges() {
+  if (!savedSnapshot) return false;
+  const seq = getCurrentSequence();
+  if (!seq) return false;
+  const current = JSON.stringify({ name: seq.name, sessions: seq.sessions });
+  return current !== savedSnapshot;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1171,20 +1441,184 @@ function sequenceTotalMinutes(seq) {
   return seq.sessions.reduce((acc, s) => acc + sessionTotalSeconds(s), 0) / 60;
 }
 
+function escHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
 /* ═══════════════════════════════════════════════════
-   UI RENDERING
+   SIDEBAR PANEL COLLAPSE
    ═══════════════════════════════════════════════════ */
-function renderSidebar() {
-  const seq = getCurrentSequence();
-  if (!seq || !seq.sessions.length) {
-    sidebar.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128203;</div><div class="empty-state-text">No sessions yet</div><button class="empty-state-btn" onclick="openEditor()">Add Sessions</button></div>';
+function updatePanelCollapse() {
+  sidebarPanel.classList.toggle('collapsed', state.panelCollapsed);
+  sidebarExpandBtn.classList.toggle('visible', state.panelCollapsed);
+  panelCollapseBtn.innerHTML = state.panelCollapsed ? '&#8250;' : '&#8249;';
+}
+
+panelCollapseBtn.addEventListener('click', () => {
+  state.panelCollapsed = !state.panelCollapsed;
+  updatePanelCollapse();
+  saveState();
+});
+
+sidebarExpandBtn.addEventListener('click', () => {
+  state.panelCollapsed = false;
+  updatePanelCollapse();
+  saveState();
+});
+
+/* ═══════════════════════════════════════════════════
+   POPOUT WINDOW
+   ═══════════════════════════════════════════════════ */
+let popoutWindow = null;
+
+function getPopoutHTML(theme) {
+  return `<!DOCTYPE html>
+<html lang="en" data-theme="${theme}">
+<head>
+<meta charset="UTF-8">
+<title>JoyPro Timer</title>
+<link rel="icon" type="image/png" href="joypro-logo-dark.png">
+<link href="https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@600&family=DM+Mono:wght@400;500&family=Rethink+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --coral: #f19766; --teal: #2a7c73; --navy: #07273F;
+  --charcoal: #3d474d; --cream: #f6f3ee;
+  --bg: var(--cream); --text: var(--charcoal);
+  --text-muted: #8a9099; --accent: var(--coral); --border: #ddd6cc;
+}
+[data-theme="dark"] {
+  --bg: var(--navy); --text: var(--cream);
+  --text-muted: #8a9aaa; --accent: var(--coral); --border: #1e3a52;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Rethink Sans', sans-serif;
+  background: var(--bg); color: var(--text);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 8px 16px; user-select: none;
+  transition: background 0.3s, color 0.3s;
+}
+.popout-session {
+  font-family: 'Abhaya Libre', serif; font-weight: 600;
+  font-size: clamp(14px, min(7vw, 14vh), 80px);
+  text-align: center; margin-bottom: 0.5vh;
+  display: flex; align-items: center; justify-content: center;
+  gap: clamp(4px, 1.5vw, 16px);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.popout-status {
+  width: clamp(6px, 1.8vw, 16px); height: clamp(6px, 1.8vw, 16px);
+  border-radius: 50%;
+  background: var(--text-muted); flex-shrink: 0; opacity: 0.5;
+}
+.popout-status.playing {
+  background: var(--accent); opacity: 1;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.popout-status.paused {
+  background: var(--accent); opacity: 0.6;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+}
+.popout-time {
+  font-family: 'DM Mono', monospace;
+  font-size: clamp(18px, min(9vw, 18vh), 100px);
+  font-weight: 500; letter-spacing: 0.05em; text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="popout-session">
+  <span class="popout-status" id="popoutStatus"></span>
+  <span id="popoutSession">Loading...</span>
+</div>
+<div class="popout-time" id="popoutTime">--:--</div>
+</body>
+</html>`;
+}
+
+function openPopout() {
+  if (popoutWindow && !popoutWindow.closed) {
+    popoutWindow.focus();
     return;
   }
 
-  sidebar.innerHTML = seq.sessions.map((s, i) => {
+  const w = 380, h = 130;
+  const left = (window.screenX || window.screenLeft) + window.outerWidth - w - 30;
+  const top = (window.screenY || window.screenTop) + 30;
+
+  popoutWindow = window.open('', 'joypro_popout',
+    'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top +
+    ',toolbar=no,menubar=no,location=no,status=no,resizable=yes,scrollbars=no');
+
+  if (!popoutWindow) {
+    showToast('Popout blocked — please allow popups for this site');
+    return;
+  }
+
+  const doc = popoutWindow.document;
+  doc.open();
+  doc.write(getPopoutHTML(state.theme));
+  doc.close();
+
+  // Sync immediately once fonts load
+  popoutWindow.addEventListener('load', () => syncPopout());
+  syncPopout();
+
+  popoutWindow.addEventListener('beforeunload', () => { popoutWindow = null; });
+  showToast('Popout window opened');
+}
+
+function syncPopout() {
+  if (!popoutWindow || popoutWindow.closed) { popoutWindow = null; return; }
+  try {
+    const doc = popoutWindow.document;
+    const sessionEl = doc.getElementById('popoutSession');
+    const timeEl = doc.getElementById('popoutTime');
+    const statusEl = doc.getElementById('popoutStatus');
+    if (sessionEl) sessionEl.textContent = currentTitle.textContent;
+    if (timeEl) timeEl.textContent = formatTime(state.timerSeconds);
+    if (statusEl) {
+      statusEl.className = 'popout-status' + (running ? ' playing' : (state.timerSeconds < state.timerTotal ? ' paused' : ''));
+    }
+    // Sync theme
+    doc.documentElement.setAttribute('data-theme', state.theme);
+    // Sync document title
+    if (running) {
+      popoutWindow.document.title = formatTime(state.timerSeconds) + ' — ' + currentTitle.textContent;
+    } else {
+      popoutWindow.document.title = 'JoyPro Timer';
+    }
+  } catch(e) {}
+}
+
+popoutBtn.addEventListener('click', openPopout);
+
+/* ═══════════════════════════════════════════════════
+   UI RENDERING
+   ═══════════════════════════════════════════════════ */
+function renderSidebarHeader() {
+  const seq = getCurrentSequence();
+  sidebarSeqName.textContent = seq ? seq.name : 'No Sequence';
+}
+
+function renderSidebar() {
+  renderSidebarHeader();
+
+  const seq = getCurrentSequence();
+  if (!seq || !seq.sessions.length) {
+    sidebarSessions.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-state-icon">&#128203;</div><div class="empty-state-text">No sessions yet</div><button class="empty-state-btn" onclick="openEditorNew()">Add Sessions</button></div>';
+    return;
+  }
+
+  sidebarSessions.innerHTML = seq.sessions.map((s, i) => {
     const isActive = i === state.currentSessionIndex;
     const isCompleted = i < state.currentSessionIndex;
-    const isFuture = i > state.currentSessionIndex;
     let iconHtml = '';
     if (isCompleted) iconHtml = '<span class="session-icon completed">&#10003;</span>';
     else if (isActive && running) iconHtml = '<span class="session-icon playing">&#9654;</span>';
@@ -1203,7 +1637,7 @@ function renderSidebar() {
   }).join('');
 
   // Click to jump
-  sidebar.querySelectorAll('.session-item').forEach(el => {
+  sidebarSessions.querySelectorAll('.session-item').forEach(el => {
     el.addEventListener('click', () => {
       const idx = parseInt(el.dataset.index);
       if (idx !== state.currentSessionIndex) {
@@ -1241,12 +1675,9 @@ function renderTimer() {
   } else {
     document.title = 'JoyPro Timer';
   }
-}
 
-function escHtml(str) {
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
+  // Sync popout window
+  syncPopout();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1294,7 +1725,6 @@ function onSessionComplete() {
 
   const nextIndex = state.currentSessionIndex + 1;
   if (nextIndex >= seq.sessions.length) {
-    // Sequence complete
     showCompleteOverlay();
     return;
   }
@@ -1369,12 +1799,13 @@ function showTransitionOverlay(nextTitle, nextIndex, autoStart) {
   transitionSkipBtn.onclick = () => {
     clearInterval(transitionTimer);
     transitionTimer = null;
-    // Skip to session after next
     const seq = getCurrentSequence();
     if (seq && nextIndex + 1 < seq.sessions.length) {
       advanceToSession(nextIndex + 1);
+      startTimer();
     } else {
       advanceToSession(nextIndex);
+      startTimer();
     }
   };
 }
@@ -1410,9 +1841,11 @@ skipBtn.addEventListener('click', () => {
   if (running || state.timerSeconds < state.timerTotal) {
     showConfirm('Skip to next session?', () => {
       advanceToSession(next);
+      startTimer();
     });
   } else {
     advanceToSession(next);
+    startTimer();
   }
 });
 
@@ -1431,7 +1864,7 @@ restartBtn.addEventListener('click', () => {
 });
 
 /* ═══════════════════════════════════════════════════
-   CONFIRM DIALOG
+   CONFIRM DIALOG (2 buttons: Cancel / Confirm)
    ═══════════════════════════════════════════════════ */
 let confirmCallback = null;
 
@@ -1451,6 +1884,152 @@ confirmNo.addEventListener('click', () => {
   confirmOverlay.classList.remove('open');
   confirmCallback = null;
 });
+
+/* ═══════════════════════════════════════════════════
+   SAVE PROMPT DIALOG (4 buttons: Save, Save As, Don't Save, Cancel)
+   ═══════════════════════════════════════════════════ */
+let savePromptCallbacks = null;
+
+function showSavePrompt(onProceed) {
+  // onProceed is called after saving, discarding, or save-as completes
+  savePromptMsg.textContent = `Save changes to "${state.currentSequenceName}"?`;
+  savePromptCallbacks = onProceed;
+  savePromptOverlay.classList.add('open');
+}
+
+savePromptSave.addEventListener('click', () => {
+  savePromptOverlay.classList.remove('open');
+  doSaveCurrentSequence();
+  if (savePromptCallbacks) savePromptCallbacks();
+  savePromptCallbacks = null;
+});
+
+savePromptSaveAs.addEventListener('click', () => {
+  savePromptOverlay.classList.remove('open');
+  const cb = savePromptCallbacks;
+  savePromptCallbacks = null;
+  showNamePrompt(state.currentSequenceName + ' (copy)', (newName) => {
+    doSaveAsSequence(newName);
+    if (cb) cb();
+  });
+});
+
+savePromptDiscard.addEventListener('click', () => {
+  savePromptOverlay.classList.remove('open');
+  // Revert in-memory sequence to saved version
+  revertCurrentSequence();
+  if (savePromptCallbacks) savePromptCallbacks();
+  savePromptCallbacks = null;
+});
+
+savePromptCancel.addEventListener('click', () => {
+  savePromptOverlay.classList.remove('open');
+  savePromptCallbacks = null;
+});
+
+/* ═══════════════════════════════════════════════════
+   NAME PROMPT (for Save As)
+   ═══════════════════════════════════════════════════ */
+let namePromptCallback = null;
+
+function showNamePrompt(defaultName, onOk) {
+  namePromptInput.value = defaultName;
+  namePromptCallback = onOk;
+  namePromptOverlay.classList.add('open');
+  setTimeout(() => { namePromptInput.focus(); namePromptInput.select(); }, 100);
+}
+
+namePromptOk.addEventListener('click', () => {
+  const name = namePromptInput.value.trim();
+  if (!name) {
+    showToast('Please enter a name');
+    return;
+  }
+  // Check for duplicate names
+  if (sequences.some(s => s.name === name)) {
+    showToast('A sequence with that name already exists');
+    return;
+  }
+  namePromptOverlay.classList.remove('open');
+  if (namePromptCallback) namePromptCallback(name);
+  namePromptCallback = null;
+});
+
+namePromptCancel.addEventListener('click', () => {
+  namePromptOverlay.classList.remove('open');
+  namePromptCallback = null;
+});
+
+namePromptInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') namePromptOk.click();
+  if (e.key === 'Escape') namePromptCancel.click();
+});
+
+/* ═══════════════════════════════════════════════════
+   SAVE / SAVE-AS / REVERT LOGIC
+   ═══════════════════════════════════════════════════ */
+function doSaveCurrentSequence() {
+  // Find the sequence in the saved array and overwrite it
+  const seq = getCurrentSequence();
+  if (!seq) return;
+
+  const idx = sequences.findIndex(s => s.name === state.currentSequenceName);
+  if (idx >= 0) {
+    sequences[idx] = JSON.parse(JSON.stringify(seq));
+  } else {
+    // Not found — must have been renamed or is new; add it
+    sequences.push(JSON.parse(JSON.stringify(seq)));
+  }
+
+  saveSequences();
+  takeSnapshot();
+  showToast('Sequence saved');
+}
+
+function doSaveAsSequence(newName) {
+  const seq = getCurrentSequence();
+  if (!seq) return;
+
+  const copy = JSON.parse(JSON.stringify(seq));
+  copy.name = newName;
+  sequences.push(copy);
+
+  // Switch active to the new copy
+  state.currentSequenceName = newName;
+  // Update the in-memory sequence reference
+  // (getCurrentSequence will now find the new one)
+
+  saveSequences();
+  saveState();
+  takeSnapshot();
+  renderSidebar();
+  showToast(`Saved as "${newName}"`);
+}
+
+function revertCurrentSequence() {
+  // Revert the in-memory sequence to the last saved snapshot
+  if (!savedSnapshot) return;
+  const snapshotData = JSON.parse(savedSnapshot);
+  const idx = sequences.findIndex(s => s.name === state.currentSequenceName);
+  if (idx >= 0) {
+    sequences[idx].name = snapshotData.name;
+    sequences[idx].sessions = snapshotData.sessions;
+    state.currentSequenceName = snapshotData.name;
+  }
+}
+
+/**
+ * Guard: check unsaved changes before proceeding with an action.
+ * If no unsaved changes, calls proceed() immediately.
+ * If unsaved changes exist, shows the 4-button save prompt.
+ */
+function guardUnsavedChanges(proceed) {
+  if (hasUnsavedChanges()) {
+    showSavePrompt(proceed);
+  } else {
+    proceed();
+  }
+}
 
 /* ═══════════════════════════════════════════════════
    TOAST
@@ -1474,6 +2053,8 @@ function showToast(msg) {
 let editorData = [];
 
 function openEditor() {
+  isNewSequenceMode = false;
+  editorModalTitle.textContent = 'Edit Sequence';
   const seq = getCurrentSequence();
   editorSeqName.value = seq.name;
   editorData = seq.sessions.map(s => ({ ...s }));
@@ -1481,8 +2062,18 @@ function openEditor() {
   editorModal.classList.add('open');
 }
 
+function openEditorNew() {
+  isNewSequenceMode = true;
+  editorModalTitle.textContent = 'New Sequence';
+  editorSeqName.value = 'New Sequence';
+  editorData = [];
+  renderEditorSessions();
+  editorModal.classList.add('open');
+}
+
 function closeEditor() {
   editorModal.classList.remove('open');
+  isNewSequenceMode = false;
 }
 
 function renderEditorSessions() {
@@ -1601,33 +2192,71 @@ editorSave.addEventListener('click', () => {
     }
   }
 
-  const seq = getCurrentSequence();
-  seq.name = name;
-  seq.sessions = editorData.map(s => ({ ...s }));
-  state.currentSequenceName = name;
+  if (isNewSequenceMode) {
+    // Check if name already exists
+    if (sequences.some(s => s.name === name)) {
+      showToast('A sequence with that name already exists');
+      return;
+    }
+    // Create new sequence
+    const newSeq = {
+      name: name,
+      sessions: editorData.map(s => ({ ...s }))
+    };
+    sequences.push(newSeq);
+    state.currentSequenceName = name;
+    state.currentSessionIndex = 0;
+    if (newSeq.sessions.length) {
+      state.timerTotal = sessionTotalSeconds(newSeq.sessions[0]);
+      state.timerSeconds = state.timerTotal;
+    }
+    running = false;
+    clearInterval(timerInterval);
 
-  // Reset to beginning
-  state.currentSessionIndex = 0;
-  if (seq.sessions.length) {
-    state.timerTotal = sessionTotalSeconds(seq.sessions[0]);
-    state.timerSeconds = state.timerTotal;
+    saveSequences();
+    saveState();
+    takeSnapshot();
+    renderSidebar();
+    renderTimer();
+    hideOverlays();
+    closeEditor();
+    showToast('New sequence created');
+  } else {
+    // Editing existing sequence
+    const seq = getCurrentSequence();
+    const oldName = seq.name;
+    seq.name = name;
+    seq.sessions = editorData.map(s => ({ ...s }));
+    state.currentSequenceName = name;
+
+    // Update in sequences array (find by old name or reference)
+    const idx = sequences.findIndex(s => s === seq);
+    if (idx >= 0) {
+      sequences[idx] = seq;
+    }
+
+    // Reset to beginning
+    state.currentSessionIndex = 0;
+    if (seq.sessions.length) {
+      state.timerTotal = sessionTotalSeconds(seq.sessions[0]);
+      state.timerSeconds = state.timerTotal;
+    }
+    running = false;
+    clearInterval(timerInterval);
+
+    saveSequences();
+    saveState();
+    takeSnapshot();
+    renderSidebar();
+    renderTimer();
+    hideOverlays();
+    closeEditor();
+    showToast('Sequence saved');
   }
-  running = false;
-  clearInterval(timerInterval);
-
-  saveSequences();
-  saveState();
-  renderSidebar();
-  renderTimer();
-  hideOverlays();
-  closeEditor();
-  showToast('Sequence saved');
 });
 
 editorCancel.addEventListener('click', closeEditor);
 editorClose.addEventListener('click', closeEditor);
-
-editBtn.addEventListener('click', openEditor);
 
 // Custom sound file handler
 soundFileInput.addEventListener('change', e => {
@@ -1647,6 +2276,31 @@ soundFileInput.addEventListener('change', e => {
   };
   reader.readAsDataURL(file);
   soundFileInput.value = '';
+});
+
+/* ═══════════════════════════════════════════════════
+   PANEL BUTTONS
+   ═══════════════════════════════════════════════════ */
+panelEditBtn.addEventListener('click', openEditor);
+
+panelSaveBtn.addEventListener('click', () => {
+  doSaveCurrentSequence();
+});
+
+panelSaveAsBtn.addEventListener('click', () => {
+  showNamePrompt(state.currentSequenceName + ' (copy)', (newName) => {
+    doSaveAsSequence(newName);
+  });
+});
+
+panelNewBtn.addEventListener('click', () => {
+  guardUnsavedChanges(() => {
+    openEditorNew();
+  });
+});
+
+panelMenuBtn.addEventListener('click', () => {
+  openSavedModal();
 });
 
 /* ═══════════════════════════════════════════════════
@@ -1673,20 +2327,70 @@ function renderSavedList() {
     const isCurrent = seq.name === state.currentSequenceName;
     return `<div class="saved-seq-item" data-index="${i}">
       <div class="saved-seq-info">
-        <div class="saved-seq-name">${escHtml(seq.name)}${isCurrent ? ' (active)' : ''}</div>
+        <div class="saved-seq-name">${escHtml(seq.name)}${isCurrent ? ' <span style="font-size:11px;color:var(--text-muted)">(active)</span>' : ''}</div>
         <div class="saved-seq-meta">${sessCount} session${sessCount !== 1 ? 's' : ''} &middot; ${totalMins} min</div>
       </div>
-      <button class="saved-seq-delete" data-action="delete" data-index="${i}" title="Delete">&times;</button>
+      <div class="saved-seq-actions">
+        <button class="saved-seq-action-btn" data-action="copy" data-index="${i}" title="Duplicate">&#128203;</button>
+        <button class="saved-seq-action-btn" data-action="edit" data-index="${i}" title="Edit">&#9998;</button>
+        <button class="saved-seq-action-btn delete-btn" data-action="delete" data-index="${i}" title="Delete">&times;</button>
+      </div>
     </div>`;
   }).join('');
 
-  // Click to load
+  // Click row to load
   savedBody.querySelectorAll('.saved-seq-item').forEach(el => {
     el.addEventListener('click', e => {
-      if (e.target.closest('[data-action="delete"]')) return;
+      if (e.target.closest('[data-action]')) return;
       const idx = parseInt(el.dataset.index);
-      loadSequence(idx);
       closeSavedModal();
+      guardUnsavedChanges(() => {
+        loadSequence(idx);
+      });
+    });
+  });
+
+  // Copy
+  savedBody.querySelectorAll('[data-action="copy"]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.index);
+      const orig = sequences[idx];
+      const copy = JSON.parse(JSON.stringify(orig));
+      // Find unique name
+      let copyName = orig.name + ' (copy)';
+      let counter = 2;
+      while (sequences.some(s => s.name === copyName)) {
+        copyName = orig.name + ` (copy ${counter})`;
+        counter++;
+      }
+      copy.name = copyName;
+      sequences.push(copy);
+      saveSequences();
+      renderSavedList();
+      showToast(`Duplicated "${orig.name}"`);
+    });
+  });
+
+  // Edit (load + open editor)
+  savedBody.querySelectorAll('[data-action="edit"]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.index);
+      const targetName = sequences[idx].name;
+
+      closeSavedModal();
+
+      if (targetName === state.currentSequenceName) {
+        // Already active, just open editor
+        openEditor();
+      } else {
+        // Need to switch — check unsaved changes first
+        guardUnsavedChanges(() => {
+          loadSequence(idx);
+          openEditor();
+        });
+      }
     });
   });
 
@@ -1726,26 +2430,14 @@ function loadSequence(index) {
   }
 
   saveState();
+  takeSnapshot();
   renderSidebar();
   renderTimer();
   showToast(`Loaded "${seq.name}"`);
 }
 
-savedSaveCurrentBtn.addEventListener('click', () => {
-  // Duplicate current sequence with a new name
-  const seq = getCurrentSequence();
-  const newName = seq.name + ' (copy)';
-  const copy = JSON.parse(JSON.stringify(seq));
-  copy.name = newName;
-  sequences.push(copy);
-  saveSequences();
-  renderSavedList();
-  showToast('Sequence duplicated');
-});
-
 savedClose.addEventListener('click', closeSavedModal);
 savedCloseBtn.addEventListener('click', closeSavedModal);
-menuBtn.addEventListener('click', openSavedModal);
 
 /* ═══════════════════════════════════════════════════
    KEYBOARD SHORTCUTS
@@ -1754,7 +2446,11 @@ document.addEventListener('keydown', e => {
   // Don't trigger while typing in inputs
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
   // Don't trigger with modals open
-  const anyModalOpen = editorModal.classList.contains('open') || savedModal.classList.contains('open') || confirmOverlay.classList.contains('open');
+  const anyModalOpen = editorModal.classList.contains('open') ||
+    savedModal.classList.contains('open') ||
+    confirmOverlay.classList.contains('open') ||
+    savePromptOverlay.classList.contains('open') ||
+    namePromptOverlay.classList.contains('open');
 
   if (e.code === 'Space' && !anyModalOpen) {
     e.preventDefault();
@@ -1769,7 +2465,9 @@ document.addEventListener('keydown', e => {
   } else if (e.code === 'KeyR' && !anyModalOpen && !e.ctrlKey && !e.metaKey) {
     resetBtn.click();
   } else if (e.code === 'Escape') {
-    if (editorModal.classList.contains('open')) closeEditor();
+    if (namePromptOverlay.classList.contains('open')) { namePromptOverlay.classList.remove('open'); namePromptCallback = null; }
+    else if (savePromptOverlay.classList.contains('open')) { savePromptOverlay.classList.remove('open'); savePromptCallbacks = null; }
+    else if (editorModal.classList.contains('open')) closeEditor();
     else if (savedModal.classList.contains('open')) closeSavedModal();
     else if (confirmOverlay.classList.contains('open')) { confirmOverlay.classList.remove('open'); confirmCallback = null; }
   }
@@ -1781,6 +2479,8 @@ document.addEventListener('keydown', e => {
 editorModal.addEventListener('click', e => { if (e.target === editorModal) closeEditor(); });
 savedModal.addEventListener('click', e => { if (e.target === savedModal) closeSavedModal(); });
 confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay) { confirmOverlay.classList.remove('open'); confirmCallback = null; }});
+savePromptOverlay.addEventListener('click', e => { if (e.target === savePromptOverlay) { savePromptOverlay.classList.remove('open'); savePromptCallbacks = null; }});
+namePromptOverlay.addEventListener('click', e => { if (e.target === namePromptOverlay) { namePromptOverlay.classList.remove('open'); namePromptCallback = null; }});
 
 /* ═══════════════════════════════════════════════════
    INIT
@@ -1789,6 +2489,7 @@ function init() {
   loadAll();
   applyTheme();
   updateMuteBtn();
+  updatePanelCollapse();
 
   // Validate state against current sequence
   const seq = getCurrentSequence();
@@ -1814,6 +2515,7 @@ function init() {
     if (state.timerSeconds < 0) state.timerSeconds = 0;
   }
 
+  takeSnapshot();
   renderSidebar();
   renderTimer();
   saveState();
