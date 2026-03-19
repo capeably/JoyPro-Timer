@@ -151,6 +151,12 @@ input { font-family: inherit; color: inherit; }
    ═══════════════════════════════════════════════════ */
 .sidebar-panel {
   flex: 0 0 auto;
+  order: 2;
+  position: relative;
+  overflow: visible;
+}
+
+.sidebar-panel-inner {
   max-height: 200px;
   display: flex;
   flex-direction: column;
@@ -158,41 +164,64 @@ input { font-family: inherit; color: inherit; }
   background: var(--bg-sidebar);
   transition: max-height 0.25s ease, opacity 0.2s ease;
   overflow: hidden;
-  order: 2;
 }
 
-.sidebar-panel.collapsed {
+.sidebar-panel.collapsed .sidebar-panel-inner {
   max-height: 0;
   border-top: none;
   opacity: 0;
 }
 
-/* Floating expand button — visible only when panel is collapsed */
-.sidebar-expand-btn {
+.sidebar-panel.collapsed .panel-collapse-tab {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Tab-style expand/collapse button */
+.panel-tab-btn {
   position: absolute;
   left: 50%;
-  bottom: 0;
   transform: translateX(-50%);
-  width: 36px;
-  height: 24px;
-  border-radius: 5px 5px 0 0;
+  width: 48px;
+  height: 18px;
+  border-radius: 8px 8px 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  background: var(--bg-sidebar);
+  background: var(--border);
   border: 1px solid var(--border);
   border-bottom: none;
   z-index: 10;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.2s;
+}
+.panel-tab-btn:hover { background: var(--accent); }
+.panel-tab-btn:hover .tab-arrow { border-color: white; }
+.tab-arrow {
+  width: 8px;
+  height: 8px;
+  border-left: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transition: border-color 0.15s;
+}
+.tab-arrow.down { transform: rotate(-45deg) translateY(-2px); }
+.tab-arrow.up { transform: rotate(135deg) translateY(2px); }
+
+/* Expand tab — anchored at bottom of timer area */
+.sidebar-expand-btn {
+  bottom: 0;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease, background 0.15s;
 }
 .sidebar-expand-btn.visible {
   opacity: 1;
   pointer-events: auto;
 }
-.sidebar-expand-btn:hover { background: var(--hover-bg); }
+
+/* Collapse tab — sits above the panel border */
+.panel-collapse-tab {
+  top: -18px;
+}
 
 /* Panel header */
 .sidebar-header {
@@ -1039,25 +1068,32 @@ input { font-family: inherit; color: inherit; }
       </div>
     </div><!-- /.timer-area -->
 
-    <!-- Expand button (visible when panel collapsed) -->
-    <button class="sidebar-expand-btn" id="sidebarExpandBtn">⏫</button>
+    <!-- Expand tab (visible when panel collapsed) -->
+    <button class="panel-tab-btn sidebar-expand-btn" id="sidebarExpandBtn" title="Show sessions">
+      <div class="tab-arrow up"></div>
+    </button>
 
     <!-- Bottom Panel (Sessions/Sequence) -->
     <aside class="sidebar-panel" id="sidebarPanel">
-      <div class="sidebar-header">
-        <div class="sidebar-name-row">
-          <div class="sidebar-seq-name" id="sidebarSeqName"></div>
+      <!-- Collapse tab sits on top of panel -->
+      <button class="panel-tab-btn panel-collapse-tab" id="panelCollapseBtn" title="Hide sessions">
+        <div class="tab-arrow down"></div>
+      </button>
+      <div class="sidebar-panel-inner">
+        <div class="sidebar-header">
+          <div class="sidebar-name-row">
+            <div class="sidebar-seq-name" id="sidebarSeqName"></div>
+          </div>
+          <div class="sidebar-toolbar">
+            <button class="sidebar-btn" id="panelEditBtn" title="Edit sequence (E)">&#9998;</button>
+            <button class="sidebar-btn" id="panelSaveBtn" title="Save sequence">&#128190;</button>
+            <button class="sidebar-btn" id="panelSaveAsBtn" title="Save as new sequence">&#128203;</button>
+            <button class="sidebar-btn" id="panelNewBtn" title="New sequence">&#43;</button>
+            <button class="sidebar-btn" id="panelMenuBtn" title="Load saved sequence">&#9776;</button>
+          </div>
         </div>
-        <div class="sidebar-toolbar">
-          <button class="sidebar-btn" id="panelEditBtn" title="Edit sequence (E)">&#9998;</button>
-          <button class="sidebar-btn" id="panelSaveBtn" title="Save sequence">&#128190;</button>
-          <button class="sidebar-btn" id="panelSaveAsBtn" title="Save as new sequence">&#128203;</button>
-          <button class="sidebar-btn" id="panelNewBtn" title="New sequence">&#43;</button>
-          <button class="sidebar-btn" id="panelMenuBtn" title="Load saved sequence">&#9776;</button>
-        </div>
-        <button class="sidebar-btn" id="panelCollapseBtn" title="Collapse panel">⏬</button>
+        <div class="sidebar-sessions" id="sidebarSessions"></div>
       </div>
-      <div class="sidebar-sessions" id="sidebarSessions"></div>
     </aside>
   </div><!-- /.main -->
 </div><!-- /.app -->
@@ -1429,8 +1465,7 @@ function escHtml(str) {
 function updatePanelCollapse() {
   sidebarPanel.classList.toggle('collapsed', state.panelCollapsed);
   sidebarExpandBtn.classList.toggle('visible', state.panelCollapsed);
-  panelCollapseBtn.textContent = state.panelCollapsed ? '⏫' : '⏬';
-  sidebarExpandBtn.textContent = '⏫';
+  // Arrow directions are set via CSS classes, no text to update
 }
 
 panelCollapseBtn.addEventListener('click', () => {
