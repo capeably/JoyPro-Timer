@@ -338,7 +338,7 @@ input { font-family: inherit; color: inherit; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px 20px;
+  padding: 16px 12px;
   position: relative;
   min-width: 0;
   min-height: 0;
@@ -348,29 +348,29 @@ input { font-family: inherit; color: inherit; }
 .current-session-title {
   font-family: 'Abhaya Libre', serif;
   font-weight: 600;
-  font-size: clamp(16px, min(3.5vw, 4vh), 28px);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   text-align: center;
   letter-spacing: 0.01em;
+  /* font-size set dynamically by JS based on text length */
 }
 
 .timer-digits {
   font-family: 'DM Mono', monospace;
-  font-size: clamp(32px, min(7vw, 10vh), 64px);
+  font-size: clamp(40px, 18vw, 120px);
   font-weight: 500;
   letter-spacing: 0.04em;
   white-space: nowrap;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
-/* Progress bar */
+/* Progress bar — width matches digits */
 .timer-progress-bar {
-  width: clamp(140px, 30vw, 320px);
   height: 4px;
   background: var(--ring-track);
   border-radius: 2px;
   overflow: hidden;
-  margin-bottom: clamp(12px, 3vh, 24px);
+  margin-bottom: clamp(10px, 2vh, 20px);
+  /* width set dynamically by JS to match digits */
 }
 .timer-progress-fill {
   height: 100%;
@@ -1208,6 +1208,7 @@ const sidebarSeqName = $('sidebarSeqName');
 const sidebarExpandBtn = $('sidebarExpandBtn');
 const timerDigits = $('timerDigits');
 const progressFill = $('progressFill');
+const progressBar = $('progressFill').parentElement;
 const currentTitle = $('currentTitle');
 const playBtn = $('playBtn');
 const skipBtn = $('skipBtn');
@@ -1629,6 +1630,25 @@ function renderSidebar() {
   });
 }
 
+function sizeTimerContent() {
+  // Match progress bar width to digits width
+  const digitsWidth = timerDigits.offsetWidth;
+  progressBar.style.width = digitsWidth + 'px';
+
+  // Title max-width = 2× digits width
+  currentTitle.style.maxWidth = (digitsWidth * 2) + 'px';
+
+  // Adaptive title font: max 0.75× digits font, scaled down for longer text
+  const digitsFontSize = parseFloat(getComputedStyle(timerDigits).fontSize);
+  const maxTitleSize = digitsFontSize * 0.75;
+  const titleLen = currentTitle.textContent.replace(/[\u{1F000}-\u{1FFFF}]/gu, 'X').length;
+  // Short text (~8 chars) gets full max size, longer text scales down
+  const scale = Math.min(1, 12 / Math.max(titleLen, 6));
+  const titleSize = Math.max(14, Math.round(maxTitleSize * scale));
+  currentTitle.style.fontSize = titleSize + 'px';
+}
+
+let sizeRafId = null;
 function renderTimer() {
   timerDigits.textContent = formatTime(state.timerSeconds);
 
@@ -1643,6 +1663,11 @@ function renderTimer() {
   const seq = getCurrentSequence();
   if (seq && seq.sessions[state.currentSessionIndex]) {
     currentTitle.textContent = seq.sessions[state.currentSessionIndex].title;
+  }
+
+  // Size title + progress bar (debounce to next frame)
+  if (!sizeRafId) {
+    sizeRafId = requestAnimationFrame(() => { sizeTimerContent(); sizeRafId = null; });
   }
 
   // Document title
@@ -2509,6 +2534,9 @@ function init() {
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && running) tick();
   });
+
+  // Re-size timer content on window resize
+  window.addEventListener('resize', () => sizeTimerContent());
 }
 
 init();
