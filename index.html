@@ -1207,6 +1207,8 @@ let customSounds = {};
 
 let running = false;
 let timerInterval = null;
+let timerStartedAt = null;      // wall-clock anchor (Date.now())
+let timerSecondsAtStart = null;  // seconds remaining when timer started/resumed
 let transitionTimer = null;
 let audioCtx = null;
 let dirtyTimeout = null;
@@ -1690,15 +1692,19 @@ function startTimer() {
   if (!seq || !seq.sessions.length) return;
 
   running = true;
+  timerStartedAt = Date.now();
+  timerSecondsAtStart = state.timerSeconds;
   hideOverlays();
   renderSidebar();
   renderTimer();
 
-  timerInterval = setInterval(tick, 1000);
+  timerInterval = setInterval(tick, 250); // poll 4×/sec for snappy updates
 }
 
 function pauseTimer() {
   running = false;
+  timerStartedAt = null;
+  timerSecondsAtStart = null;
   clearInterval(timerInterval);
   timerInterval = null;
   renderSidebar();
@@ -1707,13 +1713,18 @@ function pauseTimer() {
 }
 
 function tick() {
-  if (state.timerSeconds <= 0) {
-    onSessionComplete();
-    return;
-  }
-  state.timerSeconds--;
+  // Wall-clock calculation — immune to browser throttling
+  const elapsed = Math.floor((Date.now() - timerStartedAt) / 1000);
+  const remaining = Math.max(0, timerSecondsAtStart - elapsed);
+
+  if (remaining === state.timerSeconds) return; // no change yet
+  state.timerSeconds = remaining;
   renderTimer();
   markDirty();
+
+  if (remaining <= 0) {
+    onSessionComplete();
+  }
 }
 
 function onSessionComplete() {
@@ -2519,6 +2530,11 @@ function init() {
   renderSidebar();
   renderTimer();
   saveState();
+
+  // Catch up timer immediately when tab regains visibility (defeats browser throttling)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && running) tick();
+  });
 }
 
 init();
