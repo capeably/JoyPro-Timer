@@ -85,12 +85,10 @@ input { font-family: inherit; color: inherit; }
    APP LAYOUT
    ═══════════════════════════════════════════════════ */
 .app {
-  max-width: 720px;
-  margin: 0 auto;
+  width: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow);
   background: var(--bg);
 }
 
@@ -142,47 +140,49 @@ input { font-family: inherit; color: inherit; }
 .main {
   flex: 1;
   display: flex;
+  flex-direction: column;
   overflow: hidden;
   min-height: 0;
   position: relative;
 }
 
 /* ═══════════════════════════════════════════════════
-   SIDEBAR PANEL
+   BOTTOM PANEL (Sessions/Sequence)
    ═══════════════════════════════════════════════════ */
 .sidebar-panel {
-  flex: 0 0 200px;
-  max-width: 200px;
+  flex: 0 0 auto;
+  max-height: 200px;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--border);
+  border-top: 1px solid var(--border);
   background: var(--bg-sidebar);
-  transition: flex-basis 0.25s ease, max-width 0.25s ease, opacity 0.2s ease;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
   overflow: hidden;
+  order: 2;
 }
 
 .sidebar-panel.collapsed {
-  flex-basis: 0px;
-  max-width: 0px;
-  border-right: none;
+  max-height: 0;
+  border-top: none;
   opacity: 0;
 }
 
 /* Floating expand button — visible only when panel is collapsed */
 .sidebar-expand-btn {
   position: absolute;
-  left: 0;
-  top: 4px;
-  width: 26px;
-  height: 26px;
-  border-radius: 0 5px 5px 0;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 24px;
+  border-radius: 5px 5px 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
   background: var(--bg-sidebar);
   border: 1px solid var(--border);
-  border-left: none;
+  border-bottom: none;
   z-index: 10;
   opacity: 0;
   pointer-events: none;
@@ -194,11 +194,14 @@ input { font-family: inherit; color: inherit; }
 }
 .sidebar-expand-btn:hover { background: var(--hover-bg); }
 
-/* Sidebar header */
+/* Panel header */
 .sidebar-header {
-  padding: 6px 8px;
+  padding: 4px 8px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   transition: opacity 0.15s;
 }
 
@@ -206,7 +209,8 @@ input { font-family: inherit; color: inherit; }
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-bottom: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .sidebar-seq-name {
@@ -308,27 +312,29 @@ input { font-family: inherit; color: inherit; }
   padding: 24px 20px;
   position: relative;
   min-width: 0;
+  min-height: 0;
+  order: 1;
 }
 
 .current-session-title {
   font-family: 'Abhaya Libre', serif;
   font-weight: 600;
-  font-size: 20px;
-  margin-bottom: 20px;
+  font-size: clamp(16px, min(3.5vw, 4vh), 28px);
+  margin-bottom: clamp(8px, 2vh, 20px);
   text-align: center;
   letter-spacing: 0.01em;
 }
 
 .timer-ring-container {
   position: relative;
-  width: 180px;
-  height: 180px;
-  margin-bottom: 24px;
+  width: clamp(120px, min(22vw, 30vh), 220px);
+  height: clamp(120px, min(22vw, 30vh), 220px);
+  margin-bottom: clamp(8px, 2vh, 20px);
 }
 
 .timer-ring-svg {
-  width: 180px;
-  height: 180px;
+  width: 100%;
+  height: 100%;
   transform: rotate(-90deg);
 }
 
@@ -366,9 +372,9 @@ input { font-family: inherit; color: inherit; }
   left: 50%;
   transform: translate(-50%, -50%);
   font-family: 'DM Mono', monospace;
-  font-size: 38px;
+  font-size: clamp(24px, min(5vw, 7vh), 46px);
   font-weight: 500;
-  letter-spacing: 1px;
+  letter-spacing: 0.04em;
   white-space: nowrap;
 }
 
@@ -379,13 +385,13 @@ input { font-family: inherit; color: inherit; }
 }
 
 .ctrl-btn {
-  width: 44px;
-  height: 44px;
+  width: clamp(36px, 7vw, 52px);
+  height: clamp(36px, 7vw, 52px);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: clamp(14px, 3vw, 22px);
   transition: background 0.15s, transform 0.1s;
   background: var(--btn-bg);
   border: 1px solid var(--border);
@@ -394,8 +400,8 @@ input { font-family: inherit; color: inherit; }
 .ctrl-btn:active { transform: scale(0.95); }
 
 .ctrl-btn.primary {
-  width: 52px;
-  height: 52px;
+  width: clamp(42px, 8vw, 60px);
+  height: clamp(42px, 8vw, 60px);
   background: var(--accent);
   color: #fff;
   border: none;
@@ -974,39 +980,7 @@ input { font-family: inherit; color: inherit; }
    RESPONSIVE
    ═══════════════════════════════════════════════════ */
 @media (max-width: 520px) {
-  .main { flex-direction: column; }
-  .sidebar-panel {
-    flex: 0 0 auto !important;
-    max-width: 100% !important;
-    width: 100%;
-    border-right: none;
-    border-top: 1px solid var(--border);
-    max-height: 180px;
-    transition: max-height 0.25s ease, opacity 0.2s ease;
-    overflow: hidden;
-  }
-  .sidebar-panel.collapsed {
-    flex-basis: 0 !important;
-    max-width: 100% !important;
-    max-height: 0;
-    border-top: none;
-    opacity: 0;
-  }
-  .sidebar-expand-btn {
-    position: absolute;
-    left: 50%;
-    top: auto;
-    bottom: 0;
-    transform: translateX(-50%);
-    border-radius: 5px 5px 0 0;
-    border: 1px solid var(--border);
-    border-bottom: none;
-  }
-  .timer-area { padding: 20px 16px; }
-  .current-session-title { font-size: 18px; }
-  .timer-ring-container { width: 150px; height: 150px; }
-  .timer-ring-svg { width: 150px; height: 150px; }
-  .timer-digits { font-size: 32px; }
+  .timer-area { padding: 16px 12px; }
   .keyboard-hint { display: none; }
 }
 </style>
@@ -1026,27 +1000,6 @@ input { font-family: inherit; color: inherit; }
 
   <!-- MAIN -->
   <div class="main">
-    <!-- Sidebar Panel -->
-    <aside class="sidebar-panel" id="sidebarPanel">
-      <div class="sidebar-header">
-        <div class="sidebar-name-row">
-          <div class="sidebar-seq-name" id="sidebarSeqName"></div>
-          <button class="sidebar-btn" id="panelCollapseBtn" title="Collapse panel">&#8249;</button>
-        </div>
-        <div class="sidebar-toolbar">
-          <button class="sidebar-btn" id="panelEditBtn" title="Edit sequence (E)">&#9998;</button>
-          <button class="sidebar-btn" id="panelSaveBtn" title="Save sequence">&#128190;</button>
-          <button class="sidebar-btn" id="panelSaveAsBtn" title="Save as new sequence">&#128203;</button>
-          <button class="sidebar-btn" id="panelNewBtn" title="New sequence">&#43;</button>
-          <button class="sidebar-btn" id="panelMenuBtn" title="Load saved sequence">&#9776;</button>
-        </div>
-      </div>
-      <div class="sidebar-sessions" id="sidebarSessions"></div>
-    </aside>
-
-    <!-- Expand button (visible when panel collapsed) -->
-    <button class="sidebar-expand-btn" id="sidebarExpandBtn">&#8250;</button>
-
     <!-- Timer Area -->
     <div class="timer-area" id="timerArea">
         <div class="current-session-title" id="currentTitle">Focus Block 1</div>
@@ -1085,6 +1038,27 @@ input { font-family: inherit; color: inherit; }
         <button class="modal-btn primary" id="restartBtn" style="margin-top:12px">Start Over</button>
       </div>
     </div><!-- /.timer-area -->
+
+    <!-- Expand button (visible when panel collapsed) -->
+    <button class="sidebar-expand-btn" id="sidebarExpandBtn">⏫</button>
+
+    <!-- Bottom Panel (Sessions/Sequence) -->
+    <aside class="sidebar-panel" id="sidebarPanel">
+      <div class="sidebar-header">
+        <div class="sidebar-name-row">
+          <div class="sidebar-seq-name" id="sidebarSeqName"></div>
+        </div>
+        <div class="sidebar-toolbar">
+          <button class="sidebar-btn" id="panelEditBtn" title="Edit sequence (E)">&#9998;</button>
+          <button class="sidebar-btn" id="panelSaveBtn" title="Save sequence">&#128190;</button>
+          <button class="sidebar-btn" id="panelSaveAsBtn" title="Save as new sequence">&#128203;</button>
+          <button class="sidebar-btn" id="panelNewBtn" title="New sequence">&#43;</button>
+          <button class="sidebar-btn" id="panelMenuBtn" title="Load saved sequence">&#9776;</button>
+        </div>
+        <button class="sidebar-btn" id="panelCollapseBtn" title="Collapse panel">⏬</button>
+      </div>
+      <div class="sidebar-sessions" id="sidebarSessions"></div>
+    </aside>
   </div><!-- /.main -->
 </div><!-- /.app -->
 
@@ -1455,7 +1429,8 @@ function escHtml(str) {
 function updatePanelCollapse() {
   sidebarPanel.classList.toggle('collapsed', state.panelCollapsed);
   sidebarExpandBtn.classList.toggle('visible', state.panelCollapsed);
-  panelCollapseBtn.innerHTML = state.panelCollapsed ? '&#8250;' : '&#8249;';
+  panelCollapseBtn.textContent = state.panelCollapsed ? '⏫' : '⏬';
+  sidebarExpandBtn.textContent = '⏫';
 }
 
 panelCollapseBtn.addEventListener('click', () => {
