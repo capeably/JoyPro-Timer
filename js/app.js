@@ -63,8 +63,7 @@ const popoutBtn = $('popoutBtn');
    THEME
    ═══════════════════════════════════════════════════ */
 function applyTheme() {
-  document.documentElement.setAttribute('data-theme', state.theme);
-  themeToggle.innerHTML = state.theme === 'dark' ? '&#9788;' : '&#9789;';
+  applyFullTheme(state.theme);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -192,11 +191,10 @@ function loadSequence(index) {
    EVENT LISTENERS
    ═══════════════════════════════════════════════════ */
 function setupEventListeners() {
-  // Theme
-  themeToggle.addEventListener('click', () => {
-    state.theme = state.theme === 'dark' ? 'light' : 'dark';
-    applyTheme();
-    saveState();
+  // Theme picker
+  themeToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleThemePicker();
   });
 
   // Mute

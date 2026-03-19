@@ -22,6 +22,8 @@ input { font-family: inherit; color: inherit; }
   display: flex;
   flex-direction: column;
   background: var(--bg);
+  position: relative;
+  z-index: 1;
 }
 
 /* ═══════════════════════════════════════════════════

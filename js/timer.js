@@ -45,6 +45,7 @@ function tick() {
 function onSessionComplete() {
   pauseTimer();
   playChime();
+  triggerShootingStar();
 
   const seq = getCurrentSequence();
   if (!seq) return;
@@ -55,14 +56,9 @@ function onSessionComplete() {
     return;
   }
 
-  const currentSession = seq.sessions[state.currentSessionIndex];
-  const nextSession = seq.sessions[nextIndex];
-
-  if (currentSession.autoAdvance) {
-    showTransitionOverlay(nextSession.title, nextIndex, true);
-  } else {
-    showTransitionOverlay(nextSession.title, nextIndex, false);
-  }
+  // Auto-advance directly to the next session
+  advanceToSession(nextIndex);
+  startTimer();
 }
 
 function advanceToSession(index) {
