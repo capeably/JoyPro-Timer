@@ -2,35 +2,64 @@
    CONSTANTS
    ═══════════════════════════════════════════════════ */
 const STORAGE_STATE = 'joypro_state';
-const STORAGE_SEQUENCES = 'joypro_sequences';
+const STORAGE_SESSIONS = 'joypro_sessions';
 const STORAGE_SOUNDS = 'joypro_custom_sounds';
 const AUTO_ADVANCE_DELAY = 3; // seconds
 
-const DEFAULT_SEQUENCE = {
-  name: "JoyPro Coworking Session",
-  sessions: [
-    { title: "Intention Setting \u{1F9D8}\u200D\u2642\uFE0F", durationMinutes: 3, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-    { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-    { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-    { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-    { title: "\u{1F64F} Closing", durationMinutes: 2, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: false }
-  ]
-};
+const DEFAULT_SESSIONS = [
+  {
+    name: "60m JoyPro Coworking Session",
+    segments: [
+      { title: "Intention Setting \u{1F9D8}\u200D\u2642\uFE0F", durationMinutes: 3, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u{1F64F} Closing", durationMinutes: 2, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: false }
+    ]
+  },
+  {
+    name: "90m JoyPro Coworking Session",
+    segments: [
+      { title: "Intention Setting \u{1F9D8}\u200D\u2642\uFE0F", durationMinutes: 3, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u{1F64F} Closing", durationMinutes: 2, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: false }
+    ]
+  },
+  {
+    name: "120m JoyPro Coworking Session",
+    segments: [
+      { title: "Intention Setting \u{1F9D8}\u200D\u2642\uFE0F", durationMinutes: 3, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "\u{1F64F} Closing", durationMinutes: 2, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: false }
+    ]
+  }
+];
 
 /* ═══════════════════════════════════════════════════
    STATE
    ═══════════════════════════════════════════════════ */
 let state = {
-  currentSequenceName: DEFAULT_SEQUENCE.name,
-  currentSessionIndex: 0,
+  currentSessionName: DEFAULT_SESSIONS[0].name,
+  currentSegmentIndex: 0,
   timerSeconds: 180,
   timerTotal: 180,
   globalMute: false,
   theme: "light",
-  panelCollapsed: false
+  panelCollapsed: false,
+  panelHeight: null
 };
 
-let sequences = [JSON.parse(JSON.stringify(DEFAULT_SEQUENCE))];
+let sessions = JSON.parse(JSON.stringify(DEFAULT_SESSIONS));
 let customSounds = {};
 
 let running = false;
@@ -44,13 +73,13 @@ let currentEditSoundIndex = -1;
 
 // Dirty tracking
 let savedSnapshot = null;
-let isNewSequenceMode = false;
+let isNewSessionMode = false;
 
 /* ═══════════════════════════════════════════════════
    HELPERS
    ═══════════════════════════════════════════════════ */
-function getCurrentSequence() {
-  return sequences.find(s => s.name === state.currentSequenceName) || sequences[0];
+function getCurrentSession() {
+  return sessions.find(s => s.name === state.currentSessionName) || sessions[0];
 }
 
 function formatTime(secs) {
@@ -59,12 +88,12 @@ function formatTime(secs) {
   return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 }
 
-function sessionTotalSeconds(session) {
-  return (session.durationMinutes || 0) * 60 + (session.durationSeconds || 0);
+function segmentTotalSeconds(segment) {
+  return (segment.durationMinutes || 0) * 60 + (segment.durationSeconds || 0);
 }
 
-function sequenceTotalMinutes(seq) {
-  return seq.sessions.reduce((acc, s) => acc + sessionTotalSeconds(s), 0) / 60;
+function sessionTotalMinutes(sess) {
+  return sess.segments.reduce((acc, s) => acc + segmentTotalSeconds(s), 0) / 60;
 }
 
 function escHtml(str) {
@@ -80,8 +109,8 @@ function saveState() {
   try { localStorage.setItem(STORAGE_STATE, JSON.stringify(state)); } catch(e) {}
 }
 
-function saveSequences() {
-  try { localStorage.setItem(STORAGE_SEQUENCES, JSON.stringify(sequences)); } catch(e) {}
+function saveSessions() {
+  try { localStorage.setItem(STORAGE_SESSIONS, JSON.stringify(sessions)); } catch(e) {}
 }
 
 function saveSounds() {
@@ -92,13 +121,36 @@ function saveSounds() {
 function loadAll() {
   try {
     const s = localStorage.getItem(STORAGE_STATE);
-    if (s) state = { ...state, ...JSON.parse(s) };
-    const sq = localStorage.getItem(STORAGE_SEQUENCES);
-    if (sq) sequences = JSON.parse(sq);
+    if (s) {
+      const parsed = JSON.parse(s);
+      // Migrate old state property names
+      if (parsed.currentSequenceName && !parsed.currentSessionName) {
+        parsed.currentSessionName = parsed.currentSequenceName;
+        delete parsed.currentSequenceName;
+      }
+      if ('currentSessionIndex' in parsed && !('currentSegmentIndex' in parsed)) {
+        parsed.currentSegmentIndex = parsed.currentSessionIndex;
+        delete parsed.currentSessionIndex;
+      }
+      state = { ...state, ...parsed };
+    }
+    // Try new key first, fall back to old key for migration
+    const sess = localStorage.getItem(STORAGE_SESSIONS) || localStorage.getItem('joypro_sequences');
+    if (sess) {
+      const parsed = JSON.parse(sess);
+      // Migrate old .sessions property to .segments
+      sessions = parsed.map(item => {
+        if (item.sessions && !item.segments) {
+          item.segments = item.sessions;
+          delete item.sessions;
+        }
+        return item;
+      });
+    }
     const snd = localStorage.getItem(STORAGE_SOUNDS);
     if (snd) customSounds = JSON.parse(snd);
   } catch(e) {}
-  if (!sequences.length) sequences = [JSON.parse(JSON.stringify(DEFAULT_SEQUENCE))];
+  if (!sessions.length) sessions = JSON.parse(JSON.stringify(DEFAULT_SESSIONS));
 }
 
 function markDirty() {
@@ -110,9 +162,9 @@ function markDirty() {
    DIRTY TRACKING (snapshot comparison)
    ═══════════════════════════════════════════════════ */
 function takeSnapshot() {
-  const seq = getCurrentSequence();
-  if (seq) {
-    savedSnapshot = JSON.stringify({ name: seq.name, sessions: seq.sessions });
+  const sess = getCurrentSession();
+  if (sess) {
+    savedSnapshot = JSON.stringify({ name: sess.name, segments: sess.segments });
   } else {
     savedSnapshot = null;
   }
@@ -120,8 +172,8 @@ function takeSnapshot() {
 
 function hasUnsavedChanges() {
   if (!savedSnapshot) return false;
-  const seq = getCurrentSequence();
-  if (!seq) return false;
-  const current = JSON.stringify({ name: seq.name, sessions: seq.sessions });
+  const sess = getCurrentSession();
+  if (!sess) return false;
+  const current = JSON.stringify({ name: sess.name, segments: sess.segments });
   return current !== savedSnapshot;
 }

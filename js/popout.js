@@ -32,7 +32,7 @@ body {
   padding: 8px 16px; user-select: none;
   transition: background 0.3s, color 0.3s;
 }
-.popout-session {
+.popout-segment {
   font-family: 'Abhaya Libre', serif; font-weight: 600;
   font-size: clamp(14px, min(7vw, 14vh), 80px);
   text-align: center; margin-bottom: 0.5vh;
@@ -63,9 +63,9 @@ body {
 </style>
 </head>
 <body>
-<div class="popout-session">
+<div class="popout-segment">
   <span class="popout-status" id="popoutStatus"></span>
-  <span id="popoutSession">Loading...</span>
+  <span id="popoutSegment">Loading...</span>
 </div>
 <div class="popout-time" id="popoutTime">--:--</div>
 </body>
@@ -107,10 +107,10 @@ function syncPopout() {
   if (!popoutWindow || popoutWindow.closed) { popoutWindow = null; return; }
   try {
     const doc = popoutWindow.document;
-    const sessionEl = doc.getElementById('popoutSession');
+    const segmentEl = doc.getElementById('popoutSegment');
     const timeEl = doc.getElementById('popoutTime');
     const statusEl = doc.getElementById('popoutStatus');
-    if (sessionEl) sessionEl.textContent = currentTitle.textContent;
+    if (segmentEl) segmentEl.textContent = currentTitle.textContent;
     if (timeEl) timeEl.textContent = formatTime(state.timerSeconds);
     if (statusEl) {
       statusEl.className = 'popout-status' + (running ? ' playing' : (state.timerSeconds < state.timerTotal ? ' paused' : ''));

@@ -3,8 +3,8 @@
    ═══════════════════════════════════════════════════ */
 const $ = id => document.getElementById(id);
 const sidebarPanel = $('sidebarPanel');
-const sidebarSessions = $('sidebarSessions');
-const sidebarSeqName = $('sidebarSeqName');
+const sidebarSegments = $('sidebarSegments');
+const sidebarSessionName = $('sidebarSessionName');
 const sidebarExpandBtn = $('sidebarExpandBtn');
 const timerDigits = $('timerDigits');
 const progressFill = $('progressFill');
@@ -33,8 +33,8 @@ const editorModal = $('editorModal');
 const editorModalTitle = $('editorModalTitle');
 const editorClose = $('editorClose');
 const editorBody = $('editorBody');
-const editorSeqName = $('editorSeqName');
-const editorSessions = $('editorSessions');
+const editorSessionName = $('editorSessionName');
+const editorSegments = $('editorSegments');
 const editorAdd = $('editorAdd');
 const editorCancel = $('editorCancel');
 const editorSave = $('editorSave');
@@ -58,6 +58,10 @@ const namePromptOk = $('namePromptOk');
 const namePromptCancel = $('namePromptCancel');
 const soundFileInput = $('soundFileInput');
 const popoutBtn = $('popoutBtn');
+const savedImportBtn = $('savedImportBtn');
+const savedExportBtn = $('savedExportBtn');
+const importFileInput = $('importFileInput');
+const sidebarPanelInner = document.querySelector('.sidebar-panel-inner');
 
 /* ═══════════════════════════════════════════════════
    THEME
@@ -67,7 +71,7 @@ function applyTheme() {
 }
 
 /* ═══════════════════════════════════════════════════
-   SAVED SEQUENCES MODAL
+   SAVED SESSIONS MODAL
    ═══════════════════════════════════════════════════ */
 function openSavedModal() {
   renderSavedList();
@@ -79,35 +83,35 @@ function closeSavedModal() {
 }
 
 function renderSavedList() {
-  if (!sequences.length) {
-    savedBody.innerHTML = '<div class="empty-state"><div class="empty-state-text">No saved sequences</div></div>';
+  if (!sessions.length) {
+    savedBody.innerHTML = '<div class="empty-state"><div class="empty-state-text">No saved sessions</div></div>';
     return;
   }
 
-  savedBody.innerHTML = sequences.map((seq, i) => {
-    const totalMins = Math.round(sequenceTotalMinutes(seq));
-    const sessCount = seq.sessions.length;
-    const isCurrent = seq.name === state.currentSequenceName;
-    return `<div class="saved-seq-item" data-index="${i}">
-      <div class="saved-seq-info">
-        <div class="saved-seq-name">${escHtml(seq.name)}${isCurrent ? ' <span style="font-size:11px;color:var(--text-muted)">(active)</span>' : ''}</div>
-        <div class="saved-seq-meta">${sessCount} session${sessCount !== 1 ? 's' : ''} &middot; ${totalMins} min</div>
+  savedBody.innerHTML = sessions.map((sess, i) => {
+    const totalMins = Math.round(sessionTotalMinutes(sess));
+    const segCount = sess.segments.length;
+    const isCurrent = sess.name === state.currentSessionName;
+    return `<div class="saved-sess-item" data-index="${i}">
+      <div class="saved-sess-info">
+        <div class="saved-sess-name">${escHtml(sess.name)}${isCurrent ? ' <span style="font-size:11px;color:var(--text-muted)">(active)</span>' : ''}</div>
+        <div class="saved-sess-meta">${segCount} segment${segCount !== 1 ? 's' : ''} &middot; ${totalMins} min</div>
       </div>
-      <div class="saved-seq-actions">
-        <button class="saved-seq-action-btn" data-action="copy" data-index="${i}" title="Duplicate">&#128203;</button>
-        <button class="saved-seq-action-btn" data-action="edit" data-index="${i}" title="Edit">&#9998;</button>
-        <button class="saved-seq-action-btn delete-btn" data-action="delete" data-index="${i}" title="Delete">&times;</button>
+      <div class="saved-sess-actions">
+        <button class="saved-sess-action-btn" data-action="copy" data-index="${i}" title="Duplicate">&#128203;</button>
+        <button class="saved-sess-action-btn" data-action="edit" data-index="${i}" title="Edit">&#9998;</button>
+        <button class="saved-sess-action-btn delete-btn" data-action="delete" data-index="${i}" title="Delete">&times;</button>
       </div>
     </div>`;
   }).join('');
 
   // Click row to load
-  savedBody.querySelectorAll('.saved-seq-item').forEach(el => {
+  savedBody.querySelectorAll('.saved-sess-item').forEach(el => {
     el.addEventListener('click', e => {
       if (e.target.closest('[data-action]')) return;
       const idx = parseInt(el.dataset.index);
       closeSavedModal();
-      guardUnsavedChanges(() => { loadSequence(idx); });
+      guardUnsavedChanges(() => { loadSession(idx); });
     });
   });
 
@@ -116,17 +120,17 @@ function renderSavedList() {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       const idx = parseInt(btn.dataset.index);
-      const orig = sequences[idx];
+      const orig = sessions[idx];
       const copy = JSON.parse(JSON.stringify(orig));
       let copyName = orig.name + ' (copy)';
       let counter = 2;
-      while (sequences.some(s => s.name === copyName)) {
+      while (sessions.some(s => s.name === copyName)) {
         copyName = orig.name + ` (copy ${counter})`;
         counter++;
       }
       copy.name = copyName;
-      sequences.push(copy);
-      saveSequences();
+      sessions.push(copy);
+      saveSessions();
       renderSavedList();
       showToast(`Duplicated "${orig.name}"`);
     });
@@ -137,12 +141,12 @@ function renderSavedList() {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       const idx = parseInt(btn.dataset.index);
-      const targetName = sequences[idx].name;
+      const targetName = sessions[idx].name;
       closeSavedModal();
-      if (targetName === state.currentSequenceName) {
+      if (targetName === state.currentSessionName) {
         openEditor();
       } else {
-        guardUnsavedChanges(() => { loadSequence(idx); openEditor(); });
+        guardUnsavedChanges(() => { loadSession(idx); openEditor(); });
       }
     });
   });
@@ -152,31 +156,31 @@ function renderSavedList() {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       const idx = parseInt(btn.dataset.index);
-      if (sequences.length <= 1) {
-        showToast('Cannot delete last sequence');
+      if (sessions.length <= 1) {
+        showToast('Cannot delete last session');
         return;
       }
-      showConfirm(`Delete "${sequences[idx].name}"?`, () => {
-        const wasActive = sequences[idx].name === state.currentSequenceName;
-        sequences.splice(idx, 1);
-        saveSequences();
-        if (wasActive) loadSequence(0);
+      showConfirm(`Delete "${sessions[idx].name}"?`, () => {
+        const wasActive = sessions[idx].name === state.currentSessionName;
+        sessions.splice(idx, 1);
+        saveSessions();
+        if (wasActive) loadSession(0);
         renderSavedList();
       });
     });
   });
 }
 
-function loadSequence(index) {
-  if (index < 0 || index >= sequences.length) return;
+function loadSession(index) {
+  if (index < 0 || index >= sessions.length) return;
   pauseTimer();
   hideOverlays();
 
-  const seq = sequences[index];
-  state.currentSequenceName = seq.name;
-  state.currentSessionIndex = 0;
-  if (seq.sessions.length) {
-    state.timerTotal = sessionTotalSeconds(seq.sessions[0]);
+  const sess = sessions[index];
+  state.currentSessionName = sess.name;
+  state.currentSegmentIndex = 0;
+  if (sess.segments.length) {
+    state.timerTotal = segmentTotalSeconds(sess.segments[0]);
     state.timerSeconds = state.timerTotal;
   }
 
@@ -184,7 +188,61 @@ function loadSequence(index) {
   takeSnapshot();
   renderSidebar();
   renderTimer();
-  showToast(`Loaded "${seq.name}"`);
+  showToast(`Loaded "${sess.name}"`);
+}
+
+/* ═══════════════════════════════════════════════════
+   IMPORT / EXPORT SESSIONS
+   ═══════════════════════════════════════════════════ */
+function exportSessions() {
+  const data = JSON.stringify(sessions, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'joypro-sessions.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Sessions exported');
+}
+
+function importSessions(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!Array.isArray(data)) {
+        showToast('Invalid file: expected an array of sessions');
+        return;
+      }
+      let added = 0;
+      let skipped = 0;
+      for (const item of data) {
+        if (!item.name || !Array.isArray(item.segments)) {
+          skipped++;
+          continue;
+        }
+        if (sessions.some(s => s.name === item.name)) {
+          skipped++;
+          continue;
+        }
+        sessions.push(JSON.parse(JSON.stringify(item)));
+        added++;
+      }
+      if (added > 0) {
+        saveSessions();
+        renderSavedList();
+      }
+      let msg = `Imported ${added} session${added !== 1 ? 's' : ''}`;
+      if (skipped > 0) msg += ` (${skipped} skipped)`;
+      showToast(msg);
+    } catch (e) {
+      showToast('Failed to parse file');
+    }
+  };
+  reader.readAsText(file);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -209,12 +267,59 @@ function setupEventListeners() {
   // Popout
   popoutBtn.addEventListener('click', openPopout);
 
-  // Panel collapse/expand
-  panelCollapseBtn.addEventListener('click', () => {
-    state.panelCollapsed = !state.panelCollapsed;
-    updatePanelCollapse();
-    saveState();
-  });
+  // Panel collapse/expand + drag-to-resize
+  (function setupPanelDragResize() {
+    let startY = 0;
+    let startHeight = 0;
+    let isDragging = false;
+
+    panelCollapseBtn.addEventListener('mousedown', e => {
+      if (state.panelCollapsed) return; // collapsed → just click
+      e.preventDefault();
+      startY = e.clientY;
+      startHeight = sidebarPanelInner.offsetHeight;
+      isDragging = false;
+
+      const onMouseMove = ev => {
+        const deltaY = startY - ev.clientY;
+        if (!isDragging && Math.abs(deltaY) > 5) {
+          isDragging = true;
+          sidebarPanelInner.style.transition = 'none';
+        }
+        if (isDragging) {
+          const newHeight = Math.min(400, Math.max(60, startHeight + deltaY));
+          sidebarPanelInner.style.maxHeight = newHeight + 'px';
+        }
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        sidebarPanelInner.style.transition = '';
+        if (isDragging) {
+          state.panelHeight = parseInt(sidebarPanelInner.style.maxHeight);
+          saveState();
+        } else {
+          // It was a click — toggle collapse
+          state.panelCollapsed = !state.panelCollapsed;
+          updatePanelCollapse();
+          saveState();
+        }
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+
+    // Fallback: click on collapse btn when panel is already collapsed
+    panelCollapseBtn.addEventListener('click', () => {
+      if (state.panelCollapsed) {
+        state.panelCollapsed = false;
+        updatePanelCollapse();
+        saveState();
+      }
+    });
+  })();
 
   sidebarExpandBtn.addEventListener('click', () => {
     state.panelCollapsed = false;
@@ -229,33 +334,33 @@ function setupEventListeners() {
   });
 
   skipBtn.addEventListener('click', () => {
-    const seq = getCurrentSequence();
-    if (!seq) return;
-    const next = state.currentSessionIndex + 1;
-    if (next >= seq.sessions.length) {
-      showToast('Already on last session');
+    const sess = getCurrentSession();
+    if (!sess) return;
+    const next = state.currentSegmentIndex + 1;
+    if (next >= sess.segments.length) {
+      showToast('Already on last segment');
       return;
     }
     if (running || state.timerSeconds < state.timerTotal) {
-      showConfirm('Skip to next session?', () => {
-        advanceToSession(next);
+      showConfirm('Skip to next segment?', () => {
+        advanceToSegment(next);
         startTimer();
       });
     } else {
-      advanceToSession(next);
+      advanceToSegment(next);
       startTimer();
     }
   });
 
   resetBtn.addEventListener('click', () => {
-    if (running || state.currentSessionIndex > 0 || state.timerSeconds < state.timerTotal) {
-      showConfirm('Reset entire sequence?', () => { resetSequence(); });
+    if (running || state.currentSegmentIndex > 0 || state.timerSeconds < state.timerTotal) {
+      showConfirm('Reset entire session?', () => { resetSession(); });
     } else {
-      resetSequence();
+      resetSession();
     }
   });
 
-  restartBtn.addEventListener('click', () => { resetSequence(); });
+  restartBtn.addEventListener('click', () => { resetSession(); });
 
   // Confirm dialog
   confirmYes.addEventListener('click', () => {
@@ -272,7 +377,7 @@ function setupEventListeners() {
   // Save prompt dialog
   savePromptSave.addEventListener('click', () => {
     savePromptOverlay.classList.remove('open');
-    doSaveCurrentSequence();
+    doSaveCurrentSession();
     if (savePromptCallbacks) savePromptCallbacks();
     savePromptCallbacks = null;
   });
@@ -281,15 +386,15 @@ function setupEventListeners() {
     savePromptOverlay.classList.remove('open');
     const cb = savePromptCallbacks;
     savePromptCallbacks = null;
-    showNamePrompt(state.currentSequenceName + ' (copy)', (newName) => {
-      doSaveAsSequence(newName);
+    showNamePrompt(state.currentSessionName + ' (copy)', (newName) => {
+      doSaveAsSession(newName);
       if (cb) cb();
     });
   });
 
   savePromptDiscard.addEventListener('click', () => {
     savePromptOverlay.classList.remove('open');
-    revertCurrentSequence();
+    revertCurrentSession();
     if (savePromptCallbacks) savePromptCallbacks();
     savePromptCallbacks = null;
   });
@@ -303,8 +408,8 @@ function setupEventListeners() {
   namePromptOk.addEventListener('click', () => {
     const name = namePromptInput.value.trim();
     if (!name) { showToast('Please enter a name'); return; }
-    if (sequences.some(s => s.name === name)) {
-      showToast('A sequence with that name already exists');
+    if (sessions.some(s => s.name === name)) {
+      showToast('A session with that name already exists');
       return;
     }
     namePromptOverlay.classList.remove('open');
@@ -324,9 +429,9 @@ function setupEventListeners() {
 
   // Panel toolbar
   panelEditBtn.addEventListener('click', openEditor);
-  panelSaveBtn.addEventListener('click', () => { doSaveCurrentSequence(); });
+  panelSaveBtn.addEventListener('click', () => { doSaveCurrentSession(); });
   panelSaveAsBtn.addEventListener('click', () => {
-    showNamePrompt(state.currentSequenceName + ' (copy)', (newName) => { doSaveAsSequence(newName); });
+    showNamePrompt(state.currentSessionName + ' (copy)', (newName) => { doSaveAsSession(newName); });
   });
   panelNewBtn.addEventListener('click', () => { guardUnsavedChanges(() => { openEditorNew(); }); });
   panelMenuBtn.addEventListener('click', () => { openSavedModal(); });
@@ -334,60 +439,60 @@ function setupEventListeners() {
   // Editor
   editorAdd.addEventListener('click', () => {
     editorData.push({
-      title: "New Session",
+      title: "New Segment",
       durationMinutes: 25,
       durationSeconds: 0,
       soundEnabled: true,
       soundKey: "default",
       autoAdvance: true
     });
-    renderEditorSessions();
-    editorSessions.parentElement.scrollTop = editorSessions.parentElement.scrollHeight;
+    renderEditorSegments();
+    editorSegments.parentElement.scrollTop = editorSegments.parentElement.scrollHeight;
   });
 
   editorSave.addEventListener('click', () => {
-    const name = editorSeqName.value.trim() || "Untitled";
+    const name = editorSessionName.value.trim() || "Untitled";
     for (const s of editorData) {
       const total = (s.durationMinutes || 0) * 60 + (s.durationSeconds || 0);
-      if (total < 1) { showToast('Each session needs at least 1 second'); return; }
+      if (total < 1) { showToast('Each segment needs at least 1 second'); return; }
     }
 
-    if (isNewSequenceMode) {
-      if (sequences.some(s => s.name === name)) {
-        showToast('A sequence with that name already exists');
+    if (isNewSessionMode) {
+      if (sessions.some(s => s.name === name)) {
+        showToast('A session with that name already exists');
         return;
       }
-      const newSeq = { name: name, sessions: editorData.map(s => ({ ...s })) };
-      sequences.push(newSeq);
-      state.currentSequenceName = name;
-      state.currentSessionIndex = 0;
-      if (newSeq.sessions.length) {
-        state.timerTotal = sessionTotalSeconds(newSeq.sessions[0]);
+      const newSess = { name: name, segments: editorData.map(s => ({ ...s })) };
+      sessions.push(newSess);
+      state.currentSessionName = name;
+      state.currentSegmentIndex = 0;
+      if (newSess.segments.length) {
+        state.timerTotal = segmentTotalSeconds(newSess.segments[0]);
         state.timerSeconds = state.timerTotal;
       }
       running = false;
       clearInterval(timerInterval);
-      saveSequences(); saveState(); takeSnapshot();
+      saveSessions(); saveState(); takeSnapshot();
       renderSidebar(); renderTimer(); hideOverlays(); closeEditor();
-      showToast('New sequence created');
+      showToast('New session created');
     } else {
-      const seq = getCurrentSequence();
-      const oldName = seq.name;
-      seq.name = name;
-      seq.sessions = editorData.map(s => ({ ...s }));
-      state.currentSequenceName = name;
-      const idx = sequences.findIndex(s => s === seq);
-      if (idx >= 0) sequences[idx] = seq;
-      state.currentSessionIndex = 0;
-      if (seq.sessions.length) {
-        state.timerTotal = sessionTotalSeconds(seq.sessions[0]);
+      const sess = getCurrentSession();
+      const oldName = sess.name;
+      sess.name = name;
+      sess.segments = editorData.map(s => ({ ...s }));
+      state.currentSessionName = name;
+      const idx = sessions.findIndex(s => s === sess);
+      if (idx >= 0) sessions[idx] = sess;
+      state.currentSegmentIndex = 0;
+      if (sess.segments.length) {
+        state.timerTotal = segmentTotalSeconds(sess.segments[0]);
         state.timerSeconds = state.timerTotal;
       }
       running = false;
       clearInterval(timerInterval);
-      saveSequences(); saveState(); takeSnapshot();
+      saveSessions(); saveState(); takeSnapshot();
       renderSidebar(); renderTimer(); hideOverlays(); closeEditor();
-      showToast('Sequence saved');
+      showToast('Session saved');
     }
   });
 
@@ -405,13 +510,22 @@ function setupEventListeners() {
     }
     const reader = new FileReader();
     reader.onload = () => {
-      const key = currentEditSoundIndex + '_' + state.currentSequenceName;
+      const key = currentEditSoundIndex + '_' + state.currentSessionName;
       customSounds[key] = reader.result;
       saveSounds();
       showToast('Custom sound set');
     };
     reader.readAsDataURL(file);
     soundFileInput.value = '';
+  });
+
+  // Import / Export
+  savedExportBtn.addEventListener('click', () => { exportSessions(); });
+  savedImportBtn.addEventListener('click', () => { importFileInput.click(); });
+  importFileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) importSessions(file);
+    importFileInput.value = '';
   });
 
   // Saved modal close
@@ -464,18 +578,18 @@ function init() {
   updateMuteBtn();
   updatePanelCollapse();
 
-  const seq = getCurrentSequence();
-  if (!seq) {
-    state.currentSequenceName = sequences[0].name;
+  const sess = getCurrentSession();
+  if (!sess) {
+    state.currentSessionName = sessions[0].name;
   }
-  const currentSeq = getCurrentSequence();
-  if (state.currentSessionIndex >= currentSeq.sessions.length) {
-    state.currentSessionIndex = 0;
+  const currentSess = getCurrentSession();
+  if (state.currentSegmentIndex >= currentSess.segments.length) {
+    state.currentSegmentIndex = 0;
   }
 
-  const currentSession = currentSeq.sessions[state.currentSessionIndex];
-  if (currentSession) {
-    const total = sessionTotalSeconds(currentSession);
+  const currentSegment = currentSess.segments[state.currentSegmentIndex];
+  if (currentSegment) {
+    const total = segmentTotalSeconds(currentSegment);
     if (state.timerTotal !== total) {
       state.timerTotal = total;
       state.timerSeconds = total;

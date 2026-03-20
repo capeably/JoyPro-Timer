@@ -4,8 +4,8 @@
 function startTimer() {
   if (running) return;
   ensureAudioCtx();
-  const seq = getCurrentSequence();
-  if (!seq || !seq.sessions.length) return;
+  const sess = getCurrentSession();
+  if (!sess || !sess.segments.length) return;
 
   running = true;
   timerStartedAt = Date.now();
@@ -38,39 +38,39 @@ function tick() {
   markDirty();
 
   if (remaining <= 0) {
-    onSessionComplete();
+    onSegmentComplete();
   }
 }
 
-function onSessionComplete() {
+function onSegmentComplete() {
   pauseTimer();
   playChime();
   triggerShootingStar();
 
-  const seq = getCurrentSequence();
-  if (!seq) return;
+  const sess = getCurrentSession();
+  if (!sess) return;
 
-  const nextIndex = state.currentSessionIndex + 1;
-  if (nextIndex >= seq.sessions.length) {
+  const nextIndex = state.currentSegmentIndex + 1;
+  if (nextIndex >= sess.segments.length) {
     showCompleteOverlay();
     return;
   }
 
-  // Auto-advance directly to the next session
-  advanceToSession(nextIndex);
+  // Auto-advance directly to the next segment
+  advanceToSegment(nextIndex);
   startTimer();
 }
 
-function advanceToSession(index) {
-  const seq = getCurrentSequence();
-  if (!seq || index < 0 || index >= seq.sessions.length) return;
+function advanceToSegment(index) {
+  const sess = getCurrentSession();
+  if (!sess || index < 0 || index >= sess.segments.length) return;
 
   pauseTimer();
   hideOverlays();
 
-  state.currentSessionIndex = index;
-  const s = seq.sessions[index];
-  state.timerTotal = sessionTotalSeconds(s);
+  state.currentSegmentIndex = index;
+  const s = sess.segments[index];
+  state.timerTotal = segmentTotalSeconds(s);
   state.timerSeconds = state.timerTotal;
 
   renderSidebar();
@@ -78,8 +78,8 @@ function advanceToSession(index) {
   markDirty();
 }
 
-function resetSequence() {
+function resetSession() {
   pauseTimer();
   hideOverlays();
-  advanceToSession(0);
+  advanceToSegment(0);
 }

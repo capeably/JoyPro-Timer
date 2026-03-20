@@ -4,51 +4,57 @@
 function updatePanelCollapse() {
   sidebarPanel.classList.toggle('collapsed', state.panelCollapsed);
   sidebarExpandBtn.classList.toggle('visible', state.panelCollapsed);
+
+  // Apply saved panel height when expanded
+  const inner = document.querySelector('.sidebar-panel-inner');
+  if (inner && !state.panelCollapsed && state.panelHeight) {
+    inner.style.maxHeight = state.panelHeight + 'px';
+  }
 }
 
 /* ═══════════════════════════════════════════════════
    UI RENDERING
    ═══════════════════════════════════════════════════ */
 function renderSidebarHeader() {
-  const seq = getCurrentSequence();
-  sidebarSeqName.textContent = seq ? seq.name : 'No Sequence';
+  const sess = getCurrentSession();
+  sidebarSessionName.textContent = sess ? sess.name : 'No Session';
 }
 
 function renderSidebar() {
   renderSidebarHeader();
 
-  const seq = getCurrentSequence();
-  if (!seq || !seq.sessions.length) {
-    sidebarSessions.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-state-icon">&#128203;</div><div class="empty-state-text">No sessions yet</div><button class="empty-state-btn" onclick="openEditorNew()">Add Sessions</button></div>';
+  const sess = getCurrentSession();
+  if (!sess || !sess.segments.length) {
+    sidebarSegments.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-state-icon">&#128203;</div><div class="empty-state-text">No segments yet</div><button class="empty-state-btn" onclick="openEditorNew()">Add Segments</button></div>';
     return;
   }
 
-  sidebarSessions.innerHTML = seq.sessions.map((s, i) => {
-    const isActive = i === state.currentSessionIndex;
-    const isCompleted = i < state.currentSessionIndex;
+  sidebarSegments.innerHTML = sess.segments.map((s, i) => {
+    const isActive = i === state.currentSegmentIndex;
+    const isCompleted = i < state.currentSegmentIndex;
     let iconHtml = '';
-    if (isCompleted) iconHtml = '<span class="session-icon completed">&#10003;</span>';
-    else if (isActive && running) iconHtml = '<span class="session-icon playing">&#9654;</span>';
-    else if (isActive) iconHtml = '<span class="session-icon playing">&#9646;&#9646;</span>';
-    else iconHtml = '<span class="session-icon"></span>';
+    if (isCompleted) iconHtml = '<span class="segment-icon completed">&#10003;</span>';
+    else if (isActive && running) iconHtml = '<span class="segment-icon playing">&#9654;</span>';
+    else if (isActive) iconHtml = '<span class="segment-icon playing">&#9646;&#9646;</span>';
+    else iconHtml = '<span class="segment-icon"></span>';
 
-    const dur = sessionTotalSeconds(s);
+    const dur = segmentTotalSeconds(s);
     const durStr = formatTime(dur);
 
-    return `<div class="session-item ${isActive ? 'active' : ''}" data-index="${i}">
-      <span class="session-num">${i + 1}</span>
+    return `<div class="segment-item ${isActive ? 'active' : ''}" data-index="${i}">
+      <span class="segment-num">${i + 1}</span>
       ${iconHtml}
-      <span class="session-title-text">${escHtml(s.title)}</span>
-      <span class="session-duration">${durStr}</span>
+      <span class="segment-title-text">${escHtml(s.title)}</span>
+      <span class="segment-duration">${durStr}</span>
     </div>`;
   }).join('');
 
   // Click to jump
-  sidebarSessions.querySelectorAll('.session-item').forEach(el => {
+  sidebarSegments.querySelectorAll('.segment-item').forEach(el => {
     el.addEventListener('click', () => {
       const idx = parseInt(el.dataset.index);
-      if (idx !== state.currentSessionIndex) {
-        advanceToSession(idx);
+      if (idx !== state.currentSegmentIndex) {
+        advanceToSegment(idx);
       }
     });
   });
@@ -77,9 +83,9 @@ function renderTimer() {
 
   playBtn.innerHTML = running ? '&#9646;&#9646;' : '&#9654;';
 
-  const seq = getCurrentSequence();
-  if (seq && seq.sessions[state.currentSessionIndex]) {
-    currentTitle.textContent = seq.sessions[state.currentSessionIndex].title;
+  const sess = getCurrentSession();
+  if (sess && sess.segments[state.currentSegmentIndex]) {
+    currentTitle.textContent = sess.segments[state.currentSegmentIndex].title;
   }
 
   if (!sizeRafId) {

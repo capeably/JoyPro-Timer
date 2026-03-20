@@ -10,11 +10,11 @@ function playChime() {
   if (state.globalMute) return;
   ensureAudioCtx();
 
-  const seq = getCurrentSequence();
-  const session = seq?.sessions[state.currentSessionIndex];
-  if (session && !session.soundEnabled) return;
+  const sess = getCurrentSession();
+  const segment = sess?.segments[state.currentSegmentIndex];
+  if (segment && !segment.soundEnabled) return;
 
-  const soundKey = state.currentSessionIndex + '_' + state.currentSequenceName;
+  const soundKey = state.currentSegmentIndex + '_' + state.currentSessionName;
   if (customSounds[soundKey]) {
     playCustomSound(customSounds[soundKey]);
     return;

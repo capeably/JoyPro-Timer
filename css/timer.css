@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════
-   BOTTOM PANEL (Sessions/Sequence)
+   BOTTOM PANEL (Segments/Session)
    ═══════════════════════════════════════════════════ */
 .sidebar-panel {
   flex: 0 0 auto;
@@ -73,6 +73,7 @@
 /* Collapse tab — sits above the panel border */
 .panel-collapse-tab {
   top: -18px;
+  cursor: ns-resize;
 }
 
 /* Panel header */
@@ -94,7 +95,7 @@
   min-width: 0;
 }
 
-.sidebar-seq-name {
+.sidebar-session-name {
   font-family: 'Abhaya Libre', serif;
   font-weight: 600;
   font-size: 13px;
@@ -125,14 +126,14 @@
 }
 .sidebar-btn:hover { background: var(--hover-bg); }
 
-/* Session list */
-.sidebar-sessions {
+/* Segment list */
+.sidebar-segments {
   flex: 1;
   overflow-y: auto;
   padding: 4px 0;
 }
 
-.session-item {
+.segment-item {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -142,10 +143,10 @@
   transition: background 0.1s;
   white-space: nowrap;
 }
-.session-item:hover { background: var(--hover-bg); }
-.session-item.active { background: var(--active-bg); font-weight: 500; }
+.segment-item:hover { background: var(--hover-bg); }
+.segment-item.active { background: var(--active-bg); font-weight: 500; }
 
-.session-num {
+.segment-num {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
   color: var(--text-muted);
@@ -154,7 +155,7 @@
   flex-shrink: 0;
 }
 
-.session-icon {
+.segment-icon {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
@@ -164,17 +165,17 @@
   font-size: 11px;
 }
 
-.session-icon.completed { color: var(--completed); }
-.session-icon.playing { color: var(--accent); }
+.segment-icon.completed { color: var(--completed); }
+.segment-icon.playing { color: var(--accent); }
 
-.session-title-text {
+.segment-title-text {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.session-duration {
+.segment-duration {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
   color: var(--text-muted);
@@ -197,7 +198,7 @@
   order: 1;
 }
 
-.current-session-title {
+.current-segment-title {
   font-family: 'Abhaya Libre', serif;
   font-weight: 600;
   margin-bottom: 2px;
@@ -333,7 +334,7 @@
 .transition-btn.skip:hover { background: var(--btn-hover); }
 
 /* ═══════════════════════════════════════════════════
-   SEQUENCE COMPLETE
+   SESSION COMPLETE
    ═══════════════════════════════════════════════════ */
 .complete-overlay {
   position: absolute;

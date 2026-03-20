@@ -1,44 +1,44 @@
 /* ═══════════════════════════════════════════════════
-   SEQUENCE EDITOR
+   SESSION EDITOR
    ═══════════════════════════════════════════════════ */
 let editorData = [];
 
 function openEditor() {
-  isNewSequenceMode = false;
-  editorModalTitle.textContent = 'Edit Sequence';
-  const seq = getCurrentSequence();
-  editorSeqName.value = seq.name;
-  editorData = seq.sessions.map(s => ({ ...s }));
-  renderEditorSessions();
+  isNewSessionMode = false;
+  editorModalTitle.textContent = 'Edit Session';
+  const sess = getCurrentSession();
+  editorSessionName.value = sess.name;
+  editorData = sess.segments.map(s => ({ ...s }));
+  renderEditorSegments();
   editorModal.classList.add('open');
 }
 
 function openEditorNew() {
-  isNewSequenceMode = true;
-  editorModalTitle.textContent = 'New Sequence';
-  editorSeqName.value = 'New Sequence';
+  isNewSessionMode = true;
+  editorModalTitle.textContent = 'New Session';
+  editorSessionName.value = 'New Session';
   editorData = [];
-  renderEditorSessions();
+  renderEditorSegments();
   editorModal.classList.add('open');
 }
 
 function closeEditor() {
   editorModal.classList.remove('open');
-  isNewSequenceMode = false;
+  isNewSessionMode = false;
 }
 
-function renderEditorSessions() {
-  editorSessions.innerHTML = editorData.map((s, i) => `
-    <div class="editor-session" data-index="${i}" draggable="true">
-      <span class="drag-handle">&#9776;</span>
-      <div class="editor-session-fields">
+function renderEditorSegments() {
+  editorSegments.innerHTML = editorData.map((s, i) => `
+    <div class="editor-segment" data-index="${i}">
+      <span class="drag-handle" draggable="true">&#9776;</span>
+      <div class="editor-segment-fields">
         <div class="editor-row">
-          <input type="text" value="${escHtml(s.title)}" data-field="title" placeholder="Session name">
+          <input type="text" value="${escHtml(s.title)}" data-field="title" placeholder="Segment name">
           <input type="number" value="${s.durationMinutes || 0}" data-field="min" min="0" max="999" title="Minutes">
           <span class="editor-time-sep">:</span>
           <input type="number" value="${String(s.durationSeconds || 0).padStart(2,'0')}" data-field="sec" min="0" max="59" title="Seconds">
         </div>
-        <div class="editor-session-options">
+        <div class="editor-segment-options">
           <label><input type="checkbox" data-field="sound" ${s.soundEnabled ? 'checked' : ''}> Sound</label>
           <label><input type="checkbox" data-field="auto" ${s.autoAdvance ? 'checked' : ''}> Auto-advance</label>
           <span class="sound-upload-btn" data-field="upload" data-index="${i}">Custom sound</span>
@@ -49,10 +49,10 @@ function renderEditorSessions() {
   `).join('');
 
   // Input listeners
-  editorSessions.querySelectorAll('input, .sound-upload-btn').forEach(el => {
-    const session = el.closest('.editor-session');
-    if (!session) return;
-    const idx = parseInt(session.dataset.index);
+  editorSegments.querySelectorAll('input, .sound-upload-btn').forEach(el => {
+    const segment = el.closest('.editor-segment');
+    if (!segment) return;
+    const idx = parseInt(segment.dataset.index);
 
     if (el.dataset.field === 'title') {
       el.addEventListener('input', () => { editorData[idx].title = el.value; });
@@ -73,11 +73,11 @@ function renderEditorSessions() {
   });
 
   // Remove buttons
-  editorSessions.querySelectorAll('[data-action="remove"]').forEach(btn => {
+  editorSegments.querySelectorAll('[data-action="remove"]').forEach(btn => {
     btn.addEventListener('click', () => {
       const idx = parseInt(btn.dataset.index);
       editorData.splice(idx, 1);
-      renderEditorSessions();
+      renderEditorSegments();
     });
   });
 
@@ -87,16 +87,24 @@ function renderEditorSessions() {
 
 function setupDragReorder() {
   let dragSrcIdx = null;
-  editorSessions.querySelectorAll('.editor-session').forEach(el => {
-    el.addEventListener('dragstart', e => {
-      dragSrcIdx = parseInt(el.dataset.index);
-      el.style.opacity = '0.4';
+
+  // Only the drag handle initiates the drag
+  editorSegments.querySelectorAll('.drag-handle').forEach(handle => {
+    handle.addEventListener('dragstart', e => {
+      const row = handle.closest('.editor-segment');
+      dragSrcIdx = parseInt(row.dataset.index);
+      row.style.opacity = '0.4';
       e.dataTransfer.effectAllowed = 'move';
     });
-    el.addEventListener('dragend', () => {
-      el.style.opacity = '';
-      editorSessions.querySelectorAll('.editor-session').forEach(x => x.style.borderTop = '');
+    handle.addEventListener('dragend', () => {
+      const row = handle.closest('.editor-segment');
+      row.style.opacity = '';
+      editorSegments.querySelectorAll('.editor-segment').forEach(x => x.style.borderTop = '');
     });
+  });
+
+  // Drop targets are the segment rows
+  editorSegments.querySelectorAll('.editor-segment').forEach(el => {
     el.addEventListener('dragover', e => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
@@ -112,7 +120,7 @@ function setupDragReorder() {
       if (dragSrcIdx !== null && dragSrcIdx !== dropIdx) {
         const [moved] = editorData.splice(dragSrcIdx, 1);
         editorData.splice(dropIdx, 0, moved);
-        renderEditorSessions();
+        renderEditorSegments();
       }
     });
   });

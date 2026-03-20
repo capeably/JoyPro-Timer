@@ -86,7 +86,7 @@
 .modal-btn.danger:hover { opacity: 0.9; }
 
 /* Editor form */
-.editor-sequence-name {
+.editor-session-name {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid var(--border);
@@ -96,9 +96,9 @@
   margin-bottom: 12px;
   outline: none;
 }
-.editor-sequence-name:focus { border-color: var(--accent); }
+.editor-session-name:focus { border-color: var(--accent); }
 
-.editor-session {
+.editor-segment {
   display: flex;
   gap: 8px;
   align-items: center;
@@ -109,16 +109,16 @@
   border: 1px solid var(--border);
 }
 
-.editor-session .drag-handle {
+.editor-segment .drag-handle {
   cursor: grab;
   color: var(--text-muted);
   font-size: 14px;
   flex-shrink: 0;
   user-select: none;
 }
-.editor-session .drag-handle:active { cursor: grabbing; }
+.editor-segment .drag-handle:active { cursor: grabbing; }
 
-.editor-session-fields {
+.editor-segment-fields {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -132,7 +132,7 @@
   align-items: center;
 }
 
-.editor-session input[type="text"] {
+.editor-segment input[type="text"] {
   flex: 1;
   padding: 6px 10px;
   border: 1px solid var(--border);
@@ -142,9 +142,9 @@
   min-width: 0;
   outline: none;
 }
-.editor-session input[type="text"]:focus { border-color: var(--accent); }
+.editor-segment input[type="text"]:focus { border-color: var(--accent); }
 
-.editor-session input[type="number"] {
+.editor-segment input[type="number"] {
   width: 50px;
   padding: 6px 6px;
   border: 1px solid var(--border);
@@ -156,11 +156,11 @@
   outline: none;
   -moz-appearance: textfield;
 }
-.editor-session input[type="number"]::-webkit-inner-spin-button,
-.editor-session input[type="number"]::-webkit-outer-spin-button {
+.editor-segment input[type="number"]::-webkit-inner-spin-button,
+.editor-segment input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
 }
-.editor-session input[type="number"]:focus { border-color: var(--accent); }
+.editor-segment input[type="number"]:focus { border-color: var(--accent); }
 
 .editor-time-sep {
   font-family: 'DM Mono', monospace;
@@ -168,7 +168,7 @@
   color: var(--text-muted);
 }
 
-.editor-session-options {
+.editor-segment-options {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -176,14 +176,14 @@
   color: var(--text-muted);
 }
 
-.editor-session-options label {
+.editor-segment-options label {
   display: flex;
   align-items: center;
   gap: 4px;
   cursor: pointer;
 }
 
-.editor-session-options input[type="checkbox"] {
+.editor-segment-options input[type="checkbox"] {
   accent-color: var(--accent);
 }
 
@@ -220,8 +220,8 @@
 }
 .sound-upload-btn:hover { color: var(--accent); }
 
-/* Saved sequences */
-.saved-seq-item {
+/* Saved sessions */
+.saved-sess-item {
   display: flex;
   align-items: center;
   padding: 10px 12px;
@@ -231,29 +231,29 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.saved-seq-item:hover { background: var(--hover-bg); }
+.saved-sess-item:hover { background: var(--hover-bg); }
 
-.saved-seq-info { flex: 1; min-width: 0; }
-.saved-seq-name {
+.saved-sess-info { flex: 1; min-width: 0; }
+.saved-sess-name {
   font-weight: 500;
   font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.saved-seq-meta {
+.saved-sess-meta {
   font-size: 12px;
   color: var(--text-muted);
   margin-top: 2px;
 }
 
-.saved-seq-actions {
+.saved-sess-actions {
   display: flex;
   gap: 2px;
   flex-shrink: 0;
 }
 
-.saved-seq-action-btn {
+.saved-sess-action-btn {
   width: 28px;
   height: 28px;
   border-radius: 6px;
@@ -263,8 +263,8 @@
   font-size: 13px;
   color: var(--text-muted);
 }
-.saved-seq-action-btn:hover { background: var(--hover-bg); color: var(--accent); }
-.saved-seq-action-btn.delete-btn:hover { background: rgba(217,107,90,0.1); color: var(--danger); }
+.saved-sess-action-btn:hover { background: var(--hover-bg); color: var(--accent); }
+.saved-sess-action-btn.delete-btn:hover { background: rgba(217,107,90,0.1); color: var(--danger); }
 
 /* ═══════════════════════════════════════════════════
    CONFIRM DIALOG

@@ -15,7 +15,7 @@ function showTransitionOverlay(nextTitle, nextIndex, autoStart) {
       if (count <= 0) {
         clearInterval(transitionTimer);
         transitionTimer = null;
-        advanceToSession(nextIndex);
+        advanceToSegment(nextIndex);
         startTimer();
       } else {
         transitionCountdown.textContent = `Starting in ${count}...`;
@@ -28,19 +28,19 @@ function showTransitionOverlay(nextTitle, nextIndex, autoStart) {
   transitionStart.onclick = () => {
     clearInterval(transitionTimer);
     transitionTimer = null;
-    advanceToSession(nextIndex);
+    advanceToSegment(nextIndex);
     startTimer();
   };
 
   transitionSkipBtn.onclick = () => {
     clearInterval(transitionTimer);
     transitionTimer = null;
-    const seq = getCurrentSequence();
-    if (seq && nextIndex + 1 < seq.sessions.length) {
-      advanceToSession(nextIndex + 1);
+    const sess = getCurrentSession();
+    if (sess && nextIndex + 1 < sess.segments.length) {
+      advanceToSegment(nextIndex + 1);
       startTimer();
     } else {
-      advanceToSession(nextIndex);
+      advanceToSegment(nextIndex);
       startTimer();
     }
   };
@@ -75,7 +75,7 @@ function showConfirm(msg, onConfirm) {
 let savePromptCallbacks = null;
 
 function showSavePrompt(onProceed) {
-  savePromptMsg.textContent = `Save changes to "${state.currentSequenceName}"?`;
+  savePromptMsg.textContent = `Save changes to "${state.currentSessionName}"?`;
   savePromptCallbacks = onProceed;
   savePromptOverlay.classList.add('open');
 }
@@ -95,47 +95,47 @@ function showNamePrompt(defaultName, onOk) {
 /* ═══════════════════════════════════════════════════
    SAVE / SAVE-AS / REVERT LOGIC
    ═══════════════════════════════════════════════════ */
-function doSaveCurrentSequence() {
-  const seq = getCurrentSequence();
-  if (!seq) return;
+function doSaveCurrentSession() {
+  const sess = getCurrentSession();
+  if (!sess) return;
 
-  const idx = sequences.findIndex(s => s.name === state.currentSequenceName);
+  const idx = sessions.findIndex(s => s.name === state.currentSessionName);
   if (idx >= 0) {
-    sequences[idx] = JSON.parse(JSON.stringify(seq));
+    sessions[idx] = JSON.parse(JSON.stringify(sess));
   } else {
-    sequences.push(JSON.parse(JSON.stringify(seq)));
+    sessions.push(JSON.parse(JSON.stringify(sess)));
   }
 
-  saveSequences();
+  saveSessions();
   takeSnapshot();
-  showToast('Sequence saved');
+  showToast('Session saved');
 }
 
-function doSaveAsSequence(newName) {
-  const seq = getCurrentSequence();
-  if (!seq) return;
+function doSaveAsSession(newName) {
+  const sess = getCurrentSession();
+  if (!sess) return;
 
-  const copy = JSON.parse(JSON.stringify(seq));
+  const copy = JSON.parse(JSON.stringify(sess));
   copy.name = newName;
-  sequences.push(copy);
+  sessions.push(copy);
 
-  state.currentSequenceName = newName;
+  state.currentSessionName = newName;
 
-  saveSequences();
+  saveSessions();
   saveState();
   takeSnapshot();
   renderSidebar();
   showToast(`Saved as "${newName}"`);
 }
 
-function revertCurrentSequence() {
+function revertCurrentSession() {
   if (!savedSnapshot) return;
   const snapshotData = JSON.parse(savedSnapshot);
-  const idx = sequences.findIndex(s => s.name === state.currentSequenceName);
+  const idx = sessions.findIndex(s => s.name === state.currentSessionName);
   if (idx >= 0) {
-    sequences[idx].name = snapshotData.name;
-    sequences[idx].sessions = snapshotData.sessions;
-    state.currentSequenceName = snapshotData.name;
+    sessions[idx].name = snapshotData.name;
+    sessions[idx].segments = snapshotData.segments;
+    state.currentSessionName = snapshotData.name;
   }
 }
 

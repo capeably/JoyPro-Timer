@@ -31,16 +31,16 @@
   <div class="main">
     <!-- Timer Area -->
     <div class="timer-area" id="timerArea">
-        <div class="current-session-title" id="currentTitle">Focus Block 1</div>
+        <div class="current-segment-title" id="currentTitle">Focus Block 1</div>
         <div class="timer-digits" id="timerDigits">25:00</div>
         <div class="timer-progress-bar">
           <div class="timer-progress-fill" id="progressFill" style="width: 100%"></div>
         </div>
 
       <div class="timer-controls">
-        <button class="ctrl-btn" id="resetBtn" title="Reset sequence (R)">&#8634;</button>
+        <button class="ctrl-btn" id="resetBtn" title="Reset session (R)">&#8634;</button>
         <button class="ctrl-btn primary" id="playBtn" title="Play/Pause (Space)">&#9654;</button>
-        <button class="ctrl-btn" id="skipBtn" title="Next session (N)">&#9197;</button>
+        <button class="ctrl-btn" id="skipBtn" title="Next segment (N)">&#9197;</button>
       </div>
 
       <!-- Transition overlay -->
@@ -57,37 +57,37 @@
       <!-- Complete overlay -->
       <div class="complete-overlay" id="completeOverlay">
         <div class="complete-icon">&#10003;</div>
-        <div class="complete-title">Sequence Complete!</div>
+        <div class="complete-title">Session Complete!</div>
         <div class="complete-sub">Great session. Take a moment to breathe.</div>
         <button class="modal-btn primary" id="restartBtn" style="margin-top:12px">Start Over</button>
       </div>
     </div><!-- /.timer-area -->
 
     <!-- Expand tab (visible when panel collapsed) -->
-    <button class="panel-tab-btn sidebar-expand-btn" id="sidebarExpandBtn" title="Show sessions">
+    <button class="panel-tab-btn sidebar-expand-btn" id="sidebarExpandBtn" title="Show segments">
       <div class="tab-arrow up"></div>
     </button>
 
-    <!-- Bottom Panel (Sessions/Sequence) -->
+    <!-- Bottom Panel (Segments/Session) -->
     <aside class="sidebar-panel" id="sidebarPanel">
       <!-- Collapse tab sits on top of panel -->
-      <button class="panel-tab-btn panel-collapse-tab" id="panelCollapseBtn" title="Hide sessions">
+      <button class="panel-tab-btn panel-collapse-tab" id="panelCollapseBtn" title="Hide segments">
         <div class="tab-arrow down"></div>
       </button>
       <div class="sidebar-panel-inner">
         <div class="sidebar-header">
           <div class="sidebar-name-row">
-            <div class="sidebar-seq-name" id="sidebarSeqName"></div>
+            <div class="sidebar-session-name" id="sidebarSessionName"></div>
           </div>
           <div class="sidebar-toolbar">
-            <button class="sidebar-btn" id="panelEditBtn" title="Edit sequence (E)">&#9998;</button>
-            <button class="sidebar-btn" id="panelSaveBtn" title="Save sequence">&#128190;</button>
-            <button class="sidebar-btn" id="panelSaveAsBtn" title="Save as new sequence">&#128203;</button>
-            <button class="sidebar-btn" id="panelNewBtn" title="New sequence">&#43;</button>
-            <button class="sidebar-btn" id="panelMenuBtn" title="Load saved sequence">&#9776;</button>
+            <button class="sidebar-btn" id="panelEditBtn" title="Edit session (E)">&#9998;</button>
+            <button class="sidebar-btn" id="panelSaveBtn" title="Save session">&#128190;</button>
+            <button class="sidebar-btn" id="panelSaveAsBtn" title="Save as new session">&#128203;</button>
+            <button class="sidebar-btn" id="panelNewBtn" title="New session">&#43;</button>
+            <button class="sidebar-btn" id="panelMenuBtn" title="Load saved session">&#9776;</button>
           </div>
         </div>
-        <div class="sidebar-sessions" id="sidebarSessions"></div>
+        <div class="sidebar-segments" id="sidebarSegments"></div>
       </div>
     </aside>
   </div><!-- /.main -->
@@ -97,13 +97,13 @@
 <div class="modal-overlay" id="editorModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="editorModalTitle">Edit Sequence</div>
+      <div class="modal-title" id="editorModalTitle">Edit Session</div>
       <button class="modal-close" id="editorClose">&times;</button>
     </div>
     <div class="modal-body" id="editorBody">
-      <input type="text" class="editor-sequence-name" id="editorSeqName" placeholder="Sequence name" spellcheck="false">
-      <div id="editorSessions"></div>
-      <button class="editor-add-btn" id="editorAdd">+ Add Session</button>
+      <input type="text" class="editor-session-name" id="editorSessionName" placeholder="Session name" spellcheck="false">
+      <div id="editorSegments"></div>
+      <button class="editor-add-btn" id="editorAdd">+ Add Segment</button>
     </div>
     <div class="modal-footer">
       <button class="modal-btn secondary" id="editorCancel">Cancel</button>
@@ -112,15 +112,18 @@
   </div>
 </div>
 
-<!-- SAVED SEQUENCES MODAL -->
+<!-- SAVED SESSIONS MODAL -->
 <div class="modal-overlay" id="savedModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Saved Sequences</div>
+      <div class="modal-title">Saved Sessions</div>
       <button class="modal-close" id="savedClose">&times;</button>
     </div>
     <div class="modal-body" id="savedBody"></div>
     <div class="modal-footer">
+      <button class="modal-btn secondary" id="savedImportBtn">Import</button>
+      <button class="modal-btn secondary" id="savedExportBtn">Export</button>
+      <span style="flex:1"></span>
       <button class="modal-btn secondary" id="savedCloseBtn">Close</button>
     </div>
   </div>
@@ -140,7 +143,7 @@
 <!-- SAVE PROMPT DIALOG (unsaved changes) -->
 <div class="save-prompt-overlay" id="savePromptOverlay">
   <div class="save-prompt-box">
-    <div class="save-prompt-msg" id="savePromptMsg">Save changes to this sequence?</div>
+    <div class="save-prompt-msg" id="savePromptMsg">Save changes to this session?</div>
     <div class="save-prompt-actions">
       <button class="modal-btn secondary" id="savePromptCancel">Cancel</button>
       <button class="modal-btn secondary" id="savePromptDiscard">Don't Save</button>
@@ -153,8 +156,8 @@
 <!-- SAVE AS NAME PROMPT -->
 <div class="name-prompt-overlay" id="namePromptOverlay">
   <div class="name-prompt-box">
-    <div class="name-prompt-label">Save sequence as:</div>
-    <input type="text" class="name-prompt-input" id="namePromptInput" placeholder="Sequence name" spellcheck="false">
+    <div class="name-prompt-label">Save session as:</div>
+    <input type="text" class="name-prompt-input" id="namePromptInput" placeholder="Session name" spellcheck="false">
     <div class="name-prompt-actions">
       <button class="modal-btn secondary" id="namePromptCancel">Cancel</button>
       <button class="modal-btn primary" id="namePromptOk">Save</button>
@@ -172,6 +175,7 @@
 
 <!-- Hidden file input for custom sound upload -->
 <input type="file" id="soundFileInput" accept="audio/*" style="display:none">
+<input type="file" id="importFileInput" accept=".json" style="display:none">
 
 <script src="js/state.js"></script>
 <script src="js/audio.js"></script>
