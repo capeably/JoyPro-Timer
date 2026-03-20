@@ -62,6 +62,7 @@ const savedImportBtn = $('savedImportBtn');
 const savedExportBtn = $('savedExportBtn');
 const importFileInput = $('importFileInput');
 const sidebarPanelInner = document.querySelector('.sidebar-panel-inner');
+const panelResizeHandle = $('panelResizeHandle');
 
 /* ═══════════════════════════════════════════════════
    THEME
@@ -267,59 +268,37 @@ function setupEventListeners() {
   // Popout
   popoutBtn.addEventListener('click', openPopout);
 
-  // Panel collapse/expand + drag-to-resize
-  (function setupPanelDragResize() {
-    let startY = 0;
-    let startHeight = 0;
-    let isDragging = false;
+  // Panel collapse/expand (click only)
+  panelCollapseBtn.addEventListener('click', () => {
+    state.panelCollapsed = !state.panelCollapsed;
+    updatePanelCollapse();
+    saveState();
+  });
 
-    panelCollapseBtn.addEventListener('mousedown', e => {
-      if (state.panelCollapsed) return; // collapsed → just click
-      e.preventDefault();
-      startY = e.clientY;
-      startHeight = sidebarPanelInner.offsetHeight;
-      isDragging = false;
+  // Panel drag-to-resize (on the resize handle bar)
+  panelResizeHandle.addEventListener('mousedown', e => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startHeight = sidebarPanelInner.offsetHeight;
+    sidebarPanelInner.style.transition = 'none';
 
-      const onMouseMove = ev => {
-        const deltaY = startY - ev.clientY;
-        if (!isDragging && Math.abs(deltaY) > 5) {
-          isDragging = true;
-          sidebarPanelInner.style.transition = 'none';
-        }
-        if (isDragging) {
-          const newHeight = Math.min(400, Math.max(60, startHeight + deltaY));
-          sidebarPanelInner.style.maxHeight = newHeight + 'px';
-        }
-      };
+    const onMouseMove = ev => {
+      const deltaY = startY - ev.clientY;
+      const newHeight = Math.min(400, Math.max(60, startHeight + deltaY));
+      sidebarPanelInner.style.maxHeight = newHeight + 'px';
+    };
 
-      const onMouseUp = () => {
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-        sidebarPanelInner.style.transition = '';
-        if (isDragging) {
-          state.panelHeight = parseInt(sidebarPanelInner.style.maxHeight);
-          saveState();
-        } else {
-          // It was a click — toggle collapse
-          state.panelCollapsed = !state.panelCollapsed;
-          updatePanelCollapse();
-          saveState();
-        }
-      };
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      sidebarPanelInner.style.transition = '';
+      state.panelHeight = parseInt(sidebarPanelInner.style.maxHeight);
+      saveState();
+    };
 
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
-    });
-
-    // Fallback: click on collapse btn when panel is already collapsed
-    panelCollapseBtn.addEventListener('click', () => {
-      if (state.panelCollapsed) {
-        state.panelCollapsed = false;
-        updatePanelCollapse();
-        saveState();
-      }
-    });
-  })();
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
 
   sidebarExpandBtn.addEventListener('click', () => {
     state.panelCollapsed = false;
