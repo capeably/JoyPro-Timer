@@ -361,23 +361,40 @@ function drawTree(cx, baseY, progress, time) {
   // ── Easing for organic growth ──
   const p = easeOutQuart(Math.min(1, progress));
 
-  // ── Trunk ──
-  const maxTrunkH = Math.min(180, bgCanvas.height * 0.22);
+  // ── Dimensions ──
+  const maxTrunkH = Math.min(160, bgCanvas.height * 0.18);
   const minTrunkH = 12;
   const trunkH = minTrunkH + (maxTrunkH - minTrunkH) * p;
-  const maxTrunkW = 14;
-  const minTrunkW = 3;
-  const trunkBottomW = minTrunkW + (maxTrunkW - minTrunkW) * p;
-  const trunkTopW = trunkBottomW * 0.4;
+  const trunkBottomW = 4 + 18 * p;
+  const trunkTopW = trunkBottomW * 0.2;
 
-  // Slight trunk curve
+  // ── S-curve control points ── (develop as tree grows)
+  const sCurve = p * 12; // max horizontal offset for S-curve
+  const topOffsetX = sCurve * 0.4; // trunk top drifts slightly right
+  const trunkTopX = cx + topOffsetX;
   const trunkTopY = baseY - trunkH;
 
+  // ── Nebari / surface roots (after 40%) ──
+  if (p > 0.4) {
+    drawNebari(cx, baseY, trunkBottomW, (p - 0.4) / 0.6);
+  }
+
+  // ── Bonsai trunk (S-curved) ──
+  // Left edge of trunk
   bgCtx.beginPath();
   bgCtx.moveTo(cx - trunkBottomW / 2, baseY);
-  bgCtx.quadraticCurveTo(cx - trunkTopW / 2 - 2, baseY - trunkH * 0.5, cx - trunkTopW / 2, trunkTopY);
-  bgCtx.lineTo(cx + trunkTopW / 2, trunkTopY);
-  bgCtx.quadraticCurveTo(cx + trunkTopW / 2 + 2, baseY - trunkH * 0.5, cx + trunkBottomW / 2, baseY);
+  bgCtx.bezierCurveTo(
+    cx - trunkBottomW * 0.3 - sCurve, baseY - trunkH * 0.35,
+    cx - trunkTopW * 0.3 + sCurve * 0.6, baseY - trunkH * 0.65,
+    trunkTopX - trunkTopW / 2, trunkTopY
+  );
+  // Right edge of trunk (reverse)
+  bgCtx.lineTo(trunkTopX + trunkTopW / 2, trunkTopY);
+  bgCtx.bezierCurveTo(
+    cx + trunkTopW * 0.3 + sCurve * 0.6, baseY - trunkH * 0.65,
+    cx + trunkBottomW * 0.3 - sCurve, baseY - trunkH * 0.35,
+    cx + trunkBottomW / 2, baseY
+  );
   bgCtx.closePath();
   const trunkGrad = bgCtx.createLinearGradient(cx - trunkBottomW, 0, cx + trunkBottomW, 0);
   trunkGrad.addColorStop(0, '#5C3D2E');
@@ -386,22 +403,83 @@ function drawTree(cx, baseY, progress, time) {
   bgCtx.fillStyle = trunkGrad;
   bgCtx.fill();
 
-  // ── Branches (appear after 25% growth) ──
+  // ── Bark texture (after 50%) ──
+  if (p > 0.5) {
+    bgCtx.strokeStyle = 'rgba(60, 35, 20, 0.2)';
+    bgCtx.lineWidth = 1;
+    for (let i = 0; i < 4; i++) {
+      const t = 0.2 + i * 0.18;
+      const barkY = baseY - trunkH * t;
+      const barkX = cx + Math.sin(t * 5) * sCurve * (0.5 - t);
+      const barkW = trunkBottomW * (1 - t * 0.7) * 0.4;
+      bgCtx.beginPath();
+      bgCtx.arc(barkX, barkY, barkW, 0.2, Math.PI - 0.2);
+      bgCtx.stroke();
+    }
+  }
+
+  // ── Sample spine points for branch attachment ──
+  const spine = [];
+  for (let i = 0; i <= 5; i++) {
+    const t = i / 5;
+    // Approximate cubic bezier center-line position
+    const sy = baseY - trunkH * t;
+    const sx = cx + Math.sin(t * Math.PI) * sCurve * (0.5 - t) * 2 + topOffsetX * t;
+    const sw = trunkBottomW * (1 - t * 0.8) + trunkTopW * t * 0.8;
+    spine.push({ x: sx, y: sy, w: sw });
+  }
+
+  // ── Branches + foliage pads (after 25%) ──
+  let branchEndpoints = [];
   if (p > 0.25) {
-    const branchP = (p - 0.25) / 0.75; // 0→1 after 25%
-    drawBranches(cx, trunkTopY, trunkH, branchP, time);
+    const branchP = (p - 0.25) / 0.75;
+    branchEndpoints = drawBonsaiBranches(spine, branchP, time);
   }
 
-  // ── Leaf canopy (appears after 15% growth) ──
-  if (p > 0.15) {
-    const leafP = (p - 0.15) / 0.85; // 0→1 for leaf growth
-    drawCanopy(cx, trunkTopY, trunkH, leafP, time);
+  // ── Foliage pads (after 20%) ──
+  if (p > 0.20) {
+    const leafP = (p - 0.20) / 0.80;
+    // Crown pad at trunk apex
+    const sway = Math.sin(time * 0.5) * 2 * p;
+    branchEndpoints.push({
+      x: trunkTopX + sway, y: trunkTopY, size: 1.3, tier: 0
+    });
+    drawFoliagePads(branchEndpoints, leafP, time);
   }
 
-  // ── Small sprout leaves at very beginning ──
+  // ── Sprout leaves at very beginning ──
   if (p < 0.3) {
     const sproutP = Math.min(1, p / 0.15);
     drawSproutLeaves(cx, baseY - trunkH, sproutP);
+  }
+}
+
+function drawNebari(cx, baseY, trunkW, p) {
+  // Surface roots spreading from trunk base
+  bgCtx.lineCap = 'round';
+  const roots = [
+    { angle: -15, side: -1 }, { angle: -25, side: 1 },
+    { angle: -10, side: -1 }, { angle: -20, side: 1 },
+    { angle: -30, side: -1 }
+  ];
+  for (let i = 0; i < roots.length; i++) {
+    const r = roots[i];
+    const rootLen = (8 + 22 * p) * (1 - i * 0.1);
+    const startX = cx + r.side * trunkW * 0.25;
+    const rad = r.angle * Math.PI / 180;
+    const endX = startX + Math.cos(rad) * rootLen * r.side;
+    const endY = baseY + Math.sin(Math.abs(rad)) * rootLen * 0.4 + 2;
+
+    // Thick to thin root
+    bgCtx.strokeStyle = '#6B4C3B';
+    bgCtx.lineWidth = trunkW * 0.12 * (1 - i * 0.12);
+    bgCtx.beginPath();
+    bgCtx.moveTo(startX, baseY);
+    bgCtx.quadraticCurveTo(
+      startX + r.side * rootLen * 0.5, baseY + rootLen * 0.15,
+      endX, endY
+    );
+    bgCtx.stroke();
   }
 }
 
@@ -432,72 +510,120 @@ function drawSproutLeaves(cx, topY, p) {
   bgCtx.restore();
 }
 
-function drawBranches(cx, trunkTopY, trunkH, p, time) {
-  const branchCount = Math.floor(2 + p * 4); // 2→6 branches
+function drawBonsaiBranches(spine, p, time) {
+  // Bonsai branches: horizontal, tiered, alternating sides
+  const branchDefs = [
+    { spineIdx: 2, side: -1, angle: -5, lenFactor: 1.0 },
+    { spineIdx: 2, side:  1, angle: -8, lenFactor: 0.85 },
+    { spineIdx: 3, side: -1, angle: -3, lenFactor: 0.75 },
+    { spineIdx: 3, side:  1, angle: -10, lenFactor: 0.65 },
+    { spineIdx: 4, side: -1, angle: -6, lenFactor: 0.5 }
+  ];
+
+  const endpoints = [];
+  const maxBranches = Math.floor(2 + p * 3); // 2→5 branches
   bgCtx.strokeStyle = '#6B4C3B';
   bgCtx.lineCap = 'round';
 
-  for (let i = 0; i < branchCount; i++) {
-    const t = (i + 1) / (branchCount + 1); // position along trunk height
-    const side = i % 2 === 0 ? -1 : 1;
-    const branchY = trunkTopY + trunkH * t * 0.6;
-    const branchLen = (15 + p * 35) * (1 - t * 0.4);
-    const angle = side * (0.4 + t * 0.3);
-    const sway = Math.sin(time * 0.8 + i * 1.5) * 0.03 * p;
+  for (let i = 0; i < Math.min(maxBranches, branchDefs.length); i++) {
+    const def = branchDefs[i];
+    const sp = spine[def.spineIdx];
+    const branchLen = (20 + p * 45) * def.lenFactor;
+    const rad = def.angle * Math.PI / 180;
+    const sway = Math.sin(time * 0.8 + i * 1.5) * 0.04 * p;
 
-    const endX = cx + Math.cos(-Math.PI / 2 + angle + sway) * branchLen * side;
-    const endY = branchY + Math.sin(-Math.PI / 2 + angle + sway) * branchLen * -0.5;
+    // Branch endpoint — mostly horizontal with slight droop/rise
+    const endX = sp.x + def.side * branchLen;
+    const endY = sp.y + Math.sin(rad + sway) * branchLen * 0.3 - branchLen * 0.1;
 
-    bgCtx.lineWidth = 1.5 + p * 2 * (1 - t * 0.5);
+    // Draw branch
+    const lw = 1.5 + p * 2.5 * (1 - i * 0.15);
+    bgCtx.lineWidth = lw;
     bgCtx.beginPath();
-    bgCtx.moveTo(cx, branchY);
-    bgCtx.quadraticCurveTo(cx + side * branchLen * 0.3, branchY - branchLen * 0.3, endX, endY);
+    bgCtx.moveTo(sp.x, sp.y);
+    bgCtx.quadraticCurveTo(
+      sp.x + def.side * branchLen * 0.5,
+      sp.y - branchLen * 0.08 + Math.sin(sway) * 3,
+      endX, endY
+    );
     bgCtx.stroke();
+
+    endpoints.push({
+      x: endX, y: endY,
+      size: def.lenFactor, tier: def.spineIdx
+    });
+
+    // Sub-branches (after 60% growth)
+    if (p > 0.6) {
+      const subP = (p - 0.6) / 0.4;
+      const subLen = branchLen * 0.4 * subP;
+      const midX = sp.x + def.side * branchLen * 0.6;
+      const midY = sp.y + (endY - sp.y) * 0.6;
+      const subEndX = midX + def.side * subLen * 0.5;
+      const subEndY = midY - subLen * 0.6;
+
+      bgCtx.lineWidth = lw * 0.5;
+      bgCtx.beginPath();
+      bgCtx.moveTo(midX, midY);
+      bgCtx.quadraticCurveTo(midX + def.side * subLen * 0.3, midY - subLen * 0.3, subEndX, subEndY);
+      bgCtx.stroke();
+
+      endpoints.push({
+        x: subEndX, y: subEndY,
+        size: def.lenFactor * 0.45, tier: def.spineIdx
+      });
+    }
+  }
+
+  return endpoints;
+}
+
+function drawFoliagePads(endpoints, p, time) {
+  // Sort bottom-to-top so upper pads overlap lower
+  endpoints.sort((a, b) => b.y - a.y);
+
+  for (let i = 0; i < endpoints.length; i++) {
+    const ep = endpoints[i];
+    const padRx = (8 + 66 * p) * ep.size; // horizontal radius
+    const padRy = padRx * 0.45; // flattened cloud shape
+    const sway = Math.sin(time * 0.5 + i * 1.2) * 2 * p;
+
+    // Shadow under pad
+    bgCtx.fillStyle = 'rgba(0, 80, 0, 0.06)';
+    bgCtx.beginPath();
+    bgCtx.ellipse(ep.x + sway * 0.5, ep.y + padRy * 0.5, padRx * 0.9, padRy * 0.25, 0, 0, Math.PI * 2);
+    bgCtx.fill();
+
+    // Dark green back layer
+    bgCtx.fillStyle = '#3A8A30';
+    drawFoliagePad(ep.x + sway, ep.y - padRy * 0.1, padRx, padRy, 0.95, time, i);
+
+    // Mid green layer
+    bgCtx.fillStyle = '#4EA842';
+    drawFoliagePad(ep.x + sway, ep.y - padRy * 0.25, padRx * 0.85, padRy * 0.85, 0.9, time, i + 10);
+
+    // Light green front layer
+    bgCtx.fillStyle = '#6CBF5C';
+    drawFoliagePad(ep.x + sway, ep.y - padRy * 0.35, padRx * 0.65, padRy * 0.7, 0.85, time, i + 20);
+
+    // Highlight
+    bgCtx.fillStyle = 'rgba(180, 230, 120, 0.3)';
+    bgCtx.beginPath();
+    bgCtx.arc(ep.x + sway - padRx * 0.2, ep.y - padRy * 0.6, padRx * 0.2, 0, Math.PI * 2);
+    bgCtx.fill();
   }
 }
 
-function drawCanopy(cx, trunkTopY, trunkH, p, time) {
-  // Canopy = layered circles of green
-  const canopyR = (20 + 60 * p);
-  const canopyCenterY = trunkTopY - canopyR * 0.3;
-  const sway = Math.sin(time * 0.5) * 3 * p;
-
-  // Shadow under canopy
-  bgCtx.fillStyle = 'rgba(0, 80, 0, 0.08)';
-  bgCtx.beginPath();
-  bgCtx.ellipse(cx + sway * 0.5, trunkTopY + trunkH * 0.05, canopyR * 1.1, canopyR * 0.2, 0, 0, Math.PI * 2);
-  bgCtx.fill();
-
-  // Dark green back layer
-  bgCtx.fillStyle = '#3A8A30';
-  drawCanopyBlob(cx + sway, canopyCenterY, canopyR, 0.9, time, 0);
-
-  // Mid green middle layer
-  bgCtx.fillStyle = '#4EA842';
-  drawCanopyBlob(cx + sway, canopyCenterY - canopyR * 0.1, canopyR * 0.85, 0.85, time, 1);
-
-  // Light green front layer
-  bgCtx.fillStyle = '#6CBF5C';
-  drawCanopyBlob(cx + sway, canopyCenterY - canopyR * 0.15, canopyR * 0.65, 0.8, time, 2);
-
-  // Highlight spots
-  bgCtx.fillStyle = 'rgba(180, 230, 120, 0.35)';
-  bgCtx.beginPath();
-  bgCtx.arc(cx + sway - canopyR * 0.2, canopyCenterY - canopyR * 0.3, canopyR * 0.25, 0, Math.PI * 2);
-  bgCtx.fill();
-}
-
-function drawCanopyBlob(cx, cy, r, scale, time, seed) {
-  // Organic blob shape using overlapping circles
+function drawFoliagePad(cx, cy, rx, ry, scale, time, seed) {
+  // Flattened cloud-pad shape using overlapping circles
   const circles = 5;
   bgCtx.beginPath();
   for (let i = 0; i < circles; i++) {
     const a = (i / circles) * Math.PI * 2 + seed;
-    const dist = r * 0.3;
-    const sway = Math.sin(time * 0.7 + i + seed) * 2;
-    const bx = cx + Math.cos(a) * dist + sway;
-    const by = cy + Math.sin(a) * dist * 0.7;
-    const br = r * scale * (0.5 + Math.sin(i * 1.3 + seed) * 0.15);
+    const sway = Math.sin(time * 0.7 + i + seed) * 1.5;
+    const bx = cx + Math.cos(a) * rx * 0.35 + sway;
+    const by = cy + Math.sin(a) * ry * 0.3;
+    const br = Math.min(rx, ry) * scale * (0.45 + Math.sin(i * 1.3 + seed) * 0.1);
     bgCtx.moveTo(bx + br, by);
     bgCtx.arc(bx, by, br, 0, Math.PI * 2);
   }
