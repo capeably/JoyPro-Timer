@@ -65,7 +65,7 @@ input { font-family: inherit; color: inherit; }
   font-size: 15px;
   transition: background 0.15s;
 }
-.header-btn:hover { background: var(--hover-bg); }
+.header-btn:hover, .header-btn:active { background: var(--hover-bg); }
 .header-btn.muted { opacity: 0.5; }
 
 /* ═══════════════════════════════════════════════════

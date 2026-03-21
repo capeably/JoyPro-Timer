@@ -55,7 +55,7 @@
   justify-content: center;
   font-size: 18px;
 }
-.modal-close:hover { background: var(--hover-bg); }
+.modal-close:hover, .modal-close:active { background: var(--hover-bg); }
 
 .modal-body {
   padding: 16px 20px;
@@ -79,11 +79,11 @@
   transition: background 0.15s;
 }
 .modal-btn.primary { background: var(--accent); color: #fff; }
-.modal-btn.primary:hover { background: #e8884f; }
+.modal-btn.primary:hover, .modal-btn.primary:active { background: #e8884f; }
 .modal-btn.secondary { background: var(--btn-bg); border: 1px solid var(--border); }
-.modal-btn.secondary:hover { background: var(--btn-hover); }
+.modal-btn.secondary:hover, .modal-btn.secondary:active { background: var(--btn-hover); }
 .modal-btn.danger { background: var(--danger); color: #fff; }
-.modal-btn.danger:hover { opacity: 0.9; }
+.modal-btn.danger:hover, .modal-btn.danger:active { opacity: 0.9; }
 
 /* Editor form */
 .editor-session-name {
@@ -198,7 +198,7 @@
   color: var(--text-muted);
   flex-shrink: 0;
 }
-.editor-remove-btn:hover { background: rgba(217,107,90,0.1); color: var(--danger); }
+.editor-remove-btn:hover, .editor-remove-btn:active { background: rgba(217,107,90,0.1); color: var(--danger); }
 
 .editor-add-btn {
   width: 100%;
@@ -209,7 +209,7 @@
   color: var(--text-muted);
   transition: all 0.15s;
 }
-.editor-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+.editor-add-btn:hover, .editor-add-btn:active { border-color: var(--accent); color: var(--accent); }
 
 /* Custom sound upload */
 .sound-upload-btn {
@@ -231,7 +231,7 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.saved-sess-item:hover { background: var(--hover-bg); }
+.saved-sess-item:hover, .saved-sess-item:active { background: var(--hover-bg); }
 
 .saved-sess-info { flex: 1; min-width: 0; }
 .saved-sess-name {
@@ -263,8 +263,8 @@
   font-size: 13px;
   color: var(--text-muted);
 }
-.saved-sess-action-btn:hover { background: var(--hover-bg); color: var(--accent); }
-.saved-sess-action-btn.delete-btn:hover { background: rgba(217,107,90,0.1); color: var(--danger); }
+.saved-sess-action-btn:hover, .saved-sess-action-btn:active { background: var(--hover-bg); color: var(--accent); }
+.saved-sess-action-btn.delete-btn:hover, .saved-sess-action-btn.delete-btn:active { background: rgba(217,107,90,0.1); color: var(--danger); }
 
 /* ═══════════════════════════════════════════════════
    CONFIRM DIALOG
@@ -383,4 +383,28 @@
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+
+/* ═══════════════════════════════════════════════════
+   EDITOR MOVE BUTTONS (touch devices)
+   ═══════════════════════════════════════════════════ */
+.move-btns { display: none; flex-direction: column; gap: 2px; flex-shrink: 0; }
+.move-btn {
+  width: 24px;
+  height: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  background: var(--btn-bg);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.move-btn:disabled { opacity: 0.3; }
+.move-btn:active { background: var(--btn-hover); }
+
+@media (hover: none) {
+  .drag-handle { display: none; }
+  .move-btns { display: flex; }
 }

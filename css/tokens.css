@@ -94,6 +94,7 @@
   pointer-events: none;
   transform: translateY(-4px);
   transition: opacity 0.15s, transform 0.15s;
+  max-width: calc(100vw - 24px);
 }
 
 .theme-picker.open {

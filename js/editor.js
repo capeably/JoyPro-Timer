@@ -31,6 +31,10 @@ function renderEditorSegments() {
   editorSegments.innerHTML = editorData.map((s, i) => `
     <div class="editor-segment" data-index="${i}">
       <span class="drag-handle" draggable="true">&#9776;</span>
+      <div class="move-btns">
+        <button class="move-btn" data-action="move-up" data-index="${i}" ${i === 0 ? 'disabled' : ''}>&#9650;</button>
+        <button class="move-btn" data-action="move-down" data-index="${i}" ${i === editorData.length - 1 ? 'disabled' : ''}>&#9660;</button>
+      </div>
       <div class="editor-segment-fields">
         <div class="editor-row">
           <input type="text" value="${escHtml(s.title)}" data-field="title" placeholder="Segment name">
@@ -77,6 +81,19 @@ function renderEditorSegments() {
     btn.addEventListener('click', () => {
       const idx = parseInt(btn.dataset.index);
       editorData.splice(idx, 1);
+      renderEditorSegments();
+    });
+  });
+
+  // Move up/down buttons (touch devices)
+  editorSegments.querySelectorAll('[data-action="move-up"], [data-action="move-down"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.index);
+      const dir = btn.dataset.action === 'move-up' ? -1 : 1;
+      const targetIdx = idx + dir;
+      if (targetIdx < 0 || targetIdx >= editorData.length) return;
+      const [moved] = editorData.splice(idx, 1);
+      editorData.splice(targetIdx, 0, moved);
       renderEditorSegments();
     });
   });

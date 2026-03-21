@@ -47,8 +47,8 @@
   cursor: pointer;
   transition: background 0.15s, opacity 0.2s;
 }
-.panel-tab-btn:hover { background: var(--accent); }
-.panel-tab-btn:hover .tab-arrow { border-color: white; }
+.panel-tab-btn:hover, .panel-tab-btn:active { background: var(--accent); }
+.panel-tab-btn:hover .tab-arrow, .panel-tab-btn:active .tab-arrow { border-color: white; }
 .tab-arrow {
   width: 8px;
   height: 8px;
@@ -95,7 +95,7 @@
   background: var(--border);
   transition: background 0.15s;
 }
-.panel-resize-handle:hover::after {
+.panel-resize-handle:hover::after, .panel-resize-handle:active::after {
   background: var(--accent);
 }
 
@@ -147,7 +147,7 @@
   transition: background 0.15s;
   flex-shrink: 0;
 }
-.sidebar-btn:hover { background: var(--hover-bg); }
+.sidebar-btn:hover, .sidebar-btn:active { background: var(--hover-bg); }
 
 /* Segment list */
 .sidebar-segments {
@@ -166,7 +166,7 @@
   transition: background 0.1s;
   white-space: nowrap;
 }
-.segment-item:hover { background: var(--hover-bg); }
+.segment-item:hover, .segment-item:active { background: var(--hover-bg); }
 .segment-item.active { background: var(--active-bg); font-weight: 500; }
 
 .segment-num {
@@ -264,6 +264,7 @@
   transition: opacity 0.25s ease;
 }
 .timer-controls:hover { opacity: 1; }
+@media (hover: none) { .timer-controls { opacity: 1; } }
 
 .ctrl-btn {
   width: 30px;
@@ -277,7 +278,7 @@
   background: var(--btn-bg);
   border: 1px solid var(--border);
 }
-.ctrl-btn:hover { background: var(--btn-hover); }
+.ctrl-btn:hover, .ctrl-btn:active { background: var(--btn-hover); }
 .ctrl-btn:active { transform: scale(0.95); }
 
 .ctrl-btn.primary {
@@ -288,7 +289,7 @@
   border: none;
   font-size: 13px;
 }
-.ctrl-btn.primary:hover { background: #e8884f; }
+.ctrl-btn.primary:hover, .ctrl-btn.primary:active { background: #e8884f; }
 
 /* ═══════════════════════════════════════════════════
    TRANSITION OVERLAY
@@ -349,12 +350,12 @@
   background: var(--accent);
   color: #fff;
 }
-.transition-btn.start:hover { background: #e8884f; }
+.transition-btn.start:hover, .transition-btn.start:active { background: #e8884f; }
 .transition-btn.skip {
   background: var(--btn-bg);
   border: 1px solid var(--border);
 }
-.transition-btn.skip:hover { background: var(--btn-hover); }
+.transition-btn.skip:hover, .transition-btn.skip:active { background: var(--btn-hover); }
 
 /* ═══════════════════════════════════════════════════
    SESSION COMPLETE
@@ -409,4 +410,11 @@
   background: var(--accent);
   color: #fff;
 }
-.empty-state-btn:hover { background: #e8884f; }
+.empty-state-btn:hover, .empty-state-btn:active { background: #e8884f; }
+
+/* ═══════════════════════════════════════════════════
+   SHORT VIEWPORT
+   ═══════════════════════════════════════════════════ */
+@media (max-height: 500px) {
+  .sidebar-panel-inner { max-height: 120px; }
+}

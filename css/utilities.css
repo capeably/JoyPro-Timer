@@ -60,7 +60,34 @@
 /* ═══════════════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════════════ */
-@media (max-width: 520px) {
-  .timer-area { padding: 16px 12px; }
+@media (max-width: 768px) {
   .keyboard-hint { display: none; }
+}
+
+@media (max-width: 480px) {
+  .timer-area { padding: 12px 8px; }
+
+  /* Tighter modal padding */
+  .modal-header { padding: 12px 14px 10px; }
+  .modal-body { padding: 12px 14px; }
+  .modal-footer { padding: 10px 14px 12px; }
+  .modal-title { font-size: 16px; }
+
+  /* Confirm/save-prompt dialogs */
+  .confirm-box, .save-prompt-box, .name-prompt-box { padding: 18px; }
+
+  /* Smaller header */
+  .header { padding: 4px 8px; }
+  .header-title { font-size: 14px; }
+
+  /* Panel toolbar */
+  .sidebar-toolbar { gap: 0; }
+  .sidebar-btn { width: 26px; height: 24px; }
+
+  /* Editor segments tighter */
+  .editor-segment { padding: 8px; gap: 6px; }
+  .editor-row { gap: 6px; }
+
+  /* Hide popout on mobile */
+  #popoutBtn { display: none; }
 }

@@ -165,12 +165,13 @@ function renderStarfield() {
                : 1;
 
     // Outer glow (large warm halo)
-    const outerGlow = bgCtx.createRadialGradient(x, y, 0, x, y, 40);
+    const glowR = window.innerWidth < 480 ? 20 : 40;
+    const outerGlow = bgCtx.createRadialGradient(x, y, 0, x, y, glowR);
     outerGlow.addColorStop(0, `rgba(255, 200, 100, ${0.4 * fade})`);
     outerGlow.addColorStop(0.3, `rgba(255, 150, 50, ${0.15 * fade})`);
     outerGlow.addColorStop(1, `rgba(255, 100, 20, 0)`);
     bgCtx.beginPath();
-    bgCtx.arc(x, y, 40, 0, Math.PI * 2);
+    bgCtx.arc(x, y, glowR, 0, Math.PI * 2);
     bgCtx.fillStyle = outerGlow;
     bgCtx.fill();
 
@@ -718,7 +719,7 @@ function toggleThemePicker() {
     // Position near the theme toggle button
     const rect = themeToggle.getBoundingClientRect();
     themePickerEl.style.top = (rect.bottom + 6) + 'px';
-    themePickerEl.style.right = (window.innerWidth - rect.right) + 'px';
+    themePickerEl.style.right = Math.max(8, window.innerWidth - rect.right) + 'px';
     themePickerEl.classList.add('open');
     // Close on outside click
     setTimeout(() => document.addEventListener('click', outsideClickThemePicker), 0);
