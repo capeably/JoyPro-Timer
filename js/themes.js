@@ -248,6 +248,117 @@ function triggerShootingStar() {
    GROWING TREE BACKGROUND
    ═══════════════════════════════════════════════════ */
 let treeClouds = [];
+let sunFaceState = { nextAppear: 0, phase: 'hidden', phaseStart: 0 };
+// Sun face phases: hidden → fadeIn(0.5s) → open(1s) → blink(0.15s) → open(0.4s) → blink(0.15s) → fadeOut(0.5s) → hidden
+
+function initSunFace() {
+  sunFaceState = {
+    nextAppear: performance.now() / 1000 + 30 + Math.random() * 60, // first appear 30-90s in
+    phase: 'hidden',
+    phaseStart: 0
+  };
+}
+
+function updateSunFace(now) {
+  const s = sunFaceState;
+  if (s.phase === 'hidden') {
+    if (now >= s.nextAppear) {
+      s.phase = 'fadeIn';
+      s.phaseStart = now;
+    }
+    return 0; // no face visible
+  }
+
+  const elapsed = now - s.phaseStart;
+  const durations = { fadeIn: 0.5, open1: 1.0, blink1: 0.15, open2: 0.4, blink2: 0.15, fadeOut: 0.5 };
+  const sequence = ['fadeIn', 'open1', 'blink1', 'open2', 'blink2', 'fadeOut'];
+
+  // Advance through phases
+  const currentDur = durations[s.phase];
+  if (elapsed >= currentDur) {
+    const idx = sequence.indexOf(s.phase);
+    if (idx < sequence.length - 1) {
+      s.phase = sequence[idx + 1];
+      s.phaseStart = now;
+    } else {
+      // Animation complete, schedule next appearance (60-120s)
+      s.phase = 'hidden';
+      s.nextAppear = now + 60 + Math.random() * 60;
+      return 0;
+    }
+  }
+
+  const t = (now - s.phaseStart) / durations[s.phase];
+  const isBlink = s.phase === 'blink1' || s.phase === 'blink2';
+  let opacity = 1;
+  if (s.phase === 'fadeIn') opacity = t;
+  else if (s.phase === 'fadeOut') opacity = 1 - t;
+
+  return { opacity, eyeOpen: isBlink ? Math.cos(t * Math.PI) * 0.5 + 0.5 : 1 };
+}
+
+function drawSunFace(cx, cy, r, faceData) {
+  if (!faceData || faceData === 0) return;
+  const { opacity, eyeOpen } = faceData;
+
+  bgCtx.save();
+  bgCtx.globalAlpha = opacity * 0.9;
+
+  // Rosy cheeks
+  bgCtx.fillStyle = 'rgba(255, 140, 110, 0.4)';
+  bgCtx.beginPath();
+  bgCtx.arc(cx - r * 0.5, cy + r * 0.2, r * 0.2, 0, Math.PI * 2);
+  bgCtx.fill();
+  bgCtx.beginPath();
+  bgCtx.arc(cx + r * 0.5, cy + r * 0.2, r * 0.2, 0, Math.PI * 2);
+  bgCtx.fill();
+
+  // Eyes
+  const eyeY = cy - r * 0.08;
+  const eyeSpacing = r * 0.28;
+  const eyeH = r * 0.16 * eyeOpen;
+  const eyeW = r * 0.12;
+
+  bgCtx.fillStyle = '#2d2d2d';
+  if (eyeOpen > 0.3) {
+    // Open eyes — oval dots
+    bgCtx.beginPath();
+    bgCtx.ellipse(cx - eyeSpacing, eyeY, eyeW, Math.max(1.5, eyeH), 0, 0, Math.PI * 2);
+    bgCtx.fill();
+    bgCtx.beginPath();
+    bgCtx.ellipse(cx + eyeSpacing, eyeY, eyeW, Math.max(1.5, eyeH), 0, 0, Math.PI * 2);
+    bgCtx.fill();
+    // Eye highlights
+    bgCtx.fillStyle = 'rgba(255,255,255,0.7)';
+    bgCtx.beginPath();
+    bgCtx.arc(cx - eyeSpacing + eyeW * 0.3, eyeY - eyeH * 0.3, eyeW * 0.35, 0, Math.PI * 2);
+    bgCtx.fill();
+    bgCtx.beginPath();
+    bgCtx.arc(cx + eyeSpacing + eyeW * 0.3, eyeY - eyeH * 0.3, eyeW * 0.35, 0, Math.PI * 2);
+    bgCtx.fill();
+  } else {
+    // Closed eyes — curved lines (happy squint)
+    bgCtx.strokeStyle = '#2d2d2d';
+    bgCtx.lineWidth = 2;
+    bgCtx.lineCap = 'round';
+    bgCtx.beginPath();
+    bgCtx.arc(cx - eyeSpacing, eyeY + eyeW * 0.3, eyeW, 0.8 * Math.PI, 0.2 * Math.PI);
+    bgCtx.stroke();
+    bgCtx.beginPath();
+    bgCtx.arc(cx + eyeSpacing, eyeY + eyeW * 0.3, eyeW, 0.8 * Math.PI, 0.2 * Math.PI);
+    bgCtx.stroke();
+  }
+
+  // Smile
+  bgCtx.strokeStyle = '#2d2d2d';
+  bgCtx.lineWidth = 2;
+  bgCtx.lineCap = 'round';
+  bgCtx.beginPath();
+  bgCtx.arc(cx, cy + r * 0.08, r * 0.25, 0.15 * Math.PI, 0.85 * Math.PI);
+  bgCtx.stroke();
+
+  bgCtx.restore();
+}
 
 function initTreeClouds() {
   treeClouds = [];
@@ -269,6 +380,7 @@ function initGrowingTree() {
   activeBackground = 'growingTree';
   bgCanvas.style.background = '';
   initTreeClouds();
+  initSunFace();
   renderGrowingTree();
 }
 
@@ -296,18 +408,24 @@ function renderGrowingTree() {
   bgCtx.fillRect(0, 0, W, H);
 
   // ── Sun ──
+  const sunR = Math.max(28, Math.min(42, W * 0.055));
   const sunX = W * 0.82;
   const sunY = H * 0.12;
-  const sunGlow = bgCtx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 80);
+  const glowSize = sunR * 2.8;
+  const sunGlow = bgCtx.createRadialGradient(sunX, sunY, 0, sunX, sunY, glowSize);
   sunGlow.addColorStop(0, 'rgba(255, 240, 180, 0.9)');
   sunGlow.addColorStop(0.3, 'rgba(255, 220, 120, 0.3)');
   sunGlow.addColorStop(1, 'rgba(255, 200, 80, 0)');
   bgCtx.fillStyle = sunGlow;
-  bgCtx.fillRect(sunX - 80, sunY - 80, 160, 160);
+  bgCtx.fillRect(sunX - glowSize, sunY - glowSize, glowSize * 2, glowSize * 2);
   bgCtx.beginPath();
-  bgCtx.arc(sunX, sunY, 28, 0, Math.PI * 2);
+  bgCtx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
   bgCtx.fillStyle = '#FFE566';
   bgCtx.fill();
+
+  // ── Sun face (appears occasionally) ──
+  const faceData = updateSunFace(now);
+  drawSunFace(sunX, sunY, sunR, faceData);
 
   // ── Clouds ── (slow drift)
   for (const c of treeClouds) {
