@@ -93,9 +93,10 @@ function resizeBgCanvas() {
       });
     }
   }
-  // Re-init clouds if growing tree active
+  // Re-init clouds and stars if growing tree active
   if (activeBackground === 'growingTree') {
     initTreeClouds();
+    initTwilightStars();
   }
 }
 
@@ -416,6 +417,51 @@ function getTreeProgress() {
   return 1 - (state.timerSeconds / state.timerTotal);
 }
 
+/* ─── Color interpolation helpers ─── */
+function lerpColor(c1, c2, t) {
+  // c1, c2 are [r, g, b] arrays, t is 0→1
+  return [
+    Math.round(c1[0] + (c2[0] - c1[0]) * t),
+    Math.round(c1[1] + (c2[1] - c1[1]) * t),
+    Math.round(c1[2] + (c2[2] - c1[2]) * t)
+  ];
+}
+
+function rgb(c) { return `rgb(${c[0]},${c[1]},${c[2]})`; }
+function rgba(c, a) { return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+
+function multiLerp(stops, t) {
+  // stops = [[pos, [r,g,b]], ...], t = 0→1
+  if (t <= stops[0][0]) return stops[0][1];
+  if (t >= stops[stops.length - 1][0]) return stops[stops.length - 1][1];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (t >= stops[i][0] && t <= stops[i + 1][0]) {
+      const local = (t - stops[i][0]) / (stops[i + 1][0] - stops[i][0]);
+      return lerpColor(stops[i][1], stops[i + 1][1], local);
+    }
+  }
+  return stops[stops.length - 1][1];
+}
+
+/* ─── Twilight stars (reused across frames) ─── */
+let twilightStars = [];
+
+function initTwilightStars() {
+  twilightStars = [];
+  const W = bgCanvas ? bgCanvas.width : window.innerWidth;
+  const H = bgCanvas ? bgCanvas.height : window.innerHeight;
+  const count = Math.floor((W * H) / 4000);
+  for (let i = 0; i < count; i++) {
+    twilightStars.push({
+      x: Math.random() * W,
+      y: Math.random() * H * 0.7, // only above horizon
+      r: Math.random() * 1.2 + 0.3,
+      twinkleSpeed: Math.random() * 0.008 + 0.003,
+      twinkleOffset: Math.random() * Math.PI * 2
+    });
+  }
+}
+
 function renderGrowingTree() {
   if (activeBackground !== 'growingTree' || !bgCtx) return;
   const W = bgCanvas.width;
@@ -425,44 +471,207 @@ function renderGrowingTree() {
 
   bgCtx.clearRect(0, 0, W, H);
 
-  // ── Sky gradient ──
-  const skyGrad = bgCtx.createLinearGradient(0, 0, 0, H);
-  skyGrad.addColorStop(0, '#5BB8F5');
-  skyGrad.addColorStop(0.55, '#87CEEB');
-  skyGrad.addColorStop(0.7, '#B5E3F5');
+  // Init twilight stars if needed
+  if (twilightStars.length === 0) initTwilightStars();
+
+  /*  ═══════════════════════════════════════════
+      SUN POSITION — arc from upper-left to lower-right horizon
+      ═══════════════════════════════════════════
+      Timeline:
+        0%   = high noon, sun at top-left
+        60%  = afternoon, sun mid-sky right
+        75%  = sky still blue, sun approaching lower-right
+        80%  = golden hour begins (sun below title area)
+        88%  = deep sunset, sun near horizon
+        93%  = dusk, sun setting below horizon
+        100% = night, sun fully set
+  */
+  const groundY = H * 0.72;
+
+  // Sun arc: parametric arc from upper-left → below horizon right
+  const arcCenterX = W * 0.5;
+  const arcCenterY = groundY;
+  const arcRadiusX = W * 0.48;
+  const arcRadiusY = groundY * 0.85;
+  const startAngle = Math.PI * 0.82;  // upper-left
+  const endAngle   = Math.PI * -0.12; // well below horizon (negative = below groundY)
+  const sunAngle = startAngle + (endAngle - startAngle) * progress;
+  const sunX = arcCenterX + Math.cos(sunAngle) * arcRadiusX;
+  const sunY = arcCenterY - Math.sin(sunAngle) * arcRadiusY;
+  const sunR = Math.max(28, Math.min(42, W * 0.055));
+
+  // Sun is visible as long as any part is above the ground line
+  // (the disc is clipped at groundY, and ground draws on top)
+  const sunVisible = (sunY - sunR < groundY) ? 1 : 0;
+
+  /*  ═══════════════════════════════════════════
+      SKY GRADIENT — transitions through day phases
+      ═══════════════════════════════════════════ */
+  // Sky top color
+  const skyTop = multiLerp([
+    [0,    [91, 184, 245]],   // bright blue
+    [0.75, [91, 184, 245]],   // still blue
+    [0.83, [180, 140, 80]],   // golden
+    [0.88, [220, 100, 50]],   // orange
+    [0.93, [80, 50, 100]],    // purple dusk
+    [1.0,  [15, 15, 45]]      // night
+  ], progress);
+
+  const skyMid = multiLerp([
+    [0,    [135, 206, 235]],  // sky blue
+    [0.75, [135, 206, 235]],  // sky blue
+    [0.83, [230, 170, 90]],   // warm gold
+    [0.88, [240, 130, 70]],   // deep orange
+    [0.93, [120, 60, 90]],    // dusky purple
+    [1.0,  [20, 20, 55]]      // dark night
+  ], progress);
+
+  const skyBottom = multiLerp([
+    [0,    [181, 227, 245]],  // pale blue
+    [0.75, [181, 227, 245]],  // pale blue
+    [0.83, [250, 200, 120]],  // golden glow
+    [0.88, [255, 150, 80]],   // orange glow
+    [0.93, [180, 100, 80]],   // warm dusk
+    [1.0,  [30, 25, 60]]      // night horizon
+  ], progress);
+
+  const skyGrad = bgCtx.createLinearGradient(0, 0, 0, groundY);
+  skyGrad.addColorStop(0, rgb(skyTop));
+  skyGrad.addColorStop(0.5, rgb(skyMid));
+  skyGrad.addColorStop(1, rgb(skyBottom));
   bgCtx.fillStyle = skyGrad;
   bgCtx.fillRect(0, 0, W, H);
 
-  // ── Sun ──
-  const sunR = Math.max(28, Math.min(42, W * 0.055));
-  const sunX = W * 0.82;
-  const sunY = H * 0.12;
-  const glowSize = sunR * 2.8;
-  const sunGlow = bgCtx.createRadialGradient(sunX, sunY, 0, sunX, sunY, glowSize);
-  sunGlow.addColorStop(0, 'rgba(255, 240, 180, 0.9)');
-  sunGlow.addColorStop(0.3, 'rgba(255, 220, 120, 0.3)');
-  sunGlow.addColorStop(1, 'rgba(255, 200, 80, 0)');
-  bgCtx.fillStyle = sunGlow;
-  bgCtx.fillRect(sunX - glowSize, sunY - glowSize, glowSize * 2, glowSize * 2);
-  bgCtx.beginPath();
-  bgCtx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
-  bgCtx.fillStyle = '#FFE566';
-  bgCtx.fill();
-
-  // ── Sun face (appears occasionally) ──
-  const faceData = updateSunFace(now);
-  drawSunFace(sunX, sunY, sunR, faceData);
-
-  // ── Clouds ── (slow drift)
-  for (const c of treeClouds) {
-    c.x += c.speed * (1 / 60); // ~60fps
-    if (c.x > W + c.w) c.x = -c.w - 20;
-    drawCloud(c.x, c.y, c.w, c.h);
+  /*  ═══════════════════════════════════════════
+      TWILIGHT STARS — fade in during dusk/night
+      ═══════════════════════════════════════════ */
+  // Stars only appear once the sun starts sinking into the grass
+  if (sunY > groundY - sunR) {
+    const starAlphaMax = Math.min(1, (sunY - (groundY - sunR)) / (sunR * 2.5));
+    for (const s of twilightStars) {
+      const twinkle = Math.sin(now * s.twinkleSpeed * 60 + s.twinkleOffset) * 0.3 + 0.7;
+      const alpha = starAlphaMax * twinkle * 0.8;
+      if (alpha < 0.02) continue;
+      bgCtx.beginPath();
+      bgCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      bgCtx.fillStyle = `rgba(255, 255, 230, ${alpha})`;
+      bgCtx.fill();
+    }
   }
 
-  // ── Ground ──
-  const groundY = H * 0.72;
-  // Rolling hills
+  /*  ═══════════════════════════════════════════
+      HORIZON GLOW — warm band near horizon during golden hour/sunset
+      ═══════════════════════════════════════════ */
+  if (progress > 0.76 && progress < 0.97) {
+    const glowIntensity = progress < 0.85
+      ? (progress - 0.76) / 0.09
+      : 1 - (progress - 0.85) / 0.12;
+    const horizonGlow = bgCtx.createLinearGradient(0, groundY - H * 0.15, 0, groundY);
+    const glowColor = multiLerp([
+      [0.76, [255, 220, 130]],
+      [0.85, [255, 140, 60]],
+      [0.93, [200, 80, 60]]
+    ], progress);
+    horizonGlow.addColorStop(0, rgba(glowColor, 0));
+    horizonGlow.addColorStop(0.7, rgba(glowColor, 0.3 * Math.max(0, glowIntensity)));
+    horizonGlow.addColorStop(1, rgba(glowColor, 0.5 * Math.max(0, glowIntensity)));
+    bgCtx.fillStyle = horizonGlow;
+    bgCtx.fillRect(0, groundY - H * 0.15, W, H * 0.15);
+  }
+
+  /*  ═══════════════════════════════════════════
+      SUN — position, color, and glow shift with progress
+      ═══════════════════════════════════════════ */
+  if (sunVisible > 0) {
+    // Sun color warms as it sets
+    const sunColor = multiLerp([
+      [0,    [255, 229, 102]],  // bright yellow
+      [0.78, [255, 229, 102]],  // still yellow
+      [0.86, [255, 180, 60]],   // warm orange
+      [0.93, [255, 120, 50]],   // deep orange-red
+      [1.0,  [220, 80, 40]]     // red
+    ], progress);
+
+    const glowColor = multiLerp([
+      [0,    [255, 240, 180]],
+      [0.78, [255, 240, 180]],
+      [0.86, [255, 200, 100]],
+      [0.93, [255, 140, 60]],
+      [1.0,  [220, 90, 40]]
+    ], progress);
+
+    const glowSize = sunR * (2.8 + progress * 1.5); // glow expands near horizon
+    // Fade glow as sun sinks below ground
+    const glowFade = sunY < groundY ? 1 : Math.max(0, 1 - (sunY - groundY) / (sunR * 2));
+    const sunGlow = bgCtx.createRadialGradient(sunX, sunY, 0, sunX, sunY, glowSize);
+    sunGlow.addColorStop(0, rgba(glowColor, 0.9 * glowFade));
+    sunGlow.addColorStop(0.3, rgba(glowColor, 0.3 * glowFade));
+    sunGlow.addColorStop(1, rgba(glowColor, 0));
+    bgCtx.fillStyle = sunGlow;
+    bgCtx.fillRect(sunX - glowSize, sunY - glowSize, glowSize * 2, glowSize * 2);
+
+    // Sun disc (clip to above horizon for partial setting)
+    bgCtx.save();
+    if (sunY + sunR > groundY) {
+      bgCtx.beginPath();
+      bgCtx.rect(0, 0, W, groundY);
+      bgCtx.clip();
+    }
+    bgCtx.beginPath();
+    bgCtx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+    bgCtx.fillStyle = rgb(sunColor);
+    bgCtx.fill();
+
+    // Sun face — hide once sun center is below ground
+    const faceData = updateSunFace(now);
+    if (sunY < groundY) drawSunFace(sunX, sunY, sunR, faceData);
+    bgCtx.restore();
+  }
+
+  /*  ═══════════════════════════════════════════
+      CLOUDS — tinted by time of day
+      ═══════════════════════════════════════════ */
+  const cloudColor = multiLerp([
+    [0,    [255, 255, 255]],  // white
+    [0.78, [255, 255, 255]],  // white
+    [0.85, [255, 220, 170]],  // warm peach
+    [0.90, [240, 160, 130]],  // sunset pink
+    [0.95, [100, 80, 120]],   // dusky purple
+    [1.0,  [40, 35, 65]]      // dark night cloud
+  ], progress);
+  const cloudAlpha = progress > 0.95 ? Math.max(0.3, 1 - (progress - 0.95) / 0.05) : 0.85;
+
+  for (const c of treeClouds) {
+    c.x += c.speed * (1 / 60);
+    if (c.x > W + c.w) c.x = -c.w - 20;
+    drawCloud(c.x, c.y, c.w, c.h, cloudColor, cloudAlpha);
+  }
+
+  /*  ═══════════════════════════════════════════
+      GROUND — darkens toward night
+      ═══════════════════════════════════════════ */
+  const grassTop = multiLerp([
+    [0,    [92, 184, 92]],
+    [0.80, [92, 184, 92]],
+    [0.88, [80, 140, 60]],
+    [0.94, [50, 90, 40]],
+    [1.0,  [20, 40, 20]]
+  ], progress);
+  const grassMid = multiLerp([
+    [0,    [74, 158, 74]],
+    [0.80, [74, 158, 74]],
+    [0.88, [60, 120, 50]],
+    [0.94, [40, 75, 35]],
+    [1.0,  [15, 32, 15]]
+  ], progress);
+  const grassBot = multiLerp([
+    [0,    [58, 122, 58]],
+    [0.80, [58, 122, 58]],
+    [0.88, [45, 95, 40]],
+    [0.94, [30, 60, 28]],
+    [1.0,  [10, 25, 12]]
+  ], progress);
+
   bgCtx.beginPath();
   bgCtx.moveTo(0, groundY);
   bgCtx.quadraticCurveTo(W * 0.15, groundY - 20, W * 0.3, groundY);
@@ -472,9 +681,9 @@ function renderGrowingTree() {
   bgCtx.lineTo(0, H);
   bgCtx.closePath();
   const grassGrad = bgCtx.createLinearGradient(0, groundY, 0, H);
-  grassGrad.addColorStop(0, '#5CB85C');
-  grassGrad.addColorStop(0.3, '#4A9E4A');
-  grassGrad.addColorStop(1, '#3A7A3A');
+  grassGrad.addColorStop(0, rgb(grassTop));
+  grassGrad.addColorStop(0.3, rgb(grassMid));
+  grassGrad.addColorStop(1, rgb(grassBot));
   bgCtx.fillStyle = grassGrad;
   bgCtx.fill();
 
@@ -483,14 +692,16 @@ function renderGrowingTree() {
   const treeBaseY = groundY + 2;
   drawTree(treeCenterX, treeBaseY, progress, now);
 
-  // ── Small grass tufts ──
-  drawGrassTufts(W, H, groundY, now);
+  // ── Grass tufts (darken at night) ──
+  drawGrassTufts(W, H, groundY, now, progress);
 
   bgAnimId = requestAnimationFrame(renderGrowingTree);
 }
 
-function drawCloud(x, y, w, h) {
-  bgCtx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+function drawCloud(x, y, w, h, color, alpha) {
+  const c = color || [255, 255, 255];
+  const a = alpha !== undefined ? alpha : 0.85;
+  bgCtx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${a})`;
   // Cloud made of overlapping circles
   const r = h * 0.7;
   bgCtx.beginPath();
@@ -775,8 +986,15 @@ function drawFoliagePad(cx, cy, rx, ry, scale, time, seed) {
   bgCtx.fill();
 }
 
-function drawGrassTufts(W, H, groundY, time) {
-  bgCtx.strokeStyle = '#4A9E4A';
+function drawGrassTufts(W, H, groundY, time, progress) {
+  const p = progress || 0;
+  const tuftColor = multiLerp([
+    [0,    [74, 158, 74]],
+    [0.80, [74, 158, 74]],
+    [0.90, [50, 100, 45]],
+    [1.0,  [20, 45, 20]]
+  ], p);
+  bgCtx.strokeStyle = rgb(tuftColor);
   bgCtx.lineWidth = 1.5;
   bgCtx.lineCap = 'round';
 

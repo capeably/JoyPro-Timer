@@ -472,6 +472,7 @@ function setupEventListeners() {
       running = false;
       clearInterval(timerInterval);
       saveSessions(); saveState(); takeSnapshot();
+      applySegmentTheme(newSess.segments[0]);
       renderSidebar(); renderTimer(); hideOverlays(); closeEditor();
       showToast('New session created');
     } else {
@@ -490,6 +491,7 @@ function setupEventListeners() {
       running = false;
       clearInterval(timerInterval);
       saveSessions(); saveState(); takeSnapshot();
+      applySegmentTheme(sess.segments[0]);
       renderSidebar(); renderTimer(); hideOverlays(); closeEditor();
       showToast('Session saved');
     }
