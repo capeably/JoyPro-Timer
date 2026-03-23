@@ -46,6 +46,14 @@ function renderEditorSegments() {
           <label><input type="checkbox" data-field="sound" ${s.soundEnabled ? 'checked' : ''}> Sound</label>
           <label><input type="checkbox" data-field="auto" ${s.autoAdvance ? 'checked' : ''}> Auto-advance</label>
           <span class="sound-upload-btn" data-field="upload" data-index="${i}">Custom sound</span>
+          <label class="theme-select-label">Theme:
+            <select data-field="theme">
+              <option value="default" ${(!s.theme || s.theme === 'default') ? 'selected' : ''}>Default</option>
+              ${Object.entries(THEMES).map(([key, t]) =>
+                `<option value="${key}" ${s.theme === key ? 'selected' : ''}>${t.label}</option>`
+              ).join('')}
+            </select>
+          </label>
         </div>
       </div>
       <button class="editor-remove-btn" data-action="remove" data-index="${i}">&times;</button>
@@ -53,7 +61,7 @@ function renderEditorSegments() {
   `).join('');
 
   // Input listeners
-  editorSegments.querySelectorAll('input, .sound-upload-btn').forEach(el => {
+  editorSegments.querySelectorAll('input, select, .sound-upload-btn').forEach(el => {
     const segment = el.closest('.editor-segment');
     if (!segment) return;
     const idx = parseInt(segment.dataset.index);
@@ -68,6 +76,8 @@ function renderEditorSegments() {
       el.addEventListener('change', () => { editorData[idx].soundEnabled = el.checked; });
     } else if (el.dataset.field === 'auto') {
       el.addEventListener('change', () => { editorData[idx].autoAdvance = el.checked; });
+    } else if (el.dataset.field === 'theme') {
+      el.addEventListener('change', () => { editorData[idx].theme = el.value; });
     } else if (el.dataset.field === 'upload') {
       el.addEventListener('click', () => {
         currentEditSoundIndex = parseInt(el.dataset.index);

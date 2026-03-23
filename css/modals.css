@@ -187,6 +187,23 @@
   accent-color: var(--accent);
 }
 
+.editor-segment-options select {
+  background: var(--bg-sidebar);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.theme-select-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
 .editor-remove-btn {
   width: 28px;
   height: 28px;

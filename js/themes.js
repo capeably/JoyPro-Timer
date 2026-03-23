@@ -67,6 +67,7 @@ function createBgCanvas() {
 
 function removeBgCanvas() {
   if (bgAnimId) { cancelAnimationFrame(bgAnimId); bgAnimId = null; }
+  stopShootingStarTimer();
   if (bgCanvas) { bgCanvas.remove(); bgCanvas = null; bgCtx = null; }
   setBgTransparency(false);
   activeBackground = null;
@@ -125,6 +126,8 @@ function initStarfield() {
   }
   shootingStars = [];
   renderStarfield();
+  // Start random shooting star timer
+  scheduleNextShootingStar();
 }
 
 function renderStarfield() {
@@ -221,6 +224,29 @@ function renderStarfield() {
   }
 
   bgAnimId = requestAnimationFrame(renderStarfield);
+}
+
+let shootingStarTimer = null;
+let nextShootingStarTime = 0;
+
+function scheduleNextShootingStar() {
+  // Random interval between 30-60 seconds
+  const delay = (30 + Math.random() * 30) * 1000;
+  nextShootingStarTime = Date.now() + delay;
+  shootingStarTimer = setTimeout(() => {
+    triggerShootingStar();
+    // Schedule the next one if still in starfield mode
+    if (activeBackground === 'starfield') {
+      scheduleNextShootingStar();
+    }
+  }, delay);
+}
+
+function stopShootingStarTimer() {
+  if (shootingStarTimer) {
+    clearTimeout(shootingStarTimer);
+    shootingStarTimer = null;
+  }
 }
 
 function triggerShootingStar() {
@@ -784,10 +810,39 @@ function applyFullTheme(themeName) {
   if (!theme) return;
 
   state.theme = themeName;
+  applyThemeVisual(themeName);
+
+  // Also re-apply to current segment if it uses "default"
+  const sess = getCurrentSession();
+  if (sess) {
+    const seg = sess.segments[state.currentSegmentIndex];
+    if (seg && seg.theme && seg.theme !== 'default' && THEMES[seg.theme]) {
+      // Current segment has an override — keep its visual theme
+      applyThemeVisual(seg.theme);
+    }
+  }
+}
+
+/* ─── Per-segment theme override ─── */
+function applySegmentTheme(segment) {
+  const segTheme = segment && segment.theme;
+  if (segTheme && segTheme !== 'default' && THEMES[segTheme]) {
+    // Segment has a specific theme override — apply it visually
+    // but don't change state.theme (the user's global preference)
+    applyThemeVisual(segTheme);
+  } else {
+    // Revert to the user's global theme choice
+    applyThemeVisual(state.theme);
+  }
+}
+
+/* ─── Apply theme visuals without changing global preference ─── */
+function applyThemeVisual(themeName) {
+  const theme = THEMES[themeName];
+  if (!theme) return;
+
   document.documentElement.setAttribute('data-theme', theme.colorMode);
   document.documentElement.setAttribute('data-bg-theme', themeName);
-
-  // Update theme toggle icon
   themeToggle.innerHTML = theme.colorMode === 'dark' ? '&#9788;' : '&#9789;';
 
   // Handle background layers
@@ -800,9 +855,9 @@ function applyFullTheme(themeName) {
     }
   }
 
-  // Update picker selection
+  // Update picker selection to show the global theme, not the segment override
   document.querySelectorAll('.theme-swatch').forEach(el => {
-    el.classList.toggle('active', el.dataset.theme === themeName);
+    el.classList.toggle('active', el.dataset.theme === state.theme);
   });
 }
 

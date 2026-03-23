@@ -442,7 +442,8 @@ function setupEventListeners() {
       durationSeconds: 0,
       soundEnabled: true,
       soundKey: "default",
-      autoAdvance: true
+      autoAdvance: true,
+      theme: "default"
     });
     renderEditorSegments();
     editorSegments.parentElement.scrollTop = editorSegments.parentElement.scrollHeight;

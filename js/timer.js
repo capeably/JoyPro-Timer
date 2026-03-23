@@ -45,20 +45,26 @@ function tick() {
 function onSegmentComplete() {
   pauseTimer();
   playChime();
-  triggerShootingStar();
 
   const sess = getCurrentSession();
   if (!sess) return;
 
+  const completedSegment = sess.segments[state.currentSegmentIndex];
   const nextIndex = state.currentSegmentIndex + 1;
+
   if (nextIndex >= sess.segments.length) {
     showCompleteOverlay();
     return;
   }
 
-  // Auto-advance directly to the next segment
-  advanceToSegment(nextIndex);
-  startTimer();
+  // Only auto-advance if the completed segment has autoAdvance enabled
+  if (completedSegment && completedSegment.autoAdvance) {
+    advanceToSegment(nextIndex);
+    startTimer();
+  } else {
+    // Move to next segment but don't start — user must press play
+    advanceToSegment(nextIndex);
+  }
 }
 
 function advanceToSegment(index) {
@@ -72,6 +78,9 @@ function advanceToSegment(index) {
   const s = sess.segments[index];
   state.timerTotal = segmentTotalSeconds(s);
   state.timerSeconds = state.timerTotal;
+
+  // Apply per-segment theme (or revert to global default)
+  applySegmentTheme(s);
 
   renderSidebar();
   renderTimer();
