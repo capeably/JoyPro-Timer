@@ -70,6 +70,9 @@ function removeBgCanvas() {
   stopShootingStarTimer();
   if (bgCanvas) { bgCanvas.remove(); bgCanvas = null; bgCtx = null; }
   setBgTransparency(false);
+  // Clear any dynamic CSS overrides from Growing Tree
+  document.documentElement.style.removeProperty('--text');
+  document.documentElement.style.removeProperty('--text-muted');
   activeBackground = null;
 }
 
@@ -694,6 +697,27 @@ function renderGrowingTree() {
 
   // ── Grass tufts (darken at night) ──
   drawGrassTufts(W, H, groundY, now, progress);
+
+  // ── Dynamic text color — lighten as sky darkens ──
+  const textColor = multiLerp([
+    [0,    [45, 58, 30]],      // dark green (daytime)
+    [0.78, [45, 58, 30]],      // still dark green
+    [0.85, [80, 70, 50]],      // warm brown (golden hour)
+    [0.90, [200, 180, 150]],   // light tan (sunset)
+    [0.95, [220, 210, 200]],   // pale (dusk)
+    [1.0,  [240, 235, 230]]    // near-white (night)
+  ], progress);
+  const textMuted = multiLerp([
+    [0,    [90, 110, 66]],     // muted green (daytime)
+    [0.78, [90, 110, 66]],
+    [0.85, [140, 120, 90]],
+    [0.90, [170, 155, 135]],
+    [0.95, [185, 180, 170]],
+    [1.0,  [200, 195, 190]]
+  ], progress);
+  const root = document.documentElement;
+  root.style.setProperty('--text', `rgb(${textColor[0]},${textColor[1]},${textColor[2]})`);
+  root.style.setProperty('--text-muted', `rgb(${textMuted[0]},${textMuted[1]},${textMuted[2]})`);
 
   bgAnimId = requestAnimationFrame(renderGrowingTree);
 }
