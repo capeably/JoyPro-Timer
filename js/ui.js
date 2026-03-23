@@ -10,6 +10,15 @@ function updatePanelCollapse() {
   if (inner && !state.panelCollapsed && state.panelHeight) {
     inner.style.maxHeight = state.panelHeight + 'px';
   }
+
+  // Re-center timer content after panel transition finishes
+  if (inner) {
+    const onEnd = () => {
+      inner.removeEventListener('transitionend', onEnd);
+      sizeTimerContent();
+    };
+    inner.addEventListener('transitionend', onEnd);
+  }
 }
 
 /* ═══════════════════════════════════════════════════

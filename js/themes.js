@@ -70,9 +70,12 @@ function removeBgCanvas() {
   stopShootingStarTimer();
   if (bgCanvas) { bgCanvas.remove(); bgCanvas = null; bgCtx = null; }
   setBgTransparency(false);
-  // Clear any dynamic CSS overrides from Growing Tree
-  document.documentElement.style.removeProperty('--text');
-  document.documentElement.style.removeProperty('--text-muted');
+  // Clear any inline color overrides from Growing Tree's day/night cycle
+  const timerArea = document.getElementById('timerArea');
+  if (timerArea) {
+    timerArea.style.color = '';
+    timerArea.querySelectorAll('.timer-controls button').forEach(btn => { btn.style.color = ''; });
+  }
   activeBackground = null;
 }
 
@@ -699,6 +702,7 @@ function renderGrowingTree() {
   drawGrassTufts(W, H, groundY, now, progress);
 
   // ── Dynamic text color — lighten as sky darkens ──
+  // Only apply to timer area elements (title, digits, controls), not panel/modals
   const textColor = multiLerp([
     [0,    [45, 58, 30]],      // dark green (daytime)
     [0.78, [45, 58, 30]],      // still dark green
@@ -715,9 +719,15 @@ function renderGrowingTree() {
     [0.95, [185, 180, 170]],
     [1.0,  [200, 195, 190]]
   ], progress);
-  const root = document.documentElement;
-  root.style.setProperty('--text', `rgb(${textColor[0]},${textColor[1]},${textColor[2]})`);
-  root.style.setProperty('--text-muted', `rgb(${textMuted[0]},${textMuted[1]},${textMuted[2]})`);
+  const textRgb = `rgb(${textColor[0]},${textColor[1]},${textColor[2]})`;
+  const mutedRgb = `rgb(${textMuted[0]},${textMuted[1]},${textMuted[2]})`;
+  const timerArea = document.getElementById('timerArea');
+  if (timerArea) {
+    timerArea.style.color = textRgb;
+    // Also style the controls (reset, play, skip) which use --text-muted
+    const controls = timerArea.querySelectorAll('.timer-controls button');
+    controls.forEach(btn => { btn.style.color = mutedRgb; });
+  }
 
   bgAnimId = requestAnimationFrame(renderGrowingTree);
 }
