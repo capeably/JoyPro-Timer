@@ -21,6 +21,9 @@ function updatePanelCollapse() {
     done = true;
     if (inner) inner.removeEventListener('transitionend', recenter);
     if (_panelResizeTimer) { clearTimeout(_panelResizeTimer); _panelResizeTimer = null; }
+    // Reset scroll position so content re-centers properly
+    const timerArea = document.querySelector('.timer-area');
+    if (timerArea) timerArea.scrollTop = 0;
     sizeTimerContent();
   };
   if (inner) inner.addEventListener('transitionend', recenter);
