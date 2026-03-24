@@ -59,9 +59,10 @@
 .tab-arrow.down { transform: rotate(-45deg) translateY(-2px); }
 .tab-arrow.up { transform: rotate(135deg) translateY(2px); }
 
-/* Expand tab — anchored at bottom of timer area */
+/* Expand tab — anchored at bottom of timer area, above safe area on iPhones */
 .sidebar-expand-btn {
-  bottom: 0;
+  bottom: 8px;
+  bottom: calc(8px + env(safe-area-inset-bottom));
   opacity: 0;
   pointer-events: none;
 }

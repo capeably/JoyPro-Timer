@@ -536,22 +536,24 @@ function setupEventListeners() {
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    // Ignore when any modifier key is held (except for Escape)
+    const hasModifier = e.ctrlKey || e.altKey || e.metaKey || e.shiftKey;
     const anyModalOpen = editorModal.classList.contains('open') ||
       savedModal.classList.contains('open') ||
       confirmOverlay.classList.contains('open') ||
       savePromptOverlay.classList.contains('open') ||
       namePromptOverlay.classList.contains('open');
 
-    if (e.code === 'Space' && !anyModalOpen) {
+    if (e.code === 'Space' && !anyModalOpen && !hasModifier) {
       e.preventDefault();
       if (running) pauseTimer(); else startTimer();
-    } else if (e.code === 'KeyN' && !anyModalOpen) {
+    } else if (e.code === 'KeyN' && !anyModalOpen && !hasModifier) {
       skipBtn.click();
-    } else if (e.code === 'KeyM') {
+    } else if (e.code === 'KeyM' && !hasModifier) {
       muteToggle.click();
-    } else if (e.code === 'KeyE' && !anyModalOpen) {
+    } else if (e.code === 'KeyE' && !anyModalOpen && !hasModifier) {
       openEditor();
-    } else if (e.code === 'KeyR' && !anyModalOpen && !e.ctrlKey && !e.metaKey) {
+    } else if (e.code === 'KeyR' && !anyModalOpen && !hasModifier) {
       resetBtn.click();
     } else if (e.code === 'Escape') {
       if (namePromptOverlay.classList.contains('open')) { namePromptOverlay.classList.remove('open'); namePromptCallback = null; }
