@@ -61,8 +61,6 @@ const popoutBtn = $('popoutBtn');
 const savedImportBtn = $('savedImportBtn');
 const savedExportBtn = $('savedExportBtn');
 const importFileInput = $('importFileInput');
-const sidebarPanelInner = document.querySelector('.sidebar-panel-inner');
-const panelResizeHandle = $('panelResizeHandle');
 
 /* ═══════════════════════════════════════════════════
    THEME
@@ -274,50 +272,6 @@ function setupEventListeners() {
     updatePanelCollapse();
     saveState();
   });
-
-  // Panel drag-to-resize (on the resize handle bar)
-  function panelResizeStart(startY) {
-    const startHeight = sidebarPanelInner.offsetHeight;
-    sidebarPanelInner.style.transition = 'none';
-    const maxH = Math.min(400, window.innerHeight * 0.4);
-    return { startHeight, maxH, startY };
-  }
-  function panelResizeMove(ctx, currentY) {
-    const deltaY = ctx.startY - currentY;
-    const newHeight = Math.min(ctx.maxH, Math.max(60, ctx.startHeight + deltaY));
-    sidebarPanelInner.style.maxHeight = newHeight + 'px';
-  }
-  function panelResizeEnd() {
-    sidebarPanelInner.style.transition = '';
-    state.panelHeight = parseInt(sidebarPanelInner.style.maxHeight);
-    saveState();
-  }
-
-  panelResizeHandle.addEventListener('mousedown', e => {
-    e.preventDefault();
-    const ctx = panelResizeStart(e.clientY);
-    const onMouseMove = ev => panelResizeMove(ctx, ev.clientY);
-    const onMouseUp = () => {
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-      panelResizeEnd();
-    };
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-  });
-
-  panelResizeHandle.addEventListener('touchstart', e => {
-    e.preventDefault();
-    const ctx = panelResizeStart(e.touches[0].clientY);
-    const onTouchMove = ev => { ev.preventDefault(); panelResizeMove(ctx, ev.touches[0].clientY); };
-    const onTouchEnd = () => {
-      document.removeEventListener('touchmove', onTouchMove);
-      document.removeEventListener('touchend', onTouchEnd);
-      panelResizeEnd();
-    };
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('touchend', onTouchEnd);
-  }, { passive: false });
 
   sidebarExpandBtn.addEventListener('click', () => {
     state.panelCollapsed = false;

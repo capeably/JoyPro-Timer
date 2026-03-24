@@ -1,33 +1,19 @@
 /* ═══════════════════════════════════════════════════
    SIDEBAR PANEL COLLAPSE
    ═══════════════════════════════════════════════════ */
-let _panelResizeTimer = null;
 function updatePanelCollapse() {
   sidebarPanel.classList.toggle('collapsed', state.panelCollapsed);
   sidebarExpandBtn.classList.toggle('visible', state.panelCollapsed);
 
-  // Apply saved panel height when expanded
-  const inner = document.querySelector('.sidebar-panel-inner');
-  if (inner && !state.panelCollapsed && state.panelHeight) {
-    inner.style.maxHeight = state.panelHeight + 'px';
-  }
-
   // Re-center timer content after panel transition finishes
-  // Use both transitionend and a timeout fallback (300ms covers the 250ms transition)
-  if (_panelResizeTimer) clearTimeout(_panelResizeTimer);
-  let done = false;
-  const recenter = () => {
-    if (done) return;
-    done = true;
-    if (inner) inner.removeEventListener('transitionend', recenter);
-    if (_panelResizeTimer) { clearTimeout(_panelResizeTimer); _panelResizeTimer = null; }
-    // Reset scroll position so content re-centers properly
-    const timerArea = document.querySelector('.timer-area');
-    if (timerArea) timerArea.scrollTop = 0;
-    sizeTimerContent();
-  };
-  if (inner) inner.addEventListener('transitionend', recenter);
-  _panelResizeTimer = setTimeout(recenter, 300);
+  const inner = document.querySelector('.sidebar-panel-inner');
+  if (inner) {
+    const onEnd = () => {
+      inner.removeEventListener('transitionend', onEnd);
+      sizeTimerContent();
+    };
+    inner.addEventListener('transitionend', onEnd);
+  }
 }
 
 /* ═══════════════════════════════════════════════════

@@ -77,30 +77,6 @@
   top: -18px;
 }
 
-/* Resize handle — drag to resize panel */
-.panel-resize-handle {
-  height: 6px;
-  flex-shrink: 0;
-  cursor: ns-resize;
-  position: relative;
-  background: transparent;
-}
-.panel-resize-handle::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 32px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--border);
-  transition: background 0.15s;
-}
-.panel-resize-handle:hover::after, .panel-resize-handle:active::after {
-  background: var(--accent);
-}
-
 /* Panel header */
 .sidebar-header {
   padding: 4px 8px;

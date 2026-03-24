@@ -55,8 +55,7 @@ let state = {
   timerTotal: 180,
   globalMute: false,
   theme: "light",
-  panelCollapsed: false,
-  panelHeight: null
+  panelCollapsed: false
 };
 
 let sessions = JSON.parse(JSON.stringify(DEFAULT_SESSIONS));
