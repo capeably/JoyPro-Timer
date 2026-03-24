@@ -214,12 +214,17 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 16px 12px;
   position: relative;
   min-width: 0;
   min-height: 0;
   order: 1;
+  overflow-y: auto;
+}
+/* Use auto margins for safe vertical centering — avoids content
+   being pushed above the top edge when the container is too short */
+.current-segment-title { margin-top: auto; }
+.timer-controls { margin-bottom: auto;
 }
 
 .current-segment-title {

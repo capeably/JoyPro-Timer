@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════
    SIDEBAR PANEL COLLAPSE
    ═══════════════════════════════════════════════════ */
+let _panelResizeTimer = null;
 function updatePanelCollapse() {
   sidebarPanel.classList.toggle('collapsed', state.panelCollapsed);
   sidebarExpandBtn.classList.toggle('visible', state.panelCollapsed);
@@ -12,13 +13,18 @@ function updatePanelCollapse() {
   }
 
   // Re-center timer content after panel transition finishes
-  if (inner) {
-    const onEnd = () => {
-      inner.removeEventListener('transitionend', onEnd);
-      sizeTimerContent();
-    };
-    inner.addEventListener('transitionend', onEnd);
-  }
+  // Use both transitionend and a timeout fallback (300ms covers the 250ms transition)
+  if (_panelResizeTimer) clearTimeout(_panelResizeTimer);
+  let done = false;
+  const recenter = () => {
+    if (done) return;
+    done = true;
+    if (inner) inner.removeEventListener('transitionend', recenter);
+    if (_panelResizeTimer) { clearTimeout(_panelResizeTimer); _panelResizeTimer = null; }
+    sizeTimerContent();
+  };
+  if (inner) inner.addEventListener('transitionend', recenter);
+  _panelResizeTimer = setTimeout(recenter, 300);
 }
 
 /* ═══════════════════════════════════════════════════
