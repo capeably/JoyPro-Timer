@@ -6,9 +6,15 @@ function ensureAudioCtx() {
   if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
+const defaultChimeAudio = new Audio('files/segment-finished.mp3');
+defaultChimeAudio.preload = 'auto';
+
+function loadDefaultChime() {
+  // Audio element is created above and preloads automatically
+}
+
 function playChime() {
   if (state.globalMute) return;
-  ensureAudioCtx();
 
   const sess = getCurrentSession();
   const segment = sess?.segments[state.currentSegmentIndex];
@@ -16,33 +22,14 @@ function playChime() {
 
   const soundKey = state.currentSegmentIndex + '_' + state.currentSessionName;
   if (customSounds[soundKey]) {
+    ensureAudioCtx();
     playCustomSound(customSounds[soundKey]);
     return;
   }
 
-  const now = audioCtx.currentTime;
-  const osc1 = audioCtx.createOscillator();
-  const osc2 = audioCtx.createOscillator();
-  const gain1 = audioCtx.createGain();
-  const gain2 = audioCtx.createGain();
-
-  osc1.type = 'sine';
-  osc1.frequency.value = 830;
-  osc2.type = 'sine';
-  osc2.frequency.value = 1100;
-
-  gain1.gain.setValueAtTime(0.3, now);
-  gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-  gain2.gain.setValueAtTime(0.2, now + 0.15);
-  gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
-
-  osc1.connect(gain1).connect(audioCtx.destination);
-  osc2.connect(gain2).connect(audioCtx.destination);
-
-  osc1.start(now);
-  osc1.stop(now + 0.8);
-  osc2.start(now + 0.15);
-  osc2.stop(now + 0.9);
+  // Play default mp3 chime
+  defaultChimeAudio.currentTime = 0;
+  defaultChimeAudio.play().catch(() => {});
 }
 
 function playCustomSound(dataUrl) {

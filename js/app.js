@@ -531,6 +531,7 @@ function setupEventListeners() {
    ═══════════════════════════════════════════════════ */
 function init() {
   loadAll();
+  loadDefaultChime();
   applyTheme();
   updateMuteBtn();
   updatePanelCollapse();
