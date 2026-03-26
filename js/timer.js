@@ -11,7 +11,7 @@ function startTimer() {
   timerStartedAt = Date.now();
   timerSecondsAtStart = state.timerSeconds;
   hideOverlays();
-  renderSidebar();
+  renderSessionPanel();
   renderTimer();
 
   timerInterval = setInterval(tick, 250);
@@ -23,7 +23,7 @@ function pauseTimer() {
   timerSecondsAtStart = null;
   clearInterval(timerInterval);
   timerInterval = null;
-  renderSidebar();
+  renderSessionPanel();
   renderTimer();
   markDirty();
 }
@@ -82,7 +82,7 @@ function advanceToSegment(index) {
   // Apply per-segment theme (or revert to global default)
   applySegmentTheme(s);
 
-  renderSidebar();
+  renderSessionPanel();
   renderTimer();
   markDirty();
 }

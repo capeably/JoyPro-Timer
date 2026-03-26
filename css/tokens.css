@@ -14,7 +14,7 @@
 
   /* Light theme (default) */
   --bg: var(--cream);
-  --bg-sidebar: #eee9e2;
+  --bg-panel: #eee9e2;
   --text: var(--charcoal);
   --text-muted: #8a9099;
   --accent: var(--coral);
@@ -36,7 +36,7 @@
 
 [data-theme="dark"] {
   --bg: var(--navy);
-  --bg-sidebar: #0a2e47;
+  --bg-panel: #0a2e47;
   --text: var(--cream);
   --text-muted: #8a9aaa;
   --accent: var(--coral);
@@ -58,7 +58,7 @@
 /* Starry Night — deep indigo sky with transparent UI */
 [data-bg-theme="starryNight"] {
   --bg: #0b0e2a;
-  --bg-sidebar: rgba(8, 10, 36, 0.65);
+  --bg-panel: rgba(8, 10, 36, 0.65);
   --text: #e8e0f0;
   --text-muted: #9a8fbf;
   --accent: #c89bff;
@@ -136,7 +136,7 @@
 /* Growing Tree — cheerful daytime scene */
 [data-bg-theme="growingTree"] {
   --bg: #87CEEB;
-  --bg-sidebar: rgba(210, 190, 160, 0.85);
+  --bg-panel: rgba(210, 190, 160, 0.85);
   --text: #2d3a1e;
   --text-muted: #5a6e42;
   --accent: #e88a3a;

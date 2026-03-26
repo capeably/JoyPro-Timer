@@ -1,4 +1,9 @@
 /* ═══════════════════════════════════════════════════
+   UTILITY CLASSES
+   ═══════════════════════════════════════════════════ */
+.flex-spacer { flex: 1; }
+
+/* ═══════════════════════════════════════════════════
    TOAST
    ═══════════════════════════════════════════════════ */
 .toast-container {
@@ -50,9 +55,9 @@
 /* ═══════════════════════════════════════════════════
    SCROLLBAR
    ═══════════════════════════════════════════════════ */
-.sidebar-sessions::-webkit-scrollbar, .modal-body::-webkit-scrollbar { width: 4px; }
-.sidebar-sessions::-webkit-scrollbar-track, .modal-body::-webkit-scrollbar-track { background: transparent; }
-.sidebar-sessions::-webkit-scrollbar-thumb, .modal-body::-webkit-scrollbar-thumb {
+.session-segments::-webkit-scrollbar, .modal-body::-webkit-scrollbar { width: 4px; }
+.session-segments::-webkit-scrollbar-track, .modal-body::-webkit-scrollbar-track { background: transparent; }
+.session-segments::-webkit-scrollbar-thumb, .modal-body::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 2px;
 }
@@ -81,8 +86,8 @@
   .header-title { font-size: 14px; }
 
   /* Panel toolbar */
-  .sidebar-toolbar { gap: 0; }
-  .sidebar-btn { width: 26px; height: 24px; }
+  .session-toolbar { gap: 0; }
+  .session-btn { width: 26px; height: 24px; }
 
   /* Editor segments tighter */
   .editor-segment { padding: 8px; gap: 6px; }

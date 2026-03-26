@@ -2,11 +2,11 @@
    SIDEBAR PANEL COLLAPSE
    ═══════════════════════════════════════════════════ */
 function updatePanelCollapse() {
-  sidebarPanel.classList.toggle('collapsed', state.panelCollapsed);
-  sidebarExpandBtn.classList.toggle('visible', state.panelCollapsed);
+  sessionPanel.classList.toggle('collapsed', state.panelCollapsed);
+  sessionExpandBtn.classList.toggle('visible', state.panelCollapsed);
 
   // Re-center timer content after panel transition finishes
-  const inner = document.querySelector('.sidebar-panel-inner');
+  const inner = document.querySelector('.session-panel-inner');
   if (inner) {
     const onEnd = () => {
       inner.removeEventListener('transitionend', onEnd);
@@ -19,21 +19,31 @@ function updatePanelCollapse() {
 /* ═══════════════════════════════════════════════════
    UI RENDERING
    ═══════════════════════════════════════════════════ */
-function renderSidebarHeader() {
+function renderSessionHeader() {
+  const nameEl = document.getElementById('sessionName');
+  if (!nameEl) return; // name element may be replaced by input during inline edit
   const sess = getCurrentSession();
-  sidebarSessionName.textContent = sess ? sess.name : 'No Session';
+  const dirty = hasUnsavedChanges();
+  nameEl.textContent = (sess ? sess.name : 'No Session') + (dirty ? ' *' : '');
 }
 
-function renderSidebar() {
-  renderSidebarHeader();
+function renderSessionPanel() {
+  // Skip re-render while an inline edit input is active
+  if (inlineEditActive) return;
+
+  renderSessionHeader();
 
   const sess = getCurrentSession();
   if (!sess || !sess.segments.length) {
-    sidebarSegments.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-state-icon">&#128203;</div><div class="empty-state-text">No segments yet</div><button class="empty-state-btn" onclick="openEditorNew()">Add Segments</button></div>';
+    sessionSegments.innerHTML = '<div class="empty-state compact"><div class="empty-state-icon">&#128203;</div><div class="empty-state-text">No segments yet</div><button class="empty-state-btn" onclick="openEditorNew()">Add Segments</button></div>';
+    if (!running) {
+      sessionSegments.innerHTML += '<button class="segment-add-btn">+ Add Segment</button>';
+    }
+    setupInlineEditing();
     return;
   }
 
-  sidebarSegments.innerHTML = sess.segments.map((s, i) => {
+  let html = sess.segments.map((s, i) => {
     const isActive = i === state.currentSegmentIndex;
     const isCompleted = i < state.currentSegmentIndex;
     let iconHtml = '';
@@ -46,22 +56,37 @@ function renderSidebar() {
     const durStr = formatTime(dur);
 
     return `<div class="segment-item ${isActive ? 'active' : ''}" data-index="${i}">
+      <span class="segment-drag-handle" draggable="true">&#10495;</span>
       <span class="segment-num">${i + 1}</span>
       ${iconHtml}
       <span class="segment-title-text">${escHtml(s.title)}</span>
       <span class="segment-duration">${durStr}</span>
+      <button class="segment-edit-btn" title="Edit segment">&#9998;</button>
+      <button class="segment-delete-btn" title="Remove segment">&times;</button>
     </div>`;
   }).join('');
 
-  // Click to jump
-  sidebarSegments.querySelectorAll('.segment-item').forEach(el => {
+  // Add segment button (only when timer is stopped)
+  if (!running) {
+    html += '<button class="segment-add-btn">+ Add Segment</button>';
+  }
+
+  sessionSegments.innerHTML = html;
+
+  // Click to jump (on the row itself, not on edit/delete buttons)
+  sessionSegments.querySelectorAll('.segment-item').forEach(el => {
     el.addEventListener('click', () => {
+      if (inlineEditActive) return;
       const idx = parseInt(el.dataset.index);
       if (idx !== state.currentSegmentIndex) {
         advanceToSegment(idx);
       }
     });
   });
+
+  // Set up inline editing, drag reorder, add/delete handlers
+  setupInlineEditing();
+  setupPanelDragReorder();
 }
 
 function sizeTimerContent() {

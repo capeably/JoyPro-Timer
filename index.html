@@ -29,8 +29,10 @@
 
   <!-- MAIN -->
   <div class="main">
-    <!-- Timer Area -->
-    <div class="timer-area" id="timerArea">
+    <!-- Main content area (timer + future coworking panel sit here side-by-side) -->
+    <div class="main-content">
+      <!-- Timer Area -->
+      <div class="timer-area" id="timerArea">
         <div class="current-segment-title" id="currentTitle">Focus Block 1</div>
         <div class="timer-digits" id="timerDigits">25:00</div>
         <div class="timer-progress-bar">
@@ -59,35 +61,40 @@
         <div class="complete-icon">&#10003;</div>
         <div class="complete-title">Session Complete!</div>
         <div class="complete-sub">Great session. Take a moment to breathe.</div>
-        <button class="modal-btn primary" id="restartBtn" style="margin-top:12px">Start Over</button>
+        <button class="modal-btn primary complete-restart-btn" id="restartBtn">Start Over</button>
       </div>
     </div><!-- /.timer-area -->
+    </div><!-- /.main-content -->
 
     <!-- Expand tab (visible when panel collapsed) -->
-    <button class="panel-tab-btn sidebar-expand-btn" id="sidebarExpandBtn" title="Show segments">
+    <button class="panel-tab-btn session-expand-btn" id="sessionExpandBtn" title="Show segments">
       <div class="tab-arrow up"></div>
     </button>
 
-    <!-- Bottom Panel (Segments/Session) -->
-    <aside class="sidebar-panel" id="sidebarPanel">
+    <!-- Session Panel (bottom — segments list & toolbar) -->
+    <aside class="session-panel" id="sessionPanel">
       <!-- Collapse tab sits on top of panel -->
       <button class="panel-tab-btn panel-collapse-tab" id="panelCollapseBtn" title="Hide segments">
         <div class="tab-arrow down"></div>
       </button>
-      <div class="sidebar-panel-inner">
-        <div class="sidebar-header">
-          <div class="sidebar-name-row">
-            <div class="sidebar-session-name" id="sidebarSessionName"></div>
+      <!-- Menu lives outside session-panel-inner to avoid overflow:hidden clipping -->
+      <div class="session-actions-menu" id="sessionActionsMenu">
+        <button class="menu-item" id="menuSaveBtn">&#128190; Save</button>
+        <button class="menu-item" id="menuSaveAsBtn">&#128203; Save As...</button>
+        <button class="menu-item" id="menuAdvEditBtn">&#9998; Advanced Edit...</button>
+      </div>
+      <div class="session-panel-inner">
+        <div class="session-header">
+          <div class="session-actions-wrapper">
+            <button class="session-btn" id="sessionActionsBtn" title="Session actions">&#8942;</button>
           </div>
-          <div class="sidebar-toolbar">
-            <button class="sidebar-btn" id="panelEditBtn" title="Edit session (E)">&#9998;</button>
-            <button class="sidebar-btn" id="panelSaveBtn" title="Save session">&#128190;</button>
-            <button class="sidebar-btn" id="panelSaveAsBtn" title="Save as new session">&#128203;</button>
-            <button class="sidebar-btn" id="panelNewBtn" title="New session">&#43;</button>
-            <button class="sidebar-btn" id="panelMenuBtn" title="Load saved session">&#9776;</button>
+          <div class="session-name" id="sessionName"></div>
+          <div class="session-toolbar">
+            <button class="session-btn" id="panelNewBtn" title="New session">&#43;</button>
+            <button class="session-btn" id="panelMenuBtn" title="Load saved session">&#9776;</button>
           </div>
         </div>
-        <div class="sidebar-segments" id="sidebarSegments"></div>
+        <div class="session-segments" id="sessionSegments"></div>
       </div>
     </aside>
   </div><!-- /.main -->
@@ -123,7 +130,7 @@
     <div class="modal-footer">
       <button class="modal-btn secondary" id="savedImportBtn">Import</button>
       <button class="modal-btn secondary" id="savedExportBtn">Export</button>
-      <span style="flex:1"></span>
+      <span class="flex-spacer"></span>
       <button class="modal-btn secondary" id="savedCloseBtn">Close</button>
     </div>
   </div>
@@ -165,6 +172,45 @@
   </div>
 </div>
 
+<!-- SEGMENT EDIT POPOVER -->
+<div class="seg-edit-popover" id="segEditPopover">
+  <div class="seg-edit-header">
+    <div class="seg-edit-title">Edit Segment</div>
+    <button class="seg-edit-close" id="segEditClose">&times;</button>
+  </div>
+  <div class="seg-edit-body">
+    <div class="seg-edit-row">
+      <label class="seg-edit-label">Title</label>
+      <input type="text" class="seg-edit-input" id="segEditTitle" spellcheck="false">
+    </div>
+    <div class="seg-edit-row">
+      <label class="seg-edit-label">Duration</label>
+      <div class="seg-edit-duration">
+        <input type="number" class="seg-edit-num" id="segEditMin" min="0" max="999" title="Minutes">
+        <span class="seg-edit-sep">:</span>
+        <input type="number" class="seg-edit-num" id="segEditSec" min="0" max="59" title="Seconds">
+      </div>
+    </div>
+    <div class="seg-edit-row seg-edit-toggles">
+      <label><input type="checkbox" id="segEditSound"> Sound</label>
+      <label><input type="checkbox" id="segEditAuto"> Auto-advance</label>
+    </div>
+    <div class="seg-edit-row">
+      <label class="seg-edit-label">Theme</label>
+      <select class="seg-edit-select" id="segEditTheme"></select>
+    </div>
+    <div class="seg-edit-row seg-edit-sound-row">
+      <span class="seg-edit-sound-link" id="segEditUploadSound">Upload custom sound</span>
+      <span class="seg-edit-sound-link remove" id="segEditRemoveSound">Remove custom sound</span>
+    </div>
+  </div>
+  <div class="seg-edit-footer">
+    <button class="modal-btn secondary" id="segEditCancel">Cancel</button>
+    <button class="modal-btn primary" id="segEditSave">Save</button>
+  </div>
+</div>
+<div class="seg-edit-backdrop" id="segEditBackdrop"></div>
+
 <!-- TOAST -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -182,6 +228,7 @@
 <script src="js/themes.js"></script>
 <script src="js/timer.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/inline-edit.js"></script>
 <script src="js/popout.js"></script>
 <script src="js/dialogs.js"></script>
 <script src="js/editor.js"></script>

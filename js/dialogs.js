@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════
    TRANSITION & COMPLETE OVERLAYS
+   NOTE: showTransitionOverlay is currently unused — auto-advance
+   in timer.js skips the overlay. Kept for potential future use.
    ═══════════════════════════════════════════════════ */
 function showTransitionOverlay(nextTitle, nextIndex, autoStart) {
   transitionTitle.textContent = nextTitle;
@@ -63,9 +65,27 @@ function hideOverlays() {
    ═══════════════════════════════════════════════════ */
 let confirmCallback = null;
 
-function showConfirm(msg, onConfirm) {
+function showConfirm(msg, onConfirm, anchorEl) {
   confirmMsg.textContent = msg;
   confirmCallback = onConfirm;
+
+  const box = confirmOverlay.querySelector('.confirm-box');
+  if (anchorEl) {
+    // Position near the anchor element
+    confirmOverlay.classList.add('anchored');
+    const rect = anchorEl.getBoundingClientRect();
+    let left = rect.right - box.offsetWidth;
+    let top = rect.bottom + 6;
+    if (left < 8) left = 8;
+    if (top + 160 > window.innerHeight) top = rect.top - 6 - 160;
+    box.style.left = left + 'px';
+    box.style.top = top + 'px';
+  } else {
+    confirmOverlay.classList.remove('anchored');
+    box.style.left = '';
+    box.style.top = '';
+  }
+
   confirmOverlay.classList.add('open');
 }
 
@@ -124,7 +144,7 @@ function doSaveAsSession(newName) {
   saveSessions();
   saveState();
   takeSnapshot();
-  renderSidebar();
+  renderSessionPanel();
   showToast(`Saved as "${newName}"`);
 }
 

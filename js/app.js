@@ -2,10 +2,10 @@
    DOM REFS
    ═══════════════════════════════════════════════════ */
 const $ = id => document.getElementById(id);
-const sidebarPanel = $('sidebarPanel');
-const sidebarSegments = $('sidebarSegments');
-const sidebarSessionName = $('sidebarSessionName');
-const sidebarExpandBtn = $('sidebarExpandBtn');
+const sessionPanel = $('sessionPanel');
+const sessionSegments = $('sessionSegments');
+const sessionName = $('sessionName');
+const sessionExpandBtn = $('sessionExpandBtn');
 const timerDigits = $('timerDigits');
 const progressFill = $('progressFill');
 const progressBar = progressFill.parentElement;
@@ -15,9 +15,11 @@ const skipBtn = $('skipBtn');
 const resetBtn = $('resetBtn');
 const themeToggle = $('themeToggle');
 const muteToggle = $('muteToggle');
-const panelEditBtn = $('panelEditBtn');
-const panelSaveBtn = $('panelSaveBtn');
-const panelSaveAsBtn = $('panelSaveAsBtn');
+const sessionActionsBtn = $('sessionActionsBtn');
+const sessionActionsMenu = $('sessionActionsMenu');
+const menuSaveBtn = $('menuSaveBtn');
+const menuSaveAsBtn = $('menuSaveAsBtn');
+const menuAdvEditBtn = $('menuAdvEditBtn');
 const panelNewBtn = $('panelNewBtn');
 const panelMenuBtn = $('panelMenuBtn');
 const panelCollapseBtn = $('panelCollapseBtn');
@@ -61,6 +63,13 @@ const popoutBtn = $('popoutBtn');
 const savedImportBtn = $('savedImportBtn');
 const savedExportBtn = $('savedExportBtn');
 const importFileInput = $('importFileInput');
+const segEditPopover = $('segEditPopover');
+const segEditBackdrop = $('segEditBackdrop');
+const segEditClose = $('segEditClose');
+const segEditCancel = $('segEditCancel');
+const segEditSave = $('segEditSave');
+const segEditUploadSound = $('segEditUploadSound');
+const segEditRemoveSound = $('segEditRemoveSound');
 
 /* ═══════════════════════════════════════════════════
    THEME
@@ -93,7 +102,7 @@ function renderSavedList() {
     const isCurrent = sess.name === state.currentSessionName;
     return `<div class="saved-sess-item" data-index="${i}">
       <div class="saved-sess-info">
-        <div class="saved-sess-name">${escHtml(sess.name)}${isCurrent ? ' <span style="font-size:11px;color:var(--text-muted)">(active)</span>' : ''}</div>
+        <div class="saved-sess-name">${escHtml(sess.name)}${isCurrent ? ' <span class="saved-sess-active-tag">(active)</span>' : ''}</div>
         <div class="saved-sess-meta">${segCount} segment${segCount !== 1 ? 's' : ''} &middot; ${totalMins} min</div>
       </div>
       <div class="saved-sess-actions">
@@ -185,7 +194,7 @@ function loadSession(index) {
 
   saveState();
   takeSnapshot();
-  renderSidebar();
+  renderSessionPanel();
   renderTimer();
   showToast(`Loaded "${sess.name}"`);
 }
@@ -245,6 +254,24 @@ function importSessions(file) {
 }
 
 /* ═══════════════════════════════════════════════════
+   SHARED HELPERS
+   ═══════════════════════════════════════════════════ */
+/** Reset timer to segment 0 of the given session, persist, and refresh UI. */
+function activateSession(sess) {
+  state.currentSessionName = sess.name;
+  state.currentSegmentIndex = 0;
+  if (sess.segments.length) {
+    state.timerTotal = segmentTotalSeconds(sess.segments[0]);
+    state.timerSeconds = state.timerTotal;
+  }
+  running = false;
+  clearInterval(timerInterval);
+  saveSessions(); saveState(); takeSnapshot();
+  if (sess.segments[0]) applySegmentTheme(sess.segments[0]);
+  renderSessionPanel(); renderTimer(); hideOverlays(); closeEditor();
+}
+
+/* ═══════════════════════════════════════════════════
    EVENT LISTENERS
    ═══════════════════════════════════════════════════ */
 function setupEventListeners() {
@@ -273,7 +300,7 @@ function setupEventListeners() {
     saveState();
   });
 
-  sidebarExpandBtn.addEventListener('click', () => {
+  sessionExpandBtn.addEventListener('click', () => {
     state.panelCollapsed = false;
     updatePanelCollapse();
     saveState();
@@ -316,13 +343,13 @@ function setupEventListeners() {
 
   // Confirm dialog
   confirmYes.addEventListener('click', () => {
-    confirmOverlay.classList.remove('open');
+    confirmOverlay.classList.remove('open', 'anchored');
     if (confirmCallback) confirmCallback();
     confirmCallback = null;
   });
 
   confirmNo.addEventListener('click', () => {
-    confirmOverlay.classList.remove('open');
+    confirmOverlay.classList.remove('open', 'anchored');
     confirmCallback = null;
   });
 
@@ -379,12 +406,50 @@ function setupEventListeners() {
     if (e.key === 'Escape') namePromptCancel.click();
   });
 
-  // Panel toolbar
-  panelEditBtn.addEventListener('click', openEditor);
-  panelSaveBtn.addEventListener('click', () => { doSaveCurrentSession(); });
-  panelSaveAsBtn.addEventListener('click', () => {
+  // Session actions menu (kebab ⋮)
+  sessionActionsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    sessionActionsMenu.classList.toggle('open');
+  });
+
+  menuSaveBtn.addEventListener('click', () => {
+    sessionActionsMenu.classList.remove('open');
+    doSaveCurrentSession();
+    renderSessionHeader();
+  });
+  menuSaveAsBtn.addEventListener('click', () => {
+    sessionActionsMenu.classList.remove('open');
     showNamePrompt(state.currentSessionName + ' (copy)', (newName) => { doSaveAsSession(newName); });
   });
+  menuAdvEditBtn.addEventListener('click', () => {
+    sessionActionsMenu.classList.remove('open');
+    openEditor();
+  });
+
+  // Segment edit popover
+  segEditClose.addEventListener('click', closeSegEditPopover);
+  segEditCancel.addEventListener('click', closeSegEditPopover);
+  segEditBackdrop.addEventListener('click', closeSegEditPopover);
+  segEditSave.addEventListener('click', saveSegEditPopover);
+  segEditPopover.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.stopPropagation(); closeSegEditPopover(); }
+    if (e.key === 'Enter' && e.target.tagName !== 'SELECT') { e.preventDefault(); saveSegEditPopover(); }
+  });
+  segEditUploadSound.addEventListener('click', () => {
+    if (segEditIdx < 0) return;
+    currentEditSoundIndex = segEditIdx;
+    soundFileInput.click();
+  });
+  segEditRemoveSound.addEventListener('click', () => {
+    if (segEditIdx < 0) return;
+    const key = segEditIdx + '_' + state.currentSessionName;
+    delete customSounds[key];
+    saveSounds();
+    segEditRemoveSound.classList.add('hidden');
+    showToast('Custom sound removed');
+  });
+
+  // Right-side navigation buttons
   panelNewBtn.addEventListener('click', () => { guardUnsavedChanges(() => { openEditorNew(); }); });
   panelMenuBtn.addEventListener('click', () => { openSavedModal(); });
 
@@ -417,36 +482,15 @@ function setupEventListeners() {
       }
       const newSess = { name: name, segments: editorData.map(s => ({ ...s })) };
       sessions.push(newSess);
-      state.currentSessionName = name;
-      state.currentSegmentIndex = 0;
-      if (newSess.segments.length) {
-        state.timerTotal = segmentTotalSeconds(newSess.segments[0]);
-        state.timerSeconds = state.timerTotal;
-      }
-      running = false;
-      clearInterval(timerInterval);
-      saveSessions(); saveState(); takeSnapshot();
-      applySegmentTheme(newSess.segments[0]);
-      renderSidebar(); renderTimer(); hideOverlays(); closeEditor();
+      activateSession(newSess);
       showToast('New session created');
     } else {
       const sess = getCurrentSession();
-      const oldName = sess.name;
       sess.name = name;
       sess.segments = editorData.map(s => ({ ...s }));
-      state.currentSessionName = name;
       const idx = sessions.findIndex(s => s === sess);
       if (idx >= 0) sessions[idx] = sess;
-      state.currentSegmentIndex = 0;
-      if (sess.segments.length) {
-        state.timerTotal = segmentTotalSeconds(sess.segments[0]);
-        state.timerSeconds = state.timerTotal;
-      }
-      running = false;
-      clearInterval(timerInterval);
-      saveSessions(); saveState(); takeSnapshot();
-      applySegmentTheme(sess.segments[0]);
-      renderSidebar(); renderTimer(); hideOverlays(); closeEditor();
+      activateSession(sess);
       showToast('Session saved');
     }
   });
@@ -469,6 +513,10 @@ function setupEventListeners() {
       customSounds[key] = reader.result;
       saveSounds();
       showToast('Custom sound set');
+      // Update remove link visibility if popover is open
+      if (segEditPopover.classList.contains('open')) {
+        segEditRemoveSound.classList.remove('hidden');
+      }
     };
     reader.readAsDataURL(file);
     soundFileInput.value = '';
@@ -496,7 +544,8 @@ function setupEventListeners() {
       savedModal.classList.contains('open') ||
       confirmOverlay.classList.contains('open') ||
       savePromptOverlay.classList.contains('open') ||
-      namePromptOverlay.classList.contains('open');
+      namePromptOverlay.classList.contains('open') ||
+      segEditPopover.classList.contains('open');
 
     if (e.code === 'Space' && !anyModalOpen && !hasModifier) {
       e.preventDefault();
@@ -510,18 +559,25 @@ function setupEventListeners() {
     } else if (e.code === 'KeyR' && !anyModalOpen && !hasModifier) {
       resetBtn.click();
     } else if (e.code === 'Escape') {
-      if (namePromptOverlay.classList.contains('open')) { namePromptOverlay.classList.remove('open'); namePromptCallback = null; }
+      if (segEditPopover.classList.contains('open')) { closeSegEditPopover(); }
+      else if (sessionActionsMenu.classList.contains('open')) { sessionActionsMenu.classList.remove('open'); }
+      else if (namePromptOverlay.classList.contains('open')) { namePromptOverlay.classList.remove('open'); namePromptCallback = null; }
       else if (savePromptOverlay.classList.contains('open')) { savePromptOverlay.classList.remove('open'); savePromptCallbacks = null; }
       else if (editorModal.classList.contains('open')) closeEditor();
       else if (savedModal.classList.contains('open')) closeSavedModal();
-      else if (confirmOverlay.classList.contains('open')) { confirmOverlay.classList.remove('open'); confirmCallback = null; }
+      else if (confirmOverlay.classList.contains('open')) { confirmOverlay.classList.remove('open', 'anchored'); confirmCallback = null; }
     }
+  });
+
+  // Close session actions menu on outside click
+  document.addEventListener('click', () => {
+    sessionActionsMenu.classList.remove('open');
   });
 
   // Modal close on backdrop
   editorModal.addEventListener('click', e => { if (e.target === editorModal) closeEditor(); });
   savedModal.addEventListener('click', e => { if (e.target === savedModal) closeSavedModal(); });
-  confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay) { confirmOverlay.classList.remove('open'); confirmCallback = null; }});
+  confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay) { confirmOverlay.classList.remove('open', 'anchored'); confirmCallback = null; }});
   savePromptOverlay.addEventListener('click', e => { if (e.target === savePromptOverlay) { savePromptOverlay.classList.remove('open'); savePromptCallbacks = null; }});
   namePromptOverlay.addEventListener('click', e => { if (e.target === namePromptOverlay) { namePromptOverlay.classList.remove('open'); namePromptCallback = null; }});
 }
@@ -557,7 +613,7 @@ function init() {
   }
 
   takeSnapshot();
-  renderSidebar();
+  renderSessionPanel();
   renderTimer();
   saveState();
 

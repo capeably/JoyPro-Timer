@@ -1,189 +1,4 @@
 /* ═══════════════════════════════════════════════════
-   BOTTOM PANEL (Segments/Session)
-   ═══════════════════════════════════════════════════ */
-.sidebar-panel {
-  flex: 0 0 auto;
-  order: 2;
-  position: relative;
-  overflow: visible;
-}
-
-.sidebar-panel-inner {
-  max-height: 200px;
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--border);
-  background: var(--bg-sidebar);
-  transition: max-height 0.25s ease, opacity 0.2s ease;
-  overflow: hidden;
-}
-
-.sidebar-panel.collapsed .sidebar-panel-inner {
-  max-height: 0;
-  border-top: none;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.sidebar-panel.collapsed .panel-collapse-tab {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* Tab-style expand/collapse button */
-.panel-tab-btn {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 48px;
-  height: 18px;
-  border-radius: 8px 8px 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--border);
-  border: 1px solid var(--border);
-  border-bottom: none;
-  z-index: 10;
-  cursor: pointer;
-  transition: background 0.15s, opacity 0.2s;
-}
-.panel-tab-btn:hover, .panel-tab-btn:active { background: var(--accent); }
-.panel-tab-btn:hover .tab-arrow, .panel-tab-btn:active .tab-arrow { border-color: white; }
-.tab-arrow {
-  width: 8px;
-  height: 8px;
-  border-left: 2px solid var(--text-muted);
-  border-bottom: 2px solid var(--text-muted);
-  transition: border-color 0.15s;
-}
-.tab-arrow.down { transform: rotate(-45deg) translateY(-2px); }
-.tab-arrow.up { transform: rotate(135deg) translateY(2px); }
-
-/* Expand tab — anchored at bottom of timer area, above safe area on iPhones */
-.sidebar-expand-btn {
-  bottom: 8px;
-  bottom: calc(8px + env(safe-area-inset-bottom));
-  opacity: 0;
-  pointer-events: none;
-}
-.sidebar-expand-btn.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Collapse tab — sits above the panel border */
-.panel-collapse-tab {
-  top: -18px;
-}
-
-/* Panel header */
-.sidebar-header {
-  padding: 4px 8px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: opacity 0.15s;
-}
-
-.sidebar-name-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
-}
-
-.sidebar-session-name {
-  font-family: 'Abhaya Libre', serif;
-  font-weight: 600;
-  font-size: 13px;
-  line-height: 1.3;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-.sidebar-toolbar {
-  display: flex;
-  gap: 1px;
-  align-items: center;
-}
-
-.sidebar-btn {
-  width: 28px;
-  height: 26px;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  transition: background 0.15s;
-  flex-shrink: 0;
-}
-.sidebar-btn:hover, .sidebar-btn:active { background: var(--hover-bg); }
-
-/* Segment list */
-.sidebar-segments {
-  flex: 1;
-  overflow-y: auto;
-  padding: 4px 0;
-}
-
-.segment-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 0.1s;
-  white-space: nowrap;
-}
-.segment-item:hover, .segment-item:active { background: var(--hover-bg); }
-.segment-item.active { background: var(--active-bg); font-weight: 500; }
-
-.segment-num {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  color: var(--text-muted);
-  width: 14px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.segment-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-}
-
-.segment-icon.completed { color: var(--completed); }
-.segment-icon.playing { color: var(--accent); }
-
-.segment-title-text {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.segment-duration {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-/* ═══════════════════════════════════════════════════
    TIMER AREA
    ═══════════════════════════════════════════════════ */
 .timer-area {
@@ -196,7 +11,6 @@
   position: relative;
   min-width: 0;
   min-height: 0;
-  order: 1;
   overflow: clip;
 }
 
@@ -365,6 +179,7 @@
   font-size: 22px;
 }
 .complete-sub { font-size: 13px; color: var(--text-muted); }
+.complete-restart-btn { margin-top: 12px; }
 
 /* ═══════════════════════════════════════════════════
    EMPTY STATE
@@ -390,10 +205,5 @@
   color: #fff;
 }
 .empty-state-btn:hover, .empty-state-btn:active { background: #e8884f; }
+.empty-state.compact { padding: 20px; }
 
-/* ═══════════════════════════════════════════════════
-   SHORT VIEWPORT
-   ═══════════════════════════════════════════════════ */
-@media (max-height: 500px) {
-  .sidebar-panel-inner { max-height: 120px; }
-}
