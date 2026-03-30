@@ -54,7 +54,7 @@ let state = {
   timerSeconds: 180,
   timerTotal: 180,
   globalMute: false,
-  theme: "light",
+  theme: "growingTree",
   panelCollapsed: false
 };
 
