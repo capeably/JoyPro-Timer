@@ -1,0 +1,55 @@
+/* ═══════════════════════════════════════════════════
+   THEME PICKER
+   ═══════════════════════════════════════════════════ */
+.theme-picker {
+  position: fixed;
+  z-index: 100;
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--modal-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 0.15s, transform 0.15s;
+  max-width: calc(100vw - 24px);
+}
+
+.theme-picker.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.theme-swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.theme-swatch:hover {
+  transform: scale(1.15);
+}
+
+.theme-swatch.active {
+  border-color: var(--accent);
+}
+
+.swatch-color {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(128,128,128,0.3);
+}

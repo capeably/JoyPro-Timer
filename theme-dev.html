@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Theme Dev Harness — JoyPro</title>
+<link rel="icon" type="image/png" href="joypro-logo-dark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Rethink+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/bonsai.css">
+<link rel="stylesheet" href="css/theme-picker.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Rethink Sans', sans-serif; overflow: hidden; }
+
+  /* ── Dev Controls Panel ── */
+  .dev-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: rgba(20, 20, 30, 0.92);
+    backdrop-filter: blur(12px);
+    color: #e0e0e0;
+    padding: 12px 20px 16px;
+    font-size: 13px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .dev-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .dev-label {
+    font-weight: 600;
+    color: #aaa;
+    min-width: 70px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Progress Slider ── */
+  .slider-container {
+    flex: 1;
+    position: relative;
+    min-width: 200px;
+  }
+
+  .slider-track {
+    position: relative;
+    height: 28px;
+    display: flex;
+    align-items: center;
+  }
+
+  #progressSlider {
+    width: 100%;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255,255,255,0.15);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+  }
+  #progressSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #f19766;
+    border: 2px solid #fff;
+    cursor: grab;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  #progressSlider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #f19766;
+    border: 2px solid #fff;
+    cursor: grab;
+  }
+
+  /* ── Breakpoint Markers ── */
+  .breakpoint-markers {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 28px;
+    pointer-events: none;
+  }
+  .bp-marker {
+    position: absolute;
+    top: 2px;
+    width: 2px;
+    height: 8px;
+    border-radius: 1px;
+    transform: translateX(-1px);
+  }
+  .bp-marker.branch { background: #6faf9c; }
+  .bp-marker.foliage { background: #c89bff; }
+  .bp-marker.mature { background: #f19766; }
+  .bp-marker-label {
+    position: absolute;
+    top: -14px;
+    font-size: 8px;
+    color: #888;
+    white-space: nowrap;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  /* ── Buttons ── */
+  .dev-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #e0e0e0;
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    transition: background 0.15s;
+  }
+  .dev-btn:hover { background: rgba(255,255,255,0.18); }
+  .dev-btn.active { background: rgba(241,151,102,0.3); border-color: #f19766; color: #f19766; }
+
+  .dev-btn-icon {
+    font-size: 16px;
+    padding: 4px 8px;
+    min-width: 32px;
+    text-align: center;
+  }
+
+  /* ── Progress Display ── */
+  .progress-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    color: #f19766;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  /* ── Inspector ── */
+  .inspector {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 4px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+  }
+  .inspector.open {
+    max-height: 300px;
+    padding-top: 8px;
+  }
+  .insp-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 1px 0;
+  }
+  .insp-key { color: #888; }
+  .insp-val { color: #6faf9c; }
+  .insp-val.active { color: #f19766; }
+
+  /* ── Speed selector ── */
+  .speed-btns {
+    display: flex;
+    gap: 4px;
+  }
+
+  /* ── Mock timer area (matches main app structure) ── */
+  .timer-area {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .current-segment-title {
+    font-size: 16px;
+    opacity: 0.7;
+    margin-bottom: 8px;
+  }
+  .timer-digits {
+    font-family: 'DM Mono', monospace;
+    font-size: 64px;
+    font-weight: 500;
+  }
+  .timer-controls { display: flex; gap: 16px; margin-top: 16px; }
+  .timer-controls button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 14px;
+    font-size: 10px;
+    color: #888;
+    align-items: center;
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<!-- Mock timer area so Growing Tree text color logic has something to target -->
+<div class="timer-area" id="timerArea">
+  <div class="current-segment-title">Growing Tree — Dev Harness</div>
+  <div class="timer-digits" id="timerDigits">25:00</div>
+  <div class="timer-controls">
+    <button>&#8634;</button>
+    <button>&#9654;</button>
+    <button>&#9197;</button>
+  </div>
+</div>
+
+<!-- Dev Controls -->
+<div class="dev-panel">
+  <div class="dev-row">
+    <span class="dev-label">Progress</span>
+    <div class="slider-container">
+      <div class="breakpoint-markers" id="breakpointMarkers"></div>
+      <div class="slider-track">
+        <input type="range" id="progressSlider" min="0" max="1000" value="0" step="1">
+      </div>
+    </div>
+    <span class="progress-display" id="progressDisplay">0%</span>
+  </div>
+
+  <div class="dev-row">
+    <span class="dev-label">Playback</span>
+    <button class="dev-btn dev-btn-icon" id="stepBackBtn" title="Step back 5%">&#9664;&#9664;</button>
+    <button class="dev-btn dev-btn-icon" id="stepBack1Btn" title="Step back 1%">&#9664;</button>
+    <button class="dev-btn dev-btn-icon active" id="playPauseBtn" title="Play/Pause">&#9654;</button>
+    <button class="dev-btn dev-btn-icon" id="stepFwd1Btn" title="Step forward 1%">&#9654;</button>
+    <button class="dev-btn dev-btn-icon" id="stepFwdBtn" title="Step forward 5%">&#9654;&#9654;</button>
+    <button class="dev-btn" id="resetBtn">Reset</button>
+
+    <span class="dev-label" style="min-width:auto; margin-left:8px">Speed</span>
+    <div class="speed-btns">
+      <button class="dev-btn" data-speed="0.25">0.25x</button>
+      <button class="dev-btn" data-speed="0.5">0.5x</button>
+      <button class="dev-btn active" data-speed="1">1x</button>
+      <button class="dev-btn" data-speed="2">2x</button>
+      <button class="dev-btn" data-speed="5">5x</button>
+      <button class="dev-btn" data-speed="20">20x</button>
+    </div>
+
+    <span style="flex:1"></span>
+    <button class="dev-btn" id="inspectorToggle">Inspector ▲</button>
+  </div>
+
+  <div class="dev-row">
+    <span class="dev-label">Legend</span>
+    <div class="legend">
+      <span><span class="legend-dot" style="background:#6faf9c"></span>Branch trigger</span>
+      <span><span class="legend-dot" style="background:#c89bff"></span>Foliage appear</span>
+      <span><span class="legend-dot" style="background:#f19766"></span>Foliage mature</span>
+    </div>
+  </div>
+
+  <div class="inspector" id="inspector"></div>
+</div>
+
+<!-- Mock state object (mimics what the real app provides) -->
+<script>
+  // Minimal state mock for theme-growing-tree.js
+  const state = {
+    timerTotal: 1500, // 25 minutes in seconds
+    timerSeconds: 1500,
+    currentSegmentIndex: 0,
+    theme: 'growingTree'
+  };
+  function getCurrentSession() {
+    return { segments: [{ title: 'Focus', duration: 1500, theme: 'default' }] };
+  }
+  function saveState() {}
+</script>
+
+<!-- Load the actual theme files (same ones the real app uses) -->
+<script src="js/theme-growing-tree.js"></script>
+<script src="js/themes.js"></script>
+
+<!-- Dev harness controller -->
+<script src="js/theme-dev.js"></script>
+</body>
+</html>
