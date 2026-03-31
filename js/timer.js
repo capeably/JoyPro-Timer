@@ -82,6 +82,9 @@ function advanceToSegment(index) {
   // Apply per-segment theme (or revert to global default)
   applySegmentTheme(s);
 
+  // Reset bonsai tree so it regrows for the new segment
+  if (typeof resetBonsaiForSegment === 'function') resetBonsaiForSegment();
+
   renderSessionPanel();
   renderTimer();
   markDirty();

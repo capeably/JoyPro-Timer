@@ -68,6 +68,7 @@ function createBgCanvas() {
 function removeBgCanvas() {
   if (bgAnimId) { cancelAnimationFrame(bgAnimId); bgAnimId = null; }
   stopShootingStarTimer();
+  removeBonsaiSVG();
   if (bgCanvas) { bgCanvas.remove(); bgCanvas = null; bgCtx = null; }
   setBgTransparency(false);
   // Clear any inline color overrides from Growing Tree's day/night cycle
@@ -103,6 +104,7 @@ function resizeBgCanvas() {
   if (activeBackground === 'growingTree') {
     initTreeClouds();
     initTwilightStars();
+    positionBonsaiSVG();
   }
 }
 
@@ -414,6 +416,7 @@ function initGrowingTree() {
   bgCanvas.style.background = '';
   initTreeClouds();
   initSunFace();
+  createBonsaiSVG();
   renderGrowingTree();
 }
 
@@ -693,10 +696,9 @@ function renderGrowingTree() {
   bgCtx.fillStyle = grassGrad;
   bgCtx.fill();
 
-  // ── Tree ──
-  const treeCenterX = W * 0.5;
-  const treeBaseY = groundY + 2;
-  drawTree(treeCenterX, treeBaseY, progress, now);
+  // ── Bonsai SVG tree ──
+  updateBonsaiProgress(progress);
+  updateBonsaiColors(progress);
 
   // ── Grass tufts (darken at night) ──
   drawGrassTufts(W, H, groundY, now, progress);
@@ -736,288 +738,501 @@ function drawCloud(x, y, w, h, color, alpha) {
   const c = color || [255, 255, 255];
   const a = alpha !== undefined ? alpha : 0.85;
   bgCtx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${a})`;
-  // Cloud made of overlapping circles
+  // Cloud made of overlapping circles — each drawn separately to avoid
+  // subpath winding artifacts that cause missing chunks in overlapping areas
   const r = h * 0.7;
-  bgCtx.beginPath();
-  bgCtx.arc(x + w * 0.3, y, r, 0, Math.PI * 2);
-  bgCtx.arc(x + w * 0.5, y - r * 0.4, r * 1.2, 0, Math.PI * 2);
-  bgCtx.arc(x + w * 0.7, y, r * 0.9, 0, Math.PI * 2);
-  bgCtx.arc(x + w * 0.15, y + r * 0.2, r * 0.7, 0, Math.PI * 2);
-  bgCtx.arc(x + w * 0.85, y + r * 0.15, r * 0.6, 0, Math.PI * 2);
-  bgCtx.fill();
-}
-
-function drawTree(cx, baseY, progress, time) {
-  // ── Easing for organic growth ──
-  const p = easeOutQuart(Math.min(1, progress));
-
-  // ── Dimensions ──
-  const maxTrunkH = Math.min(160, bgCanvas.height * 0.18);
-  const minTrunkH = 12;
-  const trunkH = minTrunkH + (maxTrunkH - minTrunkH) * p;
-  const trunkBottomW = 4 + 18 * p;
-  const trunkTopW = trunkBottomW * 0.2;
-
-  // ── S-curve control points ── (develop as tree grows)
-  const sCurve = p * 12; // max horizontal offset for S-curve
-  const topOffsetX = sCurve * 0.4; // trunk top drifts slightly right
-  const trunkTopX = cx + topOffsetX;
-  const trunkTopY = baseY - trunkH;
-
-  // ── Nebari / surface roots (after 40%) ──
-  if (p > 0.4) {
-    drawNebari(cx, baseY, trunkBottomW, (p - 0.4) / 0.6);
-  }
-
-  // ── Bonsai trunk (S-curved) ──
-  // Left edge of trunk
-  bgCtx.beginPath();
-  bgCtx.moveTo(cx - trunkBottomW / 2, baseY);
-  bgCtx.bezierCurveTo(
-    cx - trunkBottomW * 0.3 - sCurve, baseY - trunkH * 0.35,
-    cx - trunkTopW * 0.3 + sCurve * 0.6, baseY - trunkH * 0.65,
-    trunkTopX - trunkTopW / 2, trunkTopY
-  );
-  // Right edge of trunk (reverse)
-  bgCtx.lineTo(trunkTopX + trunkTopW / 2, trunkTopY);
-  bgCtx.bezierCurveTo(
-    cx + trunkTopW * 0.3 + sCurve * 0.6, baseY - trunkH * 0.65,
-    cx + trunkBottomW * 0.3 - sCurve, baseY - trunkH * 0.35,
-    cx + trunkBottomW / 2, baseY
-  );
-  bgCtx.closePath();
-  const trunkGrad = bgCtx.createLinearGradient(cx - trunkBottomW, 0, cx + trunkBottomW, 0);
-  trunkGrad.addColorStop(0, '#5C3D2E');
-  trunkGrad.addColorStop(0.5, '#7B5B44');
-  trunkGrad.addColorStop(1, '#5C3D2E');
-  bgCtx.fillStyle = trunkGrad;
-  bgCtx.fill();
-
-  // ── Bark texture (after 50%) ──
-  if (p > 0.5) {
-    bgCtx.strokeStyle = 'rgba(60, 35, 20, 0.2)';
-    bgCtx.lineWidth = 1;
-    for (let i = 0; i < 4; i++) {
-      const t = 0.2 + i * 0.18;
-      const barkY = baseY - trunkH * t;
-      const barkX = cx + Math.sin(t * 5) * sCurve * (0.5 - t);
-      const barkW = trunkBottomW * (1 - t * 0.7) * 0.4;
-      bgCtx.beginPath();
-      bgCtx.arc(barkX, barkY, barkW, 0.2, Math.PI - 0.2);
-      bgCtx.stroke();
-    }
-  }
-
-  // ── Sample spine points for branch attachment ──
-  const spine = [];
-  for (let i = 0; i <= 5; i++) {
-    const t = i / 5;
-    // Approximate cubic bezier center-line position
-    const sy = baseY - trunkH * t;
-    const sx = cx + Math.sin(t * Math.PI) * sCurve * (0.5 - t) * 2 + topOffsetX * t;
-    const sw = trunkBottomW * (1 - t * 0.8) + trunkTopW * t * 0.8;
-    spine.push({ x: sx, y: sy, w: sw });
-  }
-
-  // ── Branches + foliage pads (after 25%) ──
-  let branchEndpoints = [];
-  if (p > 0.25) {
-    const branchP = (p - 0.25) / 0.75;
-    branchEndpoints = drawBonsaiBranches(spine, branchP, time);
-  }
-
-  // ── Foliage pads (after 20%) ──
-  if (p > 0.20) {
-    const leafP = (p - 0.20) / 0.80;
-    // Crown pad at trunk apex
-    const sway = Math.sin(time * 0.5) * 2 * p;
-    branchEndpoints.push({
-      x: trunkTopX + sway, y: trunkTopY, size: 1.3, tier: 0
-    });
-    drawFoliagePads(branchEndpoints, leafP, time);
-  }
-
-  // ── Sprout leaves at very beginning ──
-  if (p < 0.3) {
-    const sproutP = Math.min(1, p / 0.15);
-    drawSproutLeaves(cx, baseY - trunkH, sproutP);
-  }
-}
-
-function drawNebari(cx, baseY, trunkW, p) {
-  // Surface roots spreading from trunk base
-  bgCtx.lineCap = 'round';
-  const roots = [
-    { angle: -15, side: -1 }, { angle: -25, side: 1 },
-    { angle: -10, side: -1 }, { angle: -20, side: 1 },
-    { angle: -30, side: -1 }
+  const circles = [
+    [x + w * 0.15, y + r * 0.2, r * 0.7],
+    [x + w * 0.3,  y,           r],
+    [x + w * 0.5,  y - r * 0.4, r * 1.2],
+    [x + w * 0.7,  y,           r * 0.9],
+    [x + w * 0.85, y + r * 0.15, r * 0.6],
   ];
-  for (let i = 0; i < roots.length; i++) {
-    const r = roots[i];
-    const rootLen = (8 + 22 * p) * (1 - i * 0.1);
-    const startX = cx + r.side * trunkW * 0.25;
-    const rad = r.angle * Math.PI / 180;
-    const endX = startX + Math.cos(rad) * rootLen * r.side;
-    const endY = baseY + Math.sin(Math.abs(rad)) * rootLen * 0.4 + 2;
-
-    // Thick to thin root
-    bgCtx.strokeStyle = '#6B4C3B';
-    bgCtx.lineWidth = trunkW * 0.12 * (1 - i * 0.12);
+  for (const [cx, cy, cr] of circles) {
     bgCtx.beginPath();
-    bgCtx.moveTo(startX, baseY);
-    bgCtx.quadraticCurveTo(
-      startX + r.side * rootLen * 0.5, baseY + rootLen * 0.15,
-      endX, endY
-    );
-    bgCtx.stroke();
-  }
-}
-
-function drawSproutLeaves(cx, topY, p) {
-  if (p <= 0) return;
-  const leafSize = 6 + 8 * p;
-  bgCtx.save();
-  bgCtx.fillStyle = '#6CBF5C';
-
-  // Left leaf
-  bgCtx.save();
-  bgCtx.translate(cx - 2, topY);
-  bgCtx.rotate(-0.5);
-  bgCtx.beginPath();
-  bgCtx.ellipse(0, -leafSize / 2, leafSize * 0.4, leafSize / 2, 0, 0, Math.PI * 2);
-  bgCtx.fill();
-  bgCtx.restore();
-
-  // Right leaf
-  bgCtx.save();
-  bgCtx.translate(cx + 2, topY);
-  bgCtx.rotate(0.5);
-  bgCtx.beginPath();
-  bgCtx.ellipse(0, -leafSize / 2, leafSize * 0.4, leafSize / 2, 0, 0, Math.PI * 2);
-  bgCtx.fill();
-  bgCtx.restore();
-
-  bgCtx.restore();
-}
-
-function drawBonsaiBranches(spine, p, time) {
-  // Bonsai branches: horizontal, tiered, alternating sides
-  const branchDefs = [
-    { spineIdx: 2, side: -1, angle: -5, lenFactor: 1.0 },
-    { spineIdx: 2, side:  1, angle: -8, lenFactor: 0.85 },
-    { spineIdx: 3, side: -1, angle: -3, lenFactor: 0.75 },
-    { spineIdx: 3, side:  1, angle: -10, lenFactor: 0.65 },
-    { spineIdx: 4, side: -1, angle: -6, lenFactor: 0.5 }
-  ];
-
-  const endpoints = [];
-  const maxBranches = Math.floor(2 + p * 3); // 2→5 branches
-  bgCtx.strokeStyle = '#6B4C3B';
-  bgCtx.lineCap = 'round';
-
-  for (let i = 0; i < Math.min(maxBranches, branchDefs.length); i++) {
-    const def = branchDefs[i];
-    const sp = spine[def.spineIdx];
-    const branchLen = (20 + p * 45) * def.lenFactor;
-    const rad = def.angle * Math.PI / 180;
-    const sway = Math.sin(time * 0.8 + i * 1.5) * 0.04 * p;
-
-    // Branch endpoint — mostly horizontal with slight droop/rise
-    const endX = sp.x + def.side * branchLen;
-    const endY = sp.y + Math.sin(rad + sway) * branchLen * 0.3 - branchLen * 0.1;
-
-    // Draw branch
-    const lw = 1.5 + p * 2.5 * (1 - i * 0.15);
-    bgCtx.lineWidth = lw;
-    bgCtx.beginPath();
-    bgCtx.moveTo(sp.x, sp.y);
-    bgCtx.quadraticCurveTo(
-      sp.x + def.side * branchLen * 0.5,
-      sp.y - branchLen * 0.08 + Math.sin(sway) * 3,
-      endX, endY
-    );
-    bgCtx.stroke();
-
-    endpoints.push({
-      x: endX, y: endY,
-      size: def.lenFactor, tier: def.spineIdx
-    });
-
-    // Sub-branches (after 60% growth)
-    if (p > 0.6) {
-      const subP = (p - 0.6) / 0.4;
-      const subLen = branchLen * 0.4 * subP;
-      const midX = sp.x + def.side * branchLen * 0.6;
-      const midY = sp.y + (endY - sp.y) * 0.6;
-      const subEndX = midX + def.side * subLen * 0.5;
-      const subEndY = midY - subLen * 0.6;
-
-      bgCtx.lineWidth = lw * 0.5;
-      bgCtx.beginPath();
-      bgCtx.moveTo(midX, midY);
-      bgCtx.quadraticCurveTo(midX + def.side * subLen * 0.3, midY - subLen * 0.3, subEndX, subEndY);
-      bgCtx.stroke();
-
-      endpoints.push({
-        x: subEndX, y: subEndY,
-        size: def.lenFactor * 0.45, tier: def.spineIdx
-      });
-    }
-  }
-
-  return endpoints;
-}
-
-function drawFoliagePads(endpoints, p, time) {
-  // Sort bottom-to-top so upper pads overlap lower
-  endpoints.sort((a, b) => b.y - a.y);
-
-  for (let i = 0; i < endpoints.length; i++) {
-    const ep = endpoints[i];
-    const padRx = (8 + 66 * p) * ep.size; // horizontal radius
-    const padRy = padRx * 0.45; // flattened cloud shape
-    const sway = Math.sin(time * 0.5 + i * 1.2) * 2 * p;
-
-    // Shadow under pad
-    bgCtx.fillStyle = 'rgba(0, 80, 0, 0.06)';
-    bgCtx.beginPath();
-    bgCtx.ellipse(ep.x + sway * 0.5, ep.y + padRy * 0.5, padRx * 0.9, padRy * 0.25, 0, 0, Math.PI * 2);
-    bgCtx.fill();
-
-    // Dark green back layer
-    bgCtx.fillStyle = '#3A8A30';
-    drawFoliagePad(ep.x + sway, ep.y - padRy * 0.1, padRx, padRy, 0.95, time, i);
-
-    // Mid green layer
-    bgCtx.fillStyle = '#4EA842';
-    drawFoliagePad(ep.x + sway, ep.y - padRy * 0.25, padRx * 0.85, padRy * 0.85, 0.9, time, i + 10);
-
-    // Light green front layer
-    bgCtx.fillStyle = '#6CBF5C';
-    drawFoliagePad(ep.x + sway, ep.y - padRy * 0.35, padRx * 0.65, padRy * 0.7, 0.85, time, i + 20);
-
-    // Highlight
-    bgCtx.fillStyle = 'rgba(180, 230, 120, 0.3)';
-    bgCtx.beginPath();
-    bgCtx.arc(ep.x + sway - padRx * 0.2, ep.y - padRy * 0.6, padRx * 0.2, 0, Math.PI * 2);
+    bgCtx.arc(cx, cy, cr, 0, Math.PI * 2);
     bgCtx.fill();
   }
 }
 
-function drawFoliagePad(cx, cy, rx, ry, scale, time, seed) {
-  // Flattened cloud-pad shape using overlapping circles
-  const circles = 5;
-  bgCtx.beginPath();
-  for (let i = 0; i < circles; i++) {
-    const a = (i / circles) * Math.PI * 2 + seed;
-    const sway = Math.sin(time * 0.7 + i + seed) * 1.5;
-    const bx = cx + Math.cos(a) * rx * 0.35 + sway;
-    const by = cy + Math.sin(a) * ry * 0.3;
-    const br = Math.min(rx, ry) * scale * (0.45 + Math.sin(i * 1.3 + seed) * 0.1);
-    bgCtx.moveTo(bx + br, by);
-    bgCtx.arc(bx, by, br, 0, Math.PI * 2);
+/* ═══════════════════════════════════════════════════
+   SVG BONSAI TREE — replaces canvas-drawn tree
+   ═══════════════════════════════════════════════════ */
+let bonsaiSvgEl = null;
+let bonsaiBranchState = {};   // branchId → { triggerProgress, branch, sub, branchLen, subLen }
+let bonsaiFoliageState = {};  // padId → { triggerProgress, matureProgress, padEl }
+let bonsaiRootPaths = [];     // [{el, len}] cached on init
+
+// Tapered trunk: base is ~3x thicker than tip at full growth
+const BONSAI_TRUNK_BASE_WIDTH_START = 2;
+const BONSAI_TRUNK_BASE_WIDTH_END = 39;
+const BONSAI_TRUNK_TIP_WIDTH_START = 2;
+const BONSAI_TRUNK_TIP_WIDTH_END = 13;
+const BONSAI_SHADOW_BASE_WIDTH_START = 3;
+const BONSAI_SHADOW_BASE_WIDTH_END = 42;
+const BONSAI_SHADOW_TIP_WIDTH_START = 3;
+const BONSAI_SHADOW_TIP_WIDTH_END = 16;
+const BONSAI_TRUNK_PROGRESS_END = 0.65; // trunk finishes at 65% of timer
+const BONSAI_BRANCH_GROWTH_SPAN = 0.111;  // branch grows over 11.1% of total progress
+const BONSAI_SUB_DELAY_SPAN = BONSAI_BRANCH_GROWTH_SPAN * 0.3;
+const BONSAI_SUB_GROWTH_SPAN = BONSAI_BRANCH_GROWTH_SPAN * 0.65;
+const BONSAI_FOLIAGE_GROWTH_SPAN = 0.08;  // scale 0→1 over 8% of total progress
+const BONSAI_FOLIAGE_MATURE_SPAN = 0.06;  // scale 1→1.15 over 6% of total progress
+
+const BONSAI_BRANCH_TRIGGERS = [
+  { y: 345, branchId: 'bonsai-branch-L1',  subId: 'bonsai-sub-L1',  padId: 'bonsai-pad-L1',  foliageAt: 0.18, matureAt: 0.30 },
+  { y: 285, branchId: 'bonsai-branch-R1',  subId: 'bonsai-sub-R1',  padId: 'bonsai-pad-R1',  foliageAt: 0.28, matureAt: 0.40 },
+  { y: 225, branchId: 'bonsai-branch-L2',  subId: 'bonsai-sub-L2',  padId: 'bonsai-pad-L2',  foliageAt: 0.38, matureAt: 0.50 },
+  { y: 178, branchId: 'bonsai-branch-R2',  subId: 'bonsai-sub-R2',  padId: 'bonsai-pad-R2',  foliageAt: 0.48, matureAt: 0.60 },
+  { y: 105, branchId: 'bonsai-branch-apex', subId: 'bonsai-sub-apex', padId: 'bonsai-pad-apex', foliageAt: 0.56, matureAt: 0.68 },
+];
+
+const BONSAI_SVG_MARKUP = `
+<svg class="bonsai-svg" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg">
+  <g class="bonsai-pot" id="bonsai-pot">
+    <polygon points="140,432 260,432 248,472 152,472" fill="var(--bonsai-pot)" />
+    <rect x="132" y="424" width="136" height="10" rx="3" fill="var(--bonsai-pot-rim)" />
+    <rect x="158" y="472" width="84" height="6" rx="2" fill="var(--bonsai-pot-dark)" />
+    <line x1="155" y1="448" x2="245" y2="448" stroke="var(--bonsai-pot-dark)" stroke-width="1" opacity="0.3" />
+    <ellipse class="bonsai-soil-surface" cx="200" cy="430" rx="58" ry="8" fill="var(--bonsai-soil)" />
+    <ellipse cx="200" cy="428" rx="40" ry="4" fill="var(--bonsai-soil-highlight)" opacity="0.5" />
+  </g>
+
+  <g class="bonsai-tree-group" id="bonsai-tree-group">
+    <path class="bonsai-growable bonsai-root-path" d="M 200,424 C 192,428 172,430 158,432" />
+    <path class="bonsai-growable bonsai-root-path" d="M 200,424 C 208,428 228,429 242,431" />
+    <path class="bonsai-growable bonsai-root-path" d="M 200,426 C 196,430 186,434 174,436" />
+
+    <!-- Trunk fill paths (tapered, computed per-frame by JS) -->
+    <path id="bonsai-trunk-fill-shadow" class="bonsai-trunk-fill-shadow" />
+    <path id="bonsai-trunk-fill" class="bonsai-trunk-fill-main" />
+
+    <!-- Trunk reference paths (invisible, used for getPointAtLength) -->
+    <path id="bonsai-trunk-shadow" class="bonsai-growable bonsai-trunk-shadow"
+          d="M 200,424 C 196,405 180,385 164,362 C 142,330 132,310 138,285 C 144,260 172,242 200,230 C 228,218 250,200 248,178 C 246,156 228,140 210,125 C 192,110 182,92 186,72 C 188,60 190,50 192,42" />
+    <path id="bonsai-trunk-main" class="bonsai-growable bonsai-trunk-main"
+          d="M 200,424 C 196,405 180,385 164,362 C 142,330 132,310 138,285 C 144,260 172,242 200,230 C 228,218 250,200 248,178 C 246,156 228,140 210,125 C 192,110 182,92 186,72 C 188,60 190,50 192,42" />
+
+    <!-- Branches: origins sit exactly on trunk centerline -->
+    <path id="bonsai-branch-L1" class="bonsai-growable bonsai-branch-primary"
+          d="M 152,345 C 130,336 100,338 72,346 C 52,354 32,348 12,334" />
+    <path id="bonsai-sub-L1" class="bonsai-growable bonsai-branch-secondary"
+          d="M 72,346 C 58,332 44,318 28,308" />
+
+    <path id="bonsai-branch-R1" class="bonsai-growable bonsai-branch-primary"
+          d="M 138,285 C 164,274 202,268 244,276 C 268,282 294,276 324,262" />
+    <path id="bonsai-sub-R1" class="bonsai-growable bonsai-branch-secondary"
+          d="M 244,276 C 258,258 270,242 284,230" />
+
+    <path id="bonsai-branch-L2" class="bonsai-growable bonsai-branch-primary"
+          d="M 208,225 C 184,216 150,212 116,220 C 92,228 66,220 40,206" />
+    <path id="bonsai-sub-L2" class="bonsai-growable bonsai-branch-secondary"
+          d="M 116,220 C 102,206 86,192 70,182" />
+
+    <path id="bonsai-branch-R2" class="bonsai-growable bonsai-branch-primary"
+          d="M 248,178 C 270,168 296,166 320,174 C 340,180 358,172 376,158" />
+    <path id="bonsai-sub-R2" class="bonsai-growable bonsai-branch-secondary"
+          d="M 320,174 C 334,158 344,140 352,126" />
+
+    <path id="bonsai-branch-apex" class="bonsai-growable bonsai-branch-primary"
+          d="M 193,105 C 189,94 185,82 183,72 C 181,62 183,54 187,48" />
+    <path id="bonsai-sub-apex" class="bonsai-growable bonsai-branch-secondary"
+          d="M 193,105 C 201,92 210,82 218,72" />
+
+    <!-- Foliage pads: fluffy overlapping circles in cloud clusters -->
+    <g id="bonsai-pad-L1" class="bonsai-foliage-pad" style="transform-origin:50px 326px">
+      <circle cx="22"  cy="340" r="24" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="52"  cy="344" r="28" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="80"  cy="338" r="22" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="36"  cy="346" r="20" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="30"  cy="320" r="26" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="60"  cy="316" r="30" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="86"  cy="322" r="22" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="42"  cy="300" r="22" fill="var(--bonsai-foliage-light)" />
+      <circle cx="66"  cy="296" r="24" fill="var(--bonsai-foliage-light)" />
+      <circle cx="14"  cy="330" r="18" fill="var(--bonsai-foliage-mid)" opacity="0.7" />
+    </g>
+
+    <g id="bonsai-pad-R1" class="bonsai-foliage-pad" style="transform-origin:292px 252px">
+      <circle cx="262" cy="270" r="24" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="292" cy="274" r="28" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="320" cy="268" r="22" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="276" cy="278" r="20" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="270" cy="250" r="26" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="298" cy="246" r="30" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="324" cy="252" r="22" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="282" cy="232" r="22" fill="var(--bonsai-foliage-light)" />
+      <circle cx="306" cy="228" r="24" fill="var(--bonsai-foliage-light)" />
+      <circle cx="334" cy="260" r="18" fill="var(--bonsai-foliage-mid)" opacity="0.7" />
+    </g>
+
+    <g id="bonsai-pad-L2" class="bonsai-foliage-pad" style="transform-origin:65px 198px">
+      <circle cx="38"  cy="214" r="22" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="66"  cy="218" r="26" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="92"  cy="212" r="20" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="50"  cy="222" r="18" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="44"  cy="196" r="24" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="72"  cy="192" r="28" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="96"  cy="198" r="20" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="56"  cy="178" r="20" fill="var(--bonsai-foliage-light)" />
+      <circle cx="78"  cy="174" r="22" fill="var(--bonsai-foliage-light)" />
+      <circle cx="28"  cy="206" r="16" fill="var(--bonsai-foliage-mid)" opacity="0.7" />
+    </g>
+
+    <g id="bonsai-pad-R2" class="bonsai-foliage-pad" style="transform-origin:340px 150px">
+      <circle cx="314" cy="166" r="22" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="342" cy="170" r="26" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="368" cy="164" r="20" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="328" cy="174" r="18" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="322" cy="148" r="24" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="348" cy="144" r="28" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="372" cy="150" r="20" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="334" cy="130" r="20" fill="var(--bonsai-foliage-light)" />
+      <circle cx="356" cy="128" r="22" fill="var(--bonsai-foliage-light)" />
+      <circle cx="380" cy="158" r="16" fill="var(--bonsai-foliage-mid)" opacity="0.7" />
+    </g>
+
+    <g id="bonsai-pad-apex" class="bonsai-foliage-pad" style="transform-origin:198px 62px">
+      <circle cx="168" cy="78"  r="26" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="198" cy="82"  r="30" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="228" cy="76"  r="24" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="148" cy="74"  r="20" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="246" cy="80"  r="18" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="176" cy="56"  r="28" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="206" cy="52"  r="32" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="234" cy="58"  r="24" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="156" cy="60"  r="20" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="188" cy="38"  r="24" fill="var(--bonsai-foliage-light)" />
+      <circle cx="214" cy="36"  r="26" fill="var(--bonsai-foliage-light)" />
+      <circle cx="174" cy="44"  r="18" fill="var(--bonsai-foliage-light)" />
+    </g>
+  </g>
+</svg>`;
+
+function createBonsaiSVG() {
+  if (bonsaiSvgEl) return;
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = BONSAI_SVG_MARKUP.trim();
+  bonsaiSvgEl = wrapper.firstChild;
+  document.body.appendChild(bonsaiSvgEl);
+  initBonsaiPaths();
+  positionBonsaiSVG();
+}
+
+function initBonsaiPaths() {
+  if (!bonsaiSvgEl) return;
+  // Reset all growth state
+  bonsaiBranchState = {};
+  bonsaiFoliageState = {};
+  bonsaiRootPaths = [];
+
+  bonsaiSvgEl.querySelectorAll('.bonsai-foliage-pad').forEach(el => {
+    el.classList.remove('visible');
+    el.style.opacity = '0';
+    el.style.scale = '0';
+    el.style.animation = '';
+  });
+
+  // Set strokeDasharray/offset for all growable paths (branches, roots, trunk ref)
+  bonsaiSvgEl.querySelectorAll('.bonsai-growable').forEach(path => {
+    const len = path.getTotalLength();
+    path.style.strokeDasharray = len;
+    path.style.strokeDashoffset = len;
+  });
+
+  // Cache root path info for JS per-frame animation
+  bonsaiSvgEl.querySelectorAll('.bonsai-root-path').forEach(el => {
+    bonsaiRootPaths.push({ el, len: el.getTotalLength() });
+  });
+
+  // Reset pot
+  const pot = bonsaiSvgEl.querySelector('.bonsai-pot');
+  if (pot) pot.classList.remove('visible');
+
+  // Reset tapered trunk fill paths
+  const trunkFill = bonsaiSvgEl.querySelector('#bonsai-trunk-fill');
+  const trunkFillShadow = bonsaiSvgEl.querySelector('#bonsai-trunk-fill-shadow');
+  if (trunkFill) trunkFill.setAttribute('d', '');
+  if (trunkFillShadow) { trunkFillShadow.setAttribute('d', ''); trunkFillShadow.style.opacity = '0'; }
+}
+
+function removeBonsaiSVG() {
+  if (bonsaiSvgEl) {
+    bonsaiSvgEl.remove();
+    bonsaiSvgEl = null;
   }
-  bgCtx.fill();
+  bonsaiBranchState = {};
+  bonsaiFoliageState = {};
+  bonsaiRootPaths = [];
+}
+
+function resetBonsaiForSegment() {
+  // Full destroy + recreate for a clean slate on segment change
+  if (activeBackground !== 'growingTree') return;
+  removeBonsaiSVG();
+  createBonsaiSVG();
+}
+
+function positionBonsaiSVG() {
+  if (!bonsaiSvgEl) return;
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  const groundY = H * 0.72;
+
+  // Tree top (apex foliage ~y=16) should sit below the title area (~35% from top).
+  // Soil (y=430) sits at groundY. Solve for display height:
+  //   groundY - 0.796 * displayH = titleBottom
+  //   displayH = (groundY - titleBottom) / 0.796
+  const titleBottom = H * 0.35;
+  const svgDisplayHeight = Math.min(450, Math.max(120, (groundY - titleBottom) / 0.796));
+  const svgDisplayWidth = svgDisplayHeight * (400 / 520);
+
+  const left = (W - svgDisplayWidth) / 2;
+  // Soil surface (y=430) sits at groundY
+  const soilInSvg = svgDisplayHeight * (430 / 520);
+  const top = groundY - soilInSvg;
+
+  bonsaiSvgEl.style.left = left + 'px';
+  bonsaiSvgEl.style.top = top + 'px';
+  bonsaiSvgEl.style.width = svgDisplayWidth + 'px';
+  bonsaiSvgEl.style.height = svgDisplayHeight + 'px';
+}
+
+function buildTaperedTrunkPath(refPath, drawnLen, baseHalfW, tipHalfW) {
+  if (drawnLen < 2) return '';
+  const N = 24;
+  const eps = 0.5;
+  const leftPts = [];
+  const rightPts = [];
+
+  for (let i = 0; i <= N; i++) {
+    const L = (i / N) * drawnLen;
+    const t = i / N; // 0 = base, 1 = current tip
+    const pt = refPath.getPointAtLength(L);
+
+    // Tangent via finite difference
+    const La = Math.max(0, L - eps);
+    const Lb = Math.min(drawnLen, L + eps);
+    const pA = refPath.getPointAtLength(La);
+    const pB = refPath.getPointAtLength(Lb);
+    let dx = pB.x - pA.x, dy = pB.y - pA.y;
+    const mag = Math.sqrt(dx * dx + dy * dy) || 1;
+    dx /= mag; dy /= mag;
+
+    // Perpendicular normal
+    const nx = -dy, ny = dx;
+    const halfW = baseHalfW + (tipHalfW - baseHalfW) * t;
+
+    leftPts.push({ x: pt.x + nx * halfW, y: pt.y + ny * halfW });
+    rightPts.push({ x: pt.x - nx * halfW, y: pt.y - ny * halfW });
+  }
+
+  // Build path: left edge forward, arc tip cap, right edge backward, flat base into soil
+  // Extend base below soil surface (y=440) so trunk is always anchored in the pot
+  const soilY = 440;
+
+  let d = `M ${leftPts[0].x.toFixed(1)},${soilY}`;
+  d += ` L ${leftPts[0].x.toFixed(1)},${leftPts[0].y.toFixed(1)}`;
+  for (let i = 1; i <= N; i++) {
+    d += ` L ${leftPts[i].x.toFixed(1)},${leftPts[i].y.toFixed(1)}`;
+  }
+  // Semicircular tip cap
+  const tipR = Math.abs(tipHalfW);
+  if (tipR > 0.5) {
+    d += ` A ${tipR.toFixed(1)},${tipR.toFixed(1)} 0 0 1 ${rightPts[N].x.toFixed(1)},${rightPts[N].y.toFixed(1)}`;
+  } else {
+    d += ` L ${rightPts[N].x.toFixed(1)},${rightPts[N].y.toFixed(1)}`;
+  }
+  for (let i = N - 1; i >= 0; i--) {
+    d += ` L ${rightPts[i].x.toFixed(1)},${rightPts[i].y.toFixed(1)}`;
+  }
+  // Flat base extending into soil
+  d += ` L ${rightPts[0].x.toFixed(1)},${soilY}`;
+  d += ' Z';
+  return d;
+}
+
+function updateBonsaiProgress(progress) {
+  if (!bonsaiSvgEl) return;
+
+  // ── Pot ──
+  const pot = bonsaiSvgEl.querySelector('.bonsai-pot');
+  if (pot && progress > 0 && !pot.classList.contains('visible')) {
+    pot.classList.add('visible');
+  }
+
+  // ── Trunk (JS per-frame tapered filled polygon) ──
+  const trunkMain = bonsaiSvgEl.querySelector('#bonsai-trunk-main');
+  if (!trunkMain) return;
+
+  const trunkProgress = Math.min(1, progress / BONSAI_TRUNK_PROGRESS_END);
+  const eased = 1 - Math.pow(1 - trunkProgress, 1.6);
+  const totalLen = trunkMain.getTotalLength();
+  const drawnLen = eased * totalLen;
+
+  // Compute tapered half-widths
+  const baseHalfW = (BONSAI_TRUNK_BASE_WIDTH_START + (BONSAI_TRUNK_BASE_WIDTH_END - BONSAI_TRUNK_BASE_WIDTH_START) * eased) / 2;
+  const tipHalfW = (BONSAI_TRUNK_TIP_WIDTH_START + (BONSAI_TRUNK_TIP_WIDTH_END - BONSAI_TRUNK_TIP_WIDTH_START) * eased) / 2;
+  const shadowBaseHalfW = (BONSAI_SHADOW_BASE_WIDTH_START + (BONSAI_SHADOW_BASE_WIDTH_END - BONSAI_SHADOW_BASE_WIDTH_START) * eased) / 2;
+  const shadowTipHalfW = (BONSAI_SHADOW_TIP_WIDTH_START + (BONSAI_SHADOW_TIP_WIDTH_END - BONSAI_SHADOW_TIP_WIDTH_START) * eased) / 2;
+
+  const trunkFill = bonsaiSvgEl.querySelector('#bonsai-trunk-fill');
+  const trunkFillShadow = bonsaiSvgEl.querySelector('#bonsai-trunk-fill-shadow');
+  if (trunkFill) {
+    trunkFill.setAttribute('d', buildTaperedTrunkPath(trunkMain, drawnLen, baseHalfW, tipHalfW));
+  }
+  if (trunkFillShadow) {
+    trunkFillShadow.setAttribute('d', buildTaperedTrunkPath(trunkMain, drawnLen, shadowBaseHalfW, shadowTipHalfW));
+    trunkFillShadow.style.opacity = 0.3 + 0.3 * eased;
+  }
+
+  // ── Branches (JS per-frame, like trunk) ──
+  // Detect new branch triggers via getPointAtLength
+  if (drawnLen > 1) {
+    const point = trunkMain.getPointAtLength(drawnLen);
+    for (const trigger of BONSAI_BRANCH_TRIGGERS) {
+      if (!bonsaiBranchState[trigger.branchId] && point.y <= trigger.y) {
+        const branch = bonsaiSvgEl.querySelector('#' + trigger.branchId);
+        const sub = bonsaiSvgEl.querySelector('#' + trigger.subId);
+        bonsaiBranchState[trigger.branchId] = {
+          triggerProgress: progress,
+          branch,
+          sub,
+          branchLen: branch ? branch.getTotalLength() : 0,
+          subLen: sub ? sub.getTotalLength() : 0,
+        };
+      }
+    }
+  }
+
+  // Animate all triggered branches proportionally to progress
+  for (const id in bonsaiBranchState) {
+    const bs = bonsaiBranchState[id];
+    // Primary branch
+    const elapsed = progress - bs.triggerProgress;
+    const branchFrac = Math.min(1, Math.max(0, elapsed / BONSAI_BRANCH_GROWTH_SPAN));
+    const branchEased = 1 - Math.pow(1 - branchFrac, 2); // ease-out
+    if (bs.branch) {
+      bs.branch.style.strokeDashoffset = bs.branchLen * (1 - branchEased);
+    }
+    // Sub-branch (starts after a delay in progress-space)
+    const subElapsed = elapsed - BONSAI_SUB_DELAY_SPAN;
+    const subFrac = Math.min(1, Math.max(0, subElapsed / BONSAI_SUB_GROWTH_SPAN));
+    const subEased = 1 - Math.pow(1 - subFrac, 2);
+    if (bs.sub) {
+      bs.sub.style.strokeDashoffset = bs.subLen * (1 - subEased);
+    }
+  }
+
+  // ── Foliage (JS per-frame, like trunk and branches) ──
+  for (const trigger of BONSAI_BRANCH_TRIGGERS) {
+    if (!bonsaiFoliageState[trigger.padId] && progress >= trigger.foliageAt) {
+      const pad = bonsaiSvgEl.querySelector('#' + trigger.padId);
+      if (pad) {
+        bonsaiFoliageState[trigger.padId] = {
+          triggerProgress: trigger.foliageAt,
+          matureProgress: trigger.matureAt,
+          padEl: pad,
+        };
+        pad.classList.add('visible'); // enables sway animation only
+      }
+    }
+  }
+
+  // Animate all triggered foliage pads
+  for (const padId in bonsaiFoliageState) {
+    const fs = bonsaiFoliageState[padId];
+    // Phase 1: appear (scale 0→1, opacity 0→1)
+    const appearElapsed = progress - fs.triggerProgress;
+    const appearFrac = Math.min(1, Math.max(0, appearElapsed / BONSAI_FOLIAGE_GROWTH_SPAN));
+    const appearEased = 1 - Math.pow(1 - appearFrac, 2.5); // ease-out
+    // Phase 2: mature (scale 1→1.15)
+    let matureScale = 1;
+    if (progress >= fs.matureProgress) {
+      const matureElapsed = progress - fs.matureProgress;
+      const matureFrac = Math.min(1, Math.max(0, matureElapsed / BONSAI_FOLIAGE_MATURE_SPAN));
+      matureScale = 1 + 0.15 * (1 - Math.pow(1 - matureFrac, 2));
+    }
+    fs.padEl.style.scale = appearEased * matureScale;
+    fs.padEl.style.opacity = appearEased;
+  }
+
+  // ── Roots (JS per-frame, grow with trunk) ──
+  // Roots grow proportionally to trunk progress (same 0→0.65 range)
+  if (bonsaiRootPaths.length && trunkProgress > 0) {
+    const rootEased = 1 - Math.pow(1 - trunkProgress, 2);
+    for (const rp of bonsaiRootPaths) {
+      rp.el.style.strokeDashoffset = rp.len * (1 - rootEased);
+    }
+  }
+}
+
+function updateBonsaiColors(progress) {
+  if (!bonsaiSvgEl) return;
+  // Darken bonsai colors during sunset/night (progress > 0.80)
+  if (progress <= 0.78) return; // nothing to do during daytime
+
+  const trunk = multiLerp([
+    [0.78, [109, 76, 46]],   // #6D4C2E
+    [0.90, [70, 50, 35]],
+    [1.0,  [35, 25, 18]]
+  ], progress);
+  const trunkDark = multiLerp([
+    [0.78, [78, 53, 36]],    // #4E3524
+    [0.90, [50, 35, 25]],
+    [1.0,  [25, 18, 12]]
+  ], progress);
+  const foliageDark = multiLerp([
+    [0.78, [58, 138, 48]],   // #3A8A30
+    [0.90, [30, 70, 25]],
+    [1.0,  [15, 35, 12]]
+  ], progress);
+  const foliageMid = multiLerp([
+    [0.78, [78, 168, 66]],   // #4EA842
+    [0.90, [42, 90, 38]],
+    [1.0,  [22, 45, 20]]
+  ], progress);
+  const foliageLight = multiLerp([
+    [0.78, [108, 191, 92]],  // #6CBF5C
+    [0.90, [58, 108, 48]],
+    [1.0,  [30, 55, 25]]
+  ], progress);
+  const pot = multiLerp([
+    [0.78, [181, 101, 29]],  // #B5651D
+    [0.90, [110, 65, 20]],
+    [1.0,  [55, 33, 10]]
+  ], progress);
+
+  bonsaiSvgEl.style.setProperty('--bonsai-trunk', rgb(trunk));
+  bonsaiSvgEl.style.setProperty('--bonsai-trunk-dark', rgb(trunkDark));
+  bonsaiSvgEl.style.setProperty('--bonsai-foliage-dark', rgb(foliageDark));
+  bonsaiSvgEl.style.setProperty('--bonsai-foliage-mid', rgb(foliageMid));
+  bonsaiSvgEl.style.setProperty('--bonsai-foliage-light', rgb(foliageLight));
+  bonsaiSvgEl.style.setProperty('--bonsai-pot', rgb(pot));
+  bonsaiSvgEl.style.setProperty('--bonsai-pot-dark', rgb(trunkDark));
+  bonsaiSvgEl.style.setProperty('--bonsai-pot-rim', rgb(trunk));
+}
+
+// Returns the Y of the rolling-hill contour at a given X
+function getHillY(x, W, groundY) {
+  const t = x / W;
+  // Match the quadratic curves: 0→0.3, 0.3→0.7, 0.7→1.0
+  if (t <= 0.3) {
+    // quadraticCurveTo(0.15, groundY-20, 0.3, groundY)
+    const s = t / 0.3;
+    const a = groundY, cp = groundY - 20, b = groundY;
+    return (1 - s) * (1 - s) * a + 2 * (1 - s) * s * cp + s * s * b;
+  } else if (t <= 0.7) {
+    // quadraticCurveTo(0.5, groundY+15, 0.7, groundY-10)
+    const s = (t - 0.3) / 0.4;
+    const a = groundY, cp = groundY + 15, b = groundY - 10;
+    return (1 - s) * (1 - s) * a + 2 * (1 - s) * s * cp + s * s * b;
+  } else {
+    // quadraticCurveTo(0.85, groundY+10, 1.0, groundY)
+    const s = (t - 0.7) / 0.3;
+    const a = groundY - 10, cp = groundY + 10, b = groundY;
+    return (1 - s) * (1 - s) * a + 2 * (1 - s) * s * cp + s * s * b;
+  }
 }
 
 function drawGrassTufts(W, H, groundY, time, progress) {
@@ -1032,12 +1247,11 @@ function drawGrassTufts(W, H, groundY, time, progress) {
   bgCtx.lineWidth = 1.5;
   bgCtx.lineCap = 'round';
 
-  // Seed-based pseudo-random positions (deterministic)
+  // Seed-based pseudo-random positions (deterministic), placed on hill contour
   const tufts = Math.floor(W / 40);
   for (let i = 0; i < tufts; i++) {
     const x = (i * 47 + 13) % W;
-    const baseYOffset = Math.sin(i * 3.7) * 8;
-    const ty = groundY + baseYOffset + 2;
+    const ty = getHillY(x, W, groundY) + 2;
     const bladeCount = 2 + (i % 3);
     for (let b = 0; b < bladeCount; b++) {
       const angle = -Math.PI / 2 + (b - bladeCount / 2) * 0.3 + Math.sin(time * 1.2 + i + b) * 0.1;

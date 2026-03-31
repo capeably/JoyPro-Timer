@@ -155,5 +155,120 @@
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.15);
 }
 
+/* ═══════════════════════════════════════════════════
+   BONSAI SVG (Growing Tree theme)
+   ═══════════════════════════════════════════════════ */
+:root {
+  --bonsai-trunk: #6D4C2E;
+  --bonsai-trunk-dark: #4E3524;
+  --bonsai-pot: #B5651D;
+  --bonsai-pot-dark: #8B4513;
+  --bonsai-pot-rim: #C4753A;
+  --bonsai-soil: #3E2723;
+  --bonsai-soil-highlight: #5D4037;
+  --bonsai-foliage-dark: #3A8A30;
+  --bonsai-foliage-mid: #4EA842;
+  --bonsai-foliage-light: #6CBF5C;
+}
+
+/* Bonsai SVG overlay */
+.bonsai-svg {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+
+/* Pot fade-in */
+.bonsai-pot { opacity: 0; transition: opacity 0.5s ease; }
+.bonsai-pot.visible { opacity: 1; }
+
+.bonsai-soil-surface {
+  transform: scaleY(0.4);
+  transform-origin: center;
+  transition: transform 0.6s ease-out;
+}
+.bonsai-pot.visible .bonsai-soil-surface { transform: scaleY(1); }
+
+/* Growable paths (trunk, branches, roots) */
+.bonsai-growable {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Trunk fill paths (tapered, computed per-frame by JS) */
+.bonsai-trunk-fill-main { fill: var(--bonsai-trunk); stroke: none; }
+.bonsai-trunk-fill-shadow { fill: var(--bonsai-trunk-dark); stroke: none; opacity: 0; }
+
+/* Trunk reference paths (invisible, kept for getPointAtLength) */
+.bonsai-trunk-main { stroke: none; fill: none; }
+.bonsai-trunk-shadow { stroke: none; fill: none; }
+
+/* Branches — JS per-frame animation, 2x thicker */
+.bonsai-branch-primary {
+  stroke: var(--bonsai-trunk);
+  stroke-width: 12;
+}
+.bonsai-branch-secondary {
+  stroke: var(--bonsai-trunk);
+  stroke-width: 8;
+}
+
+/* Roots — JS per-frame animation */
+.bonsai-root-path {
+  stroke: var(--bonsai-trunk);
+  stroke-width: 3;
+}
+
+/* Foliage pads — JS per-frame scale/opacity, CSS sway animation */
+.bonsai-foliage-pad {
+  opacity: 0;
+  scale: 0;
+}
+.bonsai-foliage-pad.visible {
+  animation: bonsai-sway 4s ease-in-out infinite;
+}
+
+/* Breeze sway — gentle continuous animation with slight rotation */
+@keyframes bonsai-sway {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  25% { translate: 2px -1px; rotate: 1.5deg; }
+  50% { translate: -1px 1px; rotate: -0.8deg; }
+  75% { translate: 1.5px 0.5px; rotate: 1deg; }
+}
+/* Stagger sway timing per pad for natural look */
+.bonsai-foliage-pad:nth-child(odd) { animation-delay: -1.5s; }
+.bonsai-foliage-pad:nth-child(3n) { animation-duration: 5s; }
+.bonsai-foliage-pad:nth-child(4n) { animation-duration: 3.5s; animation-delay: -0.8s; }
+
+/* Individual circle micro-sway within foliage — organic breathing effect */
+.bonsai-foliage-pad.visible circle:nth-child(3n+1) {
+  animation: bonsai-micro-1 3.2s ease-in-out infinite;
+}
+.bonsai-foliage-pad.visible circle:nth-child(3n+2) {
+  animation: bonsai-micro-2 2.8s ease-in-out infinite -1s;
+}
+.bonsai-foliage-pad.visible circle:nth-child(3n) {
+  animation: bonsai-micro-3 3.6s ease-in-out infinite -0.5s;
+}
+@keyframes bonsai-micro-1 {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 1.5px -0.8px; }
+}
+@keyframes bonsai-micro-2 {
+  0%, 100% { translate: 0 0; }
+  50% { translate: -1.2px 1px; }
+}
+@keyframes bonsai-micro-3 {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0.8px 1.2px; }
+}
+
+/* Tree group */
+.bonsai-tree-group {
+  transform-origin: 200px 400px;
+}
+
 /* Background canvas — gradient set per-theme via JS */
 #themeBgCanvas {}
