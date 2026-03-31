@@ -780,11 +780,11 @@ const BONSAI_FOLIAGE_GROWTH_SPAN = 0.08;  // scale 0→1 over 8% of total progre
 const BONSAI_FOLIAGE_MATURE_SPAN = 0.06;  // scale 1→1.15 over 6% of total progress
 
 const BONSAI_BRANCH_TRIGGERS = [
-  { y: 345, branchId: 'bonsai-branch-L1',  subId: 'bonsai-sub-L1',  padId: 'bonsai-pad-L1',  foliageAt: 0.18, matureAt: 0.30 },
-  { y: 285, branchId: 'bonsai-branch-R1',  subId: 'bonsai-sub-R1',  padId: 'bonsai-pad-R1',  foliageAt: 0.28, matureAt: 0.40 },
-  { y: 225, branchId: 'bonsai-branch-L2',  subId: 'bonsai-sub-L2',  padId: 'bonsai-pad-L2',  foliageAt: 0.38, matureAt: 0.50 },
-  { y: 178, branchId: 'bonsai-branch-R2',  subId: 'bonsai-sub-R2',  padId: 'bonsai-pad-R2',  foliageAt: 0.48, matureAt: 0.60 },
-  { y: 105, branchId: 'bonsai-branch-apex', subId: 'bonsai-sub-apex', padId: 'bonsai-pad-apex', foliageAt: 0.56, matureAt: 0.68 },
+  { y: 372, branchId: 'bonsai-branch-L1',  subId: 'bonsai-sub-L1',  padId: 'bonsai-pad-L1',  foliageAt: 0.18, matureAt: 0.30 },
+  { y: 310, branchId: 'bonsai-branch-R1',  subId: 'bonsai-sub-R1',  padId: 'bonsai-pad-R1',  foliageAt: 0.28, matureAt: 0.40 },
+  { y: 276, branchId: 'bonsai-branch-L2',  subId: 'bonsai-sub-L2',  padId: 'bonsai-pad-L2',  foliageAt: 0.38, matureAt: 0.50 },
+  { y: 235, branchId: 'bonsai-branch-R2',  subId: 'bonsai-sub-R2',  padId: 'bonsai-pad-R2',  foliageAt: 0.48, matureAt: 0.60 },
+  { y: 192, branchId: 'bonsai-branch-apex', subId: 'bonsai-sub-apex', padId: 'bonsai-pad-apex', foliageAt: 0.56, matureAt: 0.68 },
 ];
 
 const BONSAI_SVG_MARKUP = `
@@ -808,103 +808,96 @@ const BONSAI_SVG_MARKUP = `
     <path id="bonsai-trunk-fill" class="bonsai-trunk-fill-main" />
 
     <!-- Trunk reference paths (invisible, used for getPointAtLength) -->
+    <!-- Vertically compressed by 0.75 around y=424 for a shorter, more compact tree -->
     <path id="bonsai-trunk-shadow" class="bonsai-growable bonsai-trunk-shadow"
-          d="M 200,424 C 196,405 180,385 164,362 C 142,330 132,310 138,285 C 144,260 172,242 200,230 C 228,218 250,200 248,178 C 246,156 228,140 210,125 C 192,110 182,92 186,72 C 188,60 190,50 192,42" />
+          d="M 200,424 C 196,406 178,390 160,372 C 138,348 130,330 142,310 C 154,291 180,282 206,276 C 238,268 256,255 252,235 C 248,217 232,204 214,192 C 196,181 188,168 190,151 C 191,144 192,138 194,133" />
     <path id="bonsai-trunk-main" class="bonsai-growable bonsai-trunk-main"
-          d="M 200,424 C 196,405 180,385 164,362 C 142,330 132,310 138,285 C 144,260 172,242 200,230 C 228,218 250,200 248,178 C 246,156 228,140 210,125 C 192,110 182,92 186,72 C 188,60 190,50 192,42" />
+          d="M 200,424 C 196,406 178,390 160,372 C 138,348 130,330 142,310 C 154,291 180,282 206,276 C 238,268 256,255 252,235 C 248,217 232,204 214,192 C 196,181 188,168 190,151 C 191,144 192,138 194,133" />
 
     <!-- Branches: origins sit exactly on trunk centerline -->
     <path id="bonsai-branch-L1" class="bonsai-growable bonsai-branch-primary"
-          d="M 152,345 C 130,336 100,338 72,346 C 52,354 32,348 12,334" />
+          d="M 160,372 C 130,367 90,369 55,361 C 35,357 15,352 0,345" />
     <path id="bonsai-sub-L1" class="bonsai-growable bonsai-branch-secondary"
-          d="M 72,346 C 58,332 44,318 28,308" />
+          d="M 55,361 C 42,352 30,342 18,335" />
 
     <path id="bonsai-branch-R1" class="bonsai-growable bonsai-branch-primary"
-          d="M 138,285 C 164,274 202,268 244,276 C 268,282 294,276 324,262" />
+          d="M 142,310 C 175,303 220,300 268,305 C 295,309 320,305 348,295" />
     <path id="bonsai-sub-R1" class="bonsai-growable bonsai-branch-secondary"
-          d="M 244,276 C 258,258 270,242 284,230" />
+          d="M 268,305 C 282,294 295,283 308,275" />
 
     <path id="bonsai-branch-L2" class="bonsai-growable bonsai-branch-primary"
-          d="M 208,225 C 184,216 150,212 116,220 C 92,228 66,220 40,206" />
+          d="M 206,276 C 178,270 142,268 108,273 C 82,277 58,273 34,264" />
     <path id="bonsai-sub-L2" class="bonsai-growable bonsai-branch-secondary"
-          d="M 116,220 C 102,206 86,192 70,182" />
+          d="M 108,273 C 92,264 78,253 64,245" />
 
     <path id="bonsai-branch-R2" class="bonsai-growable bonsai-branch-primary"
-          d="M 248,178 C 270,168 296,166 320,174 C 340,180 358,172 376,158" />
+          d="M 252,235 C 278,229 310,228 340,232 C 362,237 380,232 396,222" />
     <path id="bonsai-sub-R2" class="bonsai-growable bonsai-branch-secondary"
-          d="M 320,174 C 334,158 344,140 352,126" />
+          d="M 340,232 C 354,222 366,211 375,202" />
 
     <path id="bonsai-branch-apex" class="bonsai-growable bonsai-branch-primary"
-          d="M 193,105 C 189,94 185,82 183,72 C 181,62 183,54 187,48" />
+          d="M 214,192 C 208,183 200,172 196,160 C 193,151 194,144 198,138" />
     <path id="bonsai-sub-apex" class="bonsai-growable bonsai-branch-secondary"
-          d="M 193,105 C 201,92 210,82 218,72" />
+          d="M 214,192 C 222,181 232,172 240,163" />
 
-    <!-- Foliage pads: fluffy overlapping circles in cloud clusters -->
-    <g id="bonsai-pad-L1" class="bonsai-foliage-pad" style="transform-origin:50px 326px">
-      <circle cx="22"  cy="340" r="24" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="52"  cy="344" r="28" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="80"  cy="338" r="22" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="36"  cy="346" r="20" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="30"  cy="320" r="26" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="60"  cy="316" r="30" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="86"  cy="322" r="22" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="42"  cy="300" r="22" fill="var(--bonsai-foliage-light)" />
-      <circle cx="66"  cy="296" r="24" fill="var(--bonsai-foliage-light)" />
-      <circle cx="14"  cy="330" r="18" fill="var(--bonsai-foliage-mid)" opacity="0.7" />
+    <!-- Foliage pads: vertically compressed to match compact tree -->
+    <g id="bonsai-pad-L1" class="bonsai-foliage-pad" style="transform-origin:55px 349px">
+      <circle cx="14"  cy="366" r="30" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="52"  cy="369" r="33" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="90"  cy="365" r="28" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="20"  cy="349" r="32" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="56"  cy="345" r="36" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="92"  cy="350" r="29" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="34"  cy="331" r="27" fill="var(--bonsai-foliage-light)" />
+      <circle cx="66"  cy="328" r="31" fill="var(--bonsai-foliage-light)" />
     </g>
 
-    <g id="bonsai-pad-R1" class="bonsai-foliage-pad" style="transform-origin:292px 252px">
-      <circle cx="262" cy="270" r="24" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="292" cy="274" r="28" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="320" cy="268" r="22" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="276" cy="278" r="20" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="270" cy="250" r="26" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="298" cy="246" r="30" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="324" cy="252" r="22" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="282" cy="232" r="22" fill="var(--bonsai-foliage-light)" />
-      <circle cx="306" cy="228" r="24" fill="var(--bonsai-foliage-light)" />
-      <circle cx="334" cy="260" r="18" fill="var(--bonsai-foliage-mid)" opacity="0.7" />
+    <g id="bonsai-pad-R1" class="bonsai-foliage-pad" style="transform-origin:296px 296px">
+      <circle cx="260" cy="312" r="30" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="298" cy="315" r="33" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="336" cy="311" r="28" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="266" cy="296" r="32" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="302" cy="292" r="36" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="338" cy="297" r="29" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="280" cy="279" r="27" fill="var(--bonsai-foliage-light)" />
+      <circle cx="312" cy="276" r="31" fill="var(--bonsai-foliage-light)" />
     </g>
 
-    <g id="bonsai-pad-L2" class="bonsai-foliage-pad" style="transform-origin:65px 198px">
-      <circle cx="38"  cy="214" r="22" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="66"  cy="218" r="26" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="92"  cy="212" r="20" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="50"  cy="222" r="18" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="44"  cy="196" r="24" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="72"  cy="192" r="28" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="96"  cy="198" r="20" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="56"  cy="178" r="20" fill="var(--bonsai-foliage-light)" />
-      <circle cx="78"  cy="174" r="22" fill="var(--bonsai-foliage-light)" />
-      <circle cx="28"  cy="206" r="16" fill="var(--bonsai-foliage-mid)" opacity="0.7" />
+    <g id="bonsai-pad-L2" class="bonsai-foliage-pad" style="transform-origin:70px 256px">
+      <circle cx="32"  cy="272" r="28" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="68"  cy="275" r="32" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="104" cy="271" r="26" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="38"  cy="256" r="31" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="74"  cy="252" r="34" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="108" cy="256" r="27" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="52"  cy="240" r="25" fill="var(--bonsai-foliage-light)" />
+      <circle cx="82"  cy="237" r="29" fill="var(--bonsai-foliage-light)" />
     </g>
 
-    <g id="bonsai-pad-R2" class="bonsai-foliage-pad" style="transform-origin:340px 150px">
-      <circle cx="314" cy="166" r="22" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="342" cy="170" r="26" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="368" cy="164" r="20" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="328" cy="174" r="18" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="322" cy="148" r="24" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="348" cy="144" r="28" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="372" cy="150" r="20" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="334" cy="130" r="20" fill="var(--bonsai-foliage-light)" />
-      <circle cx="356" cy="128" r="22" fill="var(--bonsai-foliage-light)" />
-      <circle cx="380" cy="158" r="16" fill="var(--bonsai-foliage-mid)" opacity="0.7" />
+    <g id="bonsai-pad-R2" class="bonsai-foliage-pad" style="transform-origin:348px 219px">
+      <circle cx="312" cy="234" r="28" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="348" cy="238" r="32" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="384" cy="234" r="26" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="318" cy="219" r="31" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="354" cy="215" r="34" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="386" cy="219" r="27" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="334" cy="204" r="25" fill="var(--bonsai-foliage-light)" />
+      <circle cx="364" cy="201" r="29" fill="var(--bonsai-foliage-light)" />
     </g>
 
-    <g id="bonsai-pad-apex" class="bonsai-foliage-pad" style="transform-origin:198px 62px">
-      <circle cx="168" cy="78"  r="26" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="198" cy="82"  r="30" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="228" cy="76"  r="24" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="148" cy="74"  r="20" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="246" cy="80"  r="18" fill="var(--bonsai-foliage-dark)" />
-      <circle cx="176" cy="56"  r="28" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="206" cy="52"  r="32" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="234" cy="58"  r="24" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="156" cy="60"  r="20" fill="var(--bonsai-foliage-mid)" />
-      <circle cx="188" cy="38"  r="24" fill="var(--bonsai-foliage-light)" />
-      <circle cx="214" cy="36"  r="26" fill="var(--bonsai-foliage-light)" />
-      <circle cx="174" cy="44"  r="18" fill="var(--bonsai-foliage-light)" />
+    <g id="bonsai-pad-apex" class="bonsai-foliage-pad" style="transform-origin:200px 150px">
+      <circle cx="155" cy="167" r="32" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="200" cy="170" r="38" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="245" cy="166" r="31" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="132" cy="163" r="25" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="264" cy="167" r="23" fill="var(--bonsai-foliage-dark)" />
+      <circle cx="162" cy="149" r="34" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="205" cy="145" r="40" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="248" cy="149" r="31" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="140" cy="153" r="25" fill="var(--bonsai-foliage-mid)" />
+      <circle cx="180" cy="133" r="29" fill="var(--bonsai-foliage-light)" />
+      <circle cx="218" cy="131" r="32" fill="var(--bonsai-foliage-light)" />
+      <circle cx="152" cy="138" r="22" fill="var(--bonsai-foliage-light)" />
     </g>
   </g>
 </svg>`;
@@ -979,12 +972,11 @@ function positionBonsaiSVG() {
   const H = window.innerHeight;
   const groundY = H * 0.72;
 
-  // Tree top (apex foliage ~y=16) should sit below the title area (~35% from top).
-  // Soil (y=430) sits at groundY. Solve for display height:
-  //   groundY - 0.796 * displayH = titleBottom
-  //   displayH = (groundY - titleBottom) / 0.796
+  // Tree top (apex foliage ~y=100) should sit below the title area (~35% from top).
+  // Soil (y=430) sits at groundY. The visible tree content spans ~y=100 to y=430
+  // which is (430-100)/520 ≈ 0.635 of the viewBox height.
   const titleBottom = H * 0.35;
-  const svgDisplayHeight = Math.min(450, Math.max(120, (groundY - titleBottom) / 0.796));
+  const svgDisplayHeight = Math.min(450, Math.max(120, (groundY - titleBottom) / 0.635));
   const svgDisplayWidth = svgDisplayHeight * (400 / 520);
 
   const left = (W - svgDisplayWidth) / 2;
