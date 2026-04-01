@@ -47,7 +47,7 @@ function enterTitleEdit(segmentEl) {
   input.addEventListener('click', e => e.stopPropagation());
 }
 
-function enterDurationEdit(segmentEl) {
+function enterDurationEdit(segmentEl, clickEvent) {
   if (inlineEditActive) return;
   const idx = parseInt(segmentEl.dataset.index);
   const sess = getCurrentSession();
@@ -63,35 +63,330 @@ function enterDurationEdit(segmentEl) {
   const span = segmentEl.querySelector('.segment-duration');
   const seg = sess.segments[idx];
   const originalTotal = segmentTotalSeconds(seg);
-  const originalStr = formatTime(originalTotal);
 
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'segment-inline-input duration-input';
-  input.value = originalStr;
-  input.spellcheck = false;
-  span.replaceWith(input);
-  input.focus();
-  input.select();
+  // Determine which field to focus based on click position
+  let focusSS = false;
+  if (clickEvent && span) {
+    const rect = span.getBoundingClientRect();
+    const midX = rect.left + rect.width / 2;
+    focusSS = clickEvent.clientX > midX;
+  }
 
+  // Build split MM:SS editor
+  const wrapper = document.createElement('span');
+  wrapper.className = 'duration-edit-wrapper';
+
+  const mmInput = document.createElement('input');
+  mmInput.type = 'text';
+  mmInput.className = 'segment-inline-input duration-mm';
+  mmInput.value = String(seg.durationMinutes || 0);
+  mmInput.maxLength = 3;
+  mmInput.spellcheck = false;
+
+  const sep = document.createElement('span');
+  sep.className = 'duration-sep';
+  sep.textContent = ':';
+
+  const ssInput = document.createElement('input');
+  ssInput.type = 'text';
+  ssInput.className = 'segment-inline-input duration-ss';
+  ssInput.value = String(seg.durationSeconds || 0).padStart(2, '0');
+  ssInput.maxLength = 2;
+  ssInput.spellcheck = false;
+
+  wrapper.appendChild(mmInput);
+  wrapper.appendChild(sep);
+  wrapper.appendChild(ssInput);
+  span.replaceWith(wrapper);
+
+  const target = focusSS ? ssInput : mmInput;
+  target.focus();
+  target.select();
+
+  let finished = false;
   const finish = (save) => {
-    if (!inlineEditActive) return;
+    if (finished) return;
+    finished = true;
     inlineEditActive = false;
     if (save) {
-      const parsed = parseDuration(input.value);
-      if (parsed !== null && parsed >= 1 && parsed !== originalTotal) {
-        seg.durationMinutes = Math.floor(parsed / 60);
-        seg.durationSeconds = parsed % 60;
-        // If this is the active segment and timer is stopped, update timer
+      const mins = parseInt(mmInput.value) || 0;
+      const secs = Math.min(59, Math.max(0, parseInt(ssInput.value) || 0));
+      const total = mins * 60 + secs;
+      if (total >= 1 && total !== originalTotal) {
+        seg.durationMinutes = mins;
+        seg.durationSeconds = secs;
         if (idx === state.currentSegmentIndex && !running) {
-          state.timerTotal = parsed;
-          state.timerSeconds = parsed;
+          state.timerTotal = total;
+          state.timerSeconds = total;
           renderTimer();
         }
-      } else if (parsed !== null && parsed < 1) {
+      } else if (total < 1) {
         showToast('Minimum duration is 1 second');
       }
     }
+    renderSessionPanel();
+  };
+
+  const onKeydown = e => {
+    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+  };
+
+  // Blur: only finish when focus leaves BOTH inputs
+  const onBlur = () => {
+    setTimeout(() => {
+      if (document.activeElement !== mmInput && document.activeElement !== ssInput) {
+        finish(true);
+      }
+    }, 0);
+  };
+
+  for (const inp of [mmInput, ssInput]) {
+    inp.addEventListener('keydown', onKeydown);
+    inp.addEventListener('blur', onBlur);
+    inp.addEventListener('click', e => e.stopPropagation());
+  }
+}
+
+/* ── Main Timer Display Editing ───────────────── */
+
+let mainTimerEditActive = false;
+
+function enterMainTimerEdit() {
+  if (mainTimerEditActive || inlineEditActive) return;
+  if (running) {
+    showToast('Pause timer to edit time');
+    return;
+  }
+
+  const sess = getCurrentSession();
+  const seg = sess?.segments[state.currentSegmentIndex];
+  if (!seg) return;
+
+  mainTimerEditActive = true;
+  const totalSecs = state.timerSeconds;
+  const hh = Math.floor(totalSecs / 3600);
+  const mm = Math.floor((totalSecs % 3600) / 60);
+  const ss = totalSecs % 60;
+
+  timerDigits.textContent = '';
+  timerDigits.classList.add('editing');
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'timer-edit-wrapper';
+
+  const allInputs = [];
+
+  // Build a single time-unit column: chevron-up, input, chevron-down
+  function buildColumn(value, max, cls) {
+    const col = document.createElement('div');
+    col.className = 'timer-edit-col';
+
+    const upBtn = document.createElement('button');
+    upBtn.className = 'timer-edit-chevron up';
+    upBtn.innerHTML = '&#9650;';
+    upBtn.tabIndex = -1;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'timer-edit-input ' + cls;
+    input.value = String(value).padStart(2, '0');
+    input.maxLength = 2;
+    input.spellcheck = false;
+    input.inputMode = 'numeric';
+
+    const downBtn = document.createElement('button');
+    downBtn.className = 'timer-edit-chevron down';
+    downBtn.innerHTML = '&#9660;';
+    downBtn.tabIndex = -1;
+
+    col.appendChild(upBtn);
+    col.appendChild(input);
+    col.appendChild(downBtn);
+
+    // ── Chevron: click to increment/decrement by 1 ──
+    function adjust(delta) {
+      let v = parseInt(input.value) || 0;
+      v += delta;
+      if (v > max) v = 0;
+      if (v < 0) v = max;
+      input.value = String(v).padStart(2, '0');
+    }
+
+    // ── Chevron: hold for auto-repeat with acceleration ──
+    function setupHold(btn, delta) {
+      let holdTimer = null;
+      let interval = 400;
+
+      function tick() {
+        adjust(delta);
+        interval = Math.max(80, interval * 0.82);
+        holdTimer = setTimeout(tick, interval);
+      }
+
+      btn.addEventListener('mousedown', e => {
+        e.preventDefault();
+        adjust(delta);
+        interval = 400;
+        holdTimer = setTimeout(tick, interval);
+      });
+
+      const stop = () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } };
+      btn.addEventListener('mouseup', stop);
+      btn.addEventListener('mouseleave', stop);
+    }
+
+    setupHold(upBtn, 1);
+    setupHold(downBtn, -1);
+
+    // ── Mouse wheel: snap to nearest multiple of 5 ──
+    input.addEventListener('wheel', e => {
+      e.preventDefault();
+      let v = parseInt(input.value) || 0;
+      if (e.deltaY < 0) {
+        // scroll up — next multiple of 5
+        v = Math.min(max, (Math.floor(v / 5) + 1) * 5);
+        if (v > max) v = 0;
+      } else {
+        // scroll down — previous multiple of 5
+        v = Math.max(0, (Math.ceil(v / 5) - 1) * 5);
+      }
+      input.value = String(v).padStart(2, '0');
+    }, { passive: false });
+
+    // ── Arrow keys: increment by 1 ──
+    input.addEventListener('keydown', e => {
+      if (e.key === 'ArrowUp') { e.preventDefault(); adjust(1); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); adjust(-1); }
+    });
+
+    // ── On blur: zero-pad and clamp ──
+    input.addEventListener('blur', () => {
+      let v = parseInt(input.value) || 0;
+      v = Math.max(0, Math.min(max, v));
+      input.value = String(v).padStart(2, '0');
+    });
+
+    // ── Filter to numeric only ──
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/\D/g, '').slice(0, 2);
+    });
+
+    allInputs.push(input);
+    return col;
+  }
+
+  function buildSep() {
+    const sep = document.createElement('span');
+    sep.className = 'timer-edit-sep';
+    sep.textContent = ':';
+    return sep;
+  }
+
+  const hhCol = buildColumn(hh, 99, 'timer-edit-hh');
+  const mmCol = buildColumn(mm, 59, 'timer-edit-mm');
+  const ssCol = buildColumn(ss, 59, 'timer-edit-ss');
+
+  wrapper.appendChild(hhCol);
+  wrapper.appendChild(buildSep());
+  wrapper.appendChild(mmCol);
+  wrapper.appendChild(buildSep());
+  wrapper.appendChild(ssCol);
+  timerDigits.appendChild(wrapper);
+
+  // Focus the minutes field (most common edit)
+  allInputs[1].focus();
+  allInputs[1].select();
+
+  let finished = false;
+  const finish = (save) => {
+    if (finished) return;
+    finished = true;
+    mainTimerEditActive = false;
+    if (save) {
+      const newHH = Math.min(99, Math.max(0, parseInt(allInputs[0].value) || 0));
+      const newMM = Math.min(59, Math.max(0, parseInt(allInputs[1].value) || 0));
+      const newSS = Math.min(59, Math.max(0, parseInt(allInputs[2].value) || 0));
+      const total = newHH * 3600 + newMM * 60 + newSS;
+      if (total >= 1) {
+        seg.durationMinutes = newHH * 60 + newMM;
+        seg.durationSeconds = newSS;
+        state.timerTotal = total;
+        state.timerSeconds = total;
+      } else {
+        showToast('Minimum duration is 1 second');
+      }
+    }
+    timerDigits.textContent = '';
+    timerDigits.classList.remove('editing');
+    renderTimer();
+    renderSessionPanel();
+  };
+
+  // ── Enter/Escape on any input ──
+  for (const inp of allInputs) {
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+      if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+    });
+    inp.addEventListener('click', e => e.stopPropagation());
+  }
+
+  // ── Blur: finish only when focus leaves ALL inputs and chevrons ──
+  wrapper.addEventListener('focusout', () => {
+    setTimeout(() => {
+      if (!wrapper.contains(document.activeElement)) {
+        finish(true);
+      }
+    }, 0);
+  });
+}
+
+/* ── Main Title Editing (from main display) ───── */
+
+let mainTitleEditActive = false;
+
+function enterMainTitleEdit() {
+  if (mainTitleEditActive || mainTimerEditActive || inlineEditActive) return;
+
+  const sess = getCurrentSession();
+  const seg = sess?.segments[state.currentSegmentIndex];
+  if (!seg) return;
+
+  mainTitleEditActive = true;
+  const original = seg.title;
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'main-title-edit-input';
+  input.value = original;
+  input.spellcheck = false;
+
+  // Size input to fit the text content
+  function sizeInput() {
+    input.style.width = Math.max(8, input.value.length + 2) + 'ch';
+  }
+  sizeInput();
+  input.addEventListener('input', sizeInput);
+
+  currentTitle.textContent = '';
+  currentTitle.appendChild(input);
+  input.focus();
+  input.select();
+
+  let finished = false;
+  const finish = (save) => {
+    if (finished) return;
+    finished = true;
+    mainTitleEditActive = false;
+    if (save) {
+      const val = input.value.trim();
+      if (val && val !== original) {
+        seg.title = val;
+      }
+    }
+    currentTitle.textContent = '';
+    renderTimer();
     renderSessionPanel();
   };
 
@@ -100,7 +395,6 @@ function enterDurationEdit(segmentEl) {
     if (e.key === 'Escape') { e.preventDefault(); finish(false); }
   });
   input.addEventListener('blur', () => finish(true));
-  input.addEventListener('click', e => e.stopPropagation());
 }
 
 function parseDuration(str) {
@@ -187,7 +481,7 @@ function setupInlineEditing() {
     if (durSpan) {
       durSpan.addEventListener('dblclick', e => {
         e.stopPropagation();
-        enterDurationEdit(activeEl);
+        enterDurationEdit(activeEl, e);
       });
     }
   }
@@ -316,10 +610,23 @@ function openSegEditPopover(idx, anchorEl) {
       `<option value="${key}" ${seg.theme === key ? 'selected' : ''}>${t.label}</option>`
     ).join('');
 
-  // Show/hide remove custom sound link
-  const soundKey = idx + '_' + state.currentSessionName;
-  const removeLink = document.getElementById('segEditRemoveSound');
-  removeLink.classList.toggle('hidden', !customSounds[soundKey]);
+  // Populate sound dropdown
+  const customKey = idx + '_' + state.currentSessionName;
+  const hasCustom = !!customSounds[customKey];
+  const selectedSoundKey = hasCustom ? ('custom:' + customKey) : (seg.soundKey || 'default');
+  const soundKeySelect = document.getElementById('segEditSoundKey');
+  soundKeySelect.innerHTML = buildSoundOptionsHTML(selectedSoundKey, idx, state.currentSessionName);
+  if (hasCustom) soundKeySelect.value = 'custom:' + customKey;
+
+  // Show/hide sound picker based on sound enabled, and delete btn based on selection
+  const soundPicker = document.getElementById('segEditSoundPicker');
+  soundPicker.style.display = seg.soundEnabled ? '' : 'none';
+  document.getElementById('segEditDeleteCustom').classList.toggle('hidden', !soundKeySelect.value.startsWith('custom:'));
+
+  // Toggle sound picker visibility when checkbox changes
+  document.getElementById('segEditSound').addEventListener('change', function() {
+    soundPicker.style.display = this.checked ? '' : 'none';
+  });
 
   // Position near the anchor button
   const rect = anchorEl.getBoundingClientRect();
@@ -369,6 +676,8 @@ function saveSegEditPopover() {
   seg.soundEnabled = document.getElementById('segEditSound').checked;
   seg.autoAdvance = document.getElementById('segEditAuto').checked;
   seg.theme = document.getElementById('segEditTheme').value;
+  const soundVal = document.getElementById('segEditSoundKey').value;
+  seg.soundKey = soundVal.startsWith('custom:') ? 'default' : soundVal;
 
   // Update timer if editing the active segment while stopped
   if (segEditIdx === state.currentSegmentIndex && !running) {

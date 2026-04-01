@@ -362,6 +362,35 @@ input { font-family: inherit; color: inherit; }
   text-align: center;
 }
 
+/* Split MM:SS duration editor */
+.duration-edit-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+.duration-edit-wrapper .duration-sep {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 0 1px;
+}
+.segment-inline-input.duration-mm,
+.segment-inline-input.duration-ss {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-align: center;
+  padding: 1px 2px;
+}
+.segment-inline-input.duration-mm {
+  width: 26px;
+  border-radius: 4px 0 0 4px;
+  border-right: none;
+}
+.segment-inline-input.duration-ss {
+  width: 22px;
+  border-radius: 0 4px 4px 0;
+}
+
 /* Add segment button at bottom of list */
 .segment-add-btn {
   width: calc(100% - 16px);

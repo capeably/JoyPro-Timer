@@ -105,6 +105,9 @@ function sizeTimerContent() {
 
 let sizeRafId = null;
 function renderTimer() {
+  // Don't clobber if user is editing the main timer display or title
+  if (typeof mainTimerEditActive !== 'undefined' && mainTimerEditActive) return;
+  if (typeof mainTitleEditActive !== 'undefined' && mainTitleEditActive) return;
   timerDigits.textContent = formatTime(state.timerSeconds);
 
   const fraction = state.timerTotal > 0 ? state.timerSeconds / state.timerTotal : 1;

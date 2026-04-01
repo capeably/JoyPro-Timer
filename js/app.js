@@ -69,7 +69,10 @@ const segEditClose = $('segEditClose');
 const segEditCancel = $('segEditCancel');
 const segEditSave = $('segEditSave');
 const segEditUploadSound = $('segEditUploadSound');
-const segEditRemoveSound = $('segEditRemoveSound');
+const segEditSoundKey = $('segEditSoundKey');
+const segEditPreview = $('segEditPreview');
+const segEditDeleteCustom = $('segEditDeleteCustom');
+const segEditSoundPicker = $('segEditSoundPicker');
 
 /* ═══════════════════════════════════════════════════
    THEME
@@ -306,6 +309,20 @@ function setupEventListeners() {
     saveState();
   });
 
+  // Timer display — double-click to edit time; title — double-click to edit title
+  timerDigits.addEventListener('mousedown', (e) => {
+    if (e.detail >= 2) e.preventDefault();
+  });
+  timerDigits.addEventListener('dblclick', () => enterMainTimerEdit());
+  currentTitle.addEventListener('mousedown', (e) => {
+    if (e.detail >= 2) e.preventDefault(); // prevent dblclick text selection
+  });
+  currentTitle.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+    window.getSelection()?.removeAllRanges();
+    enterMainTitleEdit();
+  });
+
   // Timer controls
   playBtn.addEventListener('click', () => {
     if (running) pauseTimer();
@@ -440,13 +457,49 @@ function setupEventListeners() {
     currentEditSoundIndex = segEditIdx;
     soundFileInput.click();
   });
-  segEditRemoveSound.addEventListener('click', () => {
-    if (segEditIdx < 0) return;
-    const key = segEditIdx + '_' + state.currentSessionName;
-    delete customSounds[key];
-    saveSounds();
-    segEditRemoveSound.classList.add('hidden');
-    showToast('Custom sound removed');
+  segEditPreview.addEventListener('click', () => {
+    const val = segEditSoundKey.value;
+    if (val.startsWith('custom:')) {
+      const ck = val.slice(7);
+      if (customSounds[ck]) previewSound(ck);
+    } else {
+      previewSound(val);
+    }
+  });
+  segEditDeleteCustom.addEventListener('click', () => {
+    const val = segEditSoundKey.value;
+    if (!val.startsWith('custom:')) return;
+
+    // If already showing confirm, do the delete
+    if (segEditDeleteCustom.dataset.confirming === 'true') {
+      const ck = val.slice(7);
+      delete customSounds[ck];
+      saveSounds();
+      segEditSoundKey.innerHTML = buildSoundOptionsHTML('default', segEditIdx, state.currentSessionName);
+      segEditSoundKey.value = 'default';
+      segEditDeleteCustom.classList.add('hidden');
+      segEditDeleteCustom.textContent = '\u00D7';
+      segEditDeleteCustom.dataset.confirming = '';
+      segEditDeleteCustom.classList.remove('confirming');
+      showToast('Custom sound removed');
+      return;
+    }
+
+    // Show inline "Delete?" confirmation
+    segEditDeleteCustom.textContent = 'Delete?';
+    segEditDeleteCustom.dataset.confirming = 'true';
+    segEditDeleteCustom.classList.add('confirming');
+    // Auto-reset after 3 seconds if not clicked
+    setTimeout(() => {
+      if (segEditDeleteCustom.dataset.confirming === 'true') {
+        segEditDeleteCustom.textContent = '\u00D7';
+        segEditDeleteCustom.dataset.confirming = '';
+        segEditDeleteCustom.classList.remove('confirming');
+      }
+    }, 3000);
+  });
+  segEditSoundKey.addEventListener('change', () => {
+    segEditDeleteCustom.classList.toggle('hidden', !segEditSoundKey.value.startsWith('custom:'));
   });
 
   // Right-side navigation buttons
@@ -470,6 +523,10 @@ function setupEventListeners() {
 
   editorSave.addEventListener('click', () => {
     const name = editorSessionName.value.trim() || "Untitled";
+    if (editorData.length === 0) {
+      showToast('Add at least one segment');
+      return;
+    }
     for (const s of editorData) {
       const total = (s.durationMinutes || 0) * 60 + (s.durationSeconds || 0);
       if (total < 1) { showToast('Each segment needs at least 1 second'); return; }
@@ -507,16 +564,28 @@ function setupEventListeners() {
       soundFileInput.value = '';
       return;
     }
+    // Default name from filename (strip extension)
+    const defaultName = file.name.replace(/\.[^.]+$/, '') || 'Custom Sound';
     const reader = new FileReader();
     reader.onload = () => {
-      const key = currentEditSoundIndex + '_' + state.currentSessionName;
-      customSounds[key] = reader.result;
-      saveSounds();
-      showToast('Custom sound set');
-      // Update remove link visibility if popover is open
-      if (segEditPopover.classList.contains('open')) {
-        segEditRemoveSound.classList.remove('hidden');
-      }
+      const dataUrl = reader.result;
+      // Prompt for a name
+      showNamePrompt(defaultName, (name) => {
+        const key = currentEditSoundIndex + '_' + state.currentSessionName;
+        customSounds[key] = { data: dataUrl, name: name || defaultName };
+        saveSounds();
+        showToast('Custom sound added');
+        // Update sound dropdown if popover is open
+        if (segEditPopover.classList.contains('open')) {
+          segEditSoundKey.innerHTML = buildSoundOptionsHTML('custom:' + key, currentEditSoundIndex, state.currentSessionName);
+          segEditSoundKey.value = 'custom:' + key;
+          segEditDeleteCustom.classList.remove('hidden');
+        }
+        // Update editor dropdown if editor is open
+        if (editorModal.classList.contains('open')) {
+          renderEditorSegments();
+        }
+      });
     };
     reader.readAsDataURL(file);
     soundFileInput.value = '';

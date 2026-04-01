@@ -20,6 +20,11 @@
   margin-bottom: 2px;
   text-align: center;
   letter-spacing: 0.01em;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default;
   /* font-size set dynamically by JS based on text length */
 }
 
@@ -30,6 +35,10 @@
   letter-spacing: 0.04em;
   white-space: nowrap;
   margin-bottom: 6px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 /* Progress bar — width matches digits */
@@ -83,6 +92,85 @@
   font-size: 13px;
 }
 .ctrl-btn.primary:hover, .ctrl-btn.primary:active { background: #e8884f; }
+
+/* ── Main timer HH:MM:SS editor ── */
+.timer-edit-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+.timer-edit-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.timer-edit-input {
+  font-family: 'DM Mono', monospace;
+  font-size: clamp(32px, 14vw, 96px);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--accent);
+  color: inherit;
+  outline: none;
+  text-align: center;
+  padding: 0;
+  line-height: 1;
+  width: 1.4em;
+  caret-color: var(--accent);
+}
+.timer-edit-input:focus {
+  border-bottom-color: var(--accent);
+  background: rgba(241, 151, 102, 0.06);
+  border-radius: 4px 4px 0 0;
+}
+.timer-edit-chevron {
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.35;
+  cursor: pointer;
+  font-size: clamp(10px, 3vw, 18px);
+  padding: 0 8px;
+  line-height: 1;
+  transition: opacity 0.1s;
+  user-select: none;
+}
+.timer-edit-chevron:hover { opacity: 0.7; }
+.timer-edit-chevron:active { opacity: 1; }
+.timer-edit-sep {
+  font-family: 'DM Mono', monospace;
+  font-size: clamp(32px, 14vw, 96px);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  opacity: 0.35;
+  padding: 0 2px;
+  line-height: 1;
+  align-self: center;
+}
+.timer-digits.editing {
+  cursor: default;
+}
+
+/* ── Main title inline edit ── */
+.main-title-edit-input {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--accent);
+  color: inherit;
+  outline: none;
+  text-align: center;
+  padding: 0 4px;
+  /* Size to content: use ch units based on value length, set by JS */
+  min-width: 8ch;
+  max-width: 90vw;
+  box-sizing: content-box;
+}
 
 /* ═══════════════════════════════════════════════════
    TRANSITION OVERLAY

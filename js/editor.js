@@ -17,7 +17,15 @@ function openEditorNew() {
   isNewSessionMode = true;
   editorModalTitle.textContent = 'New Session';
   editorSessionName.value = 'New Session';
-  editorData = [];
+  editorData = [{
+    title: "25-Minute Segment",
+    durationMinutes: 25,
+    durationSeconds: 0,
+    soundEnabled: true,
+    soundKey: "default",
+    autoAdvance: true,
+    theme: "default"
+  }];
   renderEditorSegments();
   editorModal.classList.add('open');
 }
@@ -45,7 +53,11 @@ function renderEditorSegments() {
         <div class="editor-segment-options">
           <label><input type="checkbox" data-field="sound" ${s.soundEnabled ? 'checked' : ''}> Sound</label>
           <label><input type="checkbox" data-field="auto" ${s.autoAdvance ? 'checked' : ''}> Auto-advance</label>
-          <span class="sound-upload-btn" data-field="upload" data-index="${i}">Custom sound</span>
+          <div class="editor-sound-picker" data-index="${i}" style="${s.soundEnabled ? '' : 'display:none'}">
+            <select data-field="soundKey">${buildSoundOptionsHTML(s.soundKey || 'default', i, state.currentSessionName)}</select>
+            <button class="editor-sound-preview" data-field="preview" title="Preview">&#9654;</button>
+            <span class="sound-upload-btn" data-field="upload" data-index="${i}" title="Upload custom">+</span>
+          </div>
           <label class="theme-select-label">Theme:
             <select data-field="theme">
               <option value="default" ${(!s.theme || s.theme === 'default') ? 'selected' : ''}>Default</option>
@@ -73,7 +85,30 @@ function renderEditorSegments() {
     } else if (el.dataset.field === 'sec') {
       el.addEventListener('input', () => { editorData[idx].durationSeconds = Math.min(59, Math.max(0, parseInt(el.value) || 0)); });
     } else if (el.dataset.field === 'sound') {
-      el.addEventListener('change', () => { editorData[idx].soundEnabled = el.checked; });
+      el.addEventListener('change', () => {
+        editorData[idx].soundEnabled = el.checked;
+        const picker = segment.querySelector('.editor-sound-picker');
+        if (picker) picker.style.display = el.checked ? '' : 'none';
+      });
+    } else if (el.dataset.field === 'soundKey') {
+      el.addEventListener('change', () => {
+        const val = el.value;
+        editorData[idx].soundKey = val.startsWith('custom:') ? 'default' : val;
+      });
+    } else if (el.dataset.field === 'preview') {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        const sel = segment.querySelector('[data-field="soundKey"]');
+        if (sel) {
+          const val = sel.value;
+          if (val.startsWith('custom:')) {
+            const ck = val.slice(7);
+            if (customSounds[ck]) previewSound(ck);
+          } else {
+            previewSound(val);
+          }
+        }
+      });
     } else if (el.dataset.field === 'auto') {
       el.addEventListener('change', () => { editorData[idx].autoAdvance = el.checked; });
     } else if (el.dataset.field === 'theme') {
@@ -89,6 +124,10 @@ function renderEditorSegments() {
   // Remove buttons
   editorSegments.querySelectorAll('[data-action="remove"]').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (editorData.length <= 1) {
+        showToast('Session must have at least one segment');
+        return;
+      }
       const idx = parseInt(btn.dataset.index);
       editorData.splice(idx, 1);
       renderEditorSegments();

@@ -8,13 +8,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@600&family=DM+Mono:wght@400;500&family=Rethink+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/tokens.css?v=10">
-<link rel="stylesheet" href="css/layout.css?v=10">
-<link rel="stylesheet" href="css/timer.css?v=10">
-<link rel="stylesheet" href="css/modals.css?v=10">
-<link rel="stylesheet" href="css/bonsai.css?v=10">
-<link rel="stylesheet" href="css/theme-picker.css?v=10">
-<link rel="stylesheet" href="css/utilities.css?v=10">
+<link rel="stylesheet" href="css/tokens.css?v=12">
+<link rel="stylesheet" href="css/layout.css?v=12">
+<link rel="stylesheet" href="css/timer.css?v=12">
+<link rel="stylesheet" href="css/modals.css?v=12">
+<link rel="stylesheet" href="css/bonsai.css?v=12">
+<link rel="stylesheet" href="css/theme-picker.css?v=12">
+<link rel="stylesheet" href="css/utilities.css?v=12">
 </head>
 <body>
 
@@ -197,13 +197,18 @@
       <label><input type="checkbox" id="segEditSound"> Sound</label>
       <label><input type="checkbox" id="segEditAuto"> Auto-advance</label>
     </div>
+    <div class="seg-edit-row seg-edit-sound-picker" id="segEditSoundPicker">
+      <label class="seg-edit-label">Sound</label>
+      <div class="seg-edit-sound-controls">
+        <select class="seg-edit-select" id="segEditSoundKey"></select>
+        <button class="seg-edit-preview-btn" id="segEditPreview" title="Preview sound">&#9654;</button>
+        <button class="seg-edit-delete-btn hidden" id="segEditDeleteCustom" title="Delete custom sound">&times;</button>
+      </div>
+      <span class="seg-edit-sound-link" id="segEditUploadSound">+ Upload custom sound</span>
+    </div>
     <div class="seg-edit-row">
       <label class="seg-edit-label">Theme</label>
       <select class="seg-edit-select" id="segEditTheme"></select>
-    </div>
-    <div class="seg-edit-row seg-edit-sound-row">
-      <span class="seg-edit-sound-link" id="segEditUploadSound">Upload custom sound</span>
-      <span class="seg-edit-sound-link remove" id="segEditRemoveSound">Remove custom sound</span>
     </div>
   </div>
   <div class="seg-edit-footer">
@@ -225,16 +230,16 @@
 <input type="file" id="soundFileInput" accept="audio/*" style="display:none">
 <input type="file" id="importFileInput" accept=".json" style="display:none">
 
-<script src="js/state.js?v=10"></script>
-<script src="js/audio.js?v=10"></script>
-<script src="js/theme-growing-tree.js?v=10"></script>
-<script src="js/themes.js?v=10"></script>
-<script src="js/timer.js?v=10"></script>
-<script src="js/ui.js?v=10"></script>
-<script src="js/inline-edit.js?v=10"></script>
-<script src="js/popout.js?v=10"></script>
-<script src="js/dialogs.js?v=10"></script>
-<script src="js/editor.js?v=10"></script>
-<script src="js/app.js?v=10"></script>
+<script src="js/state.js?v=12"></script>
+<script src="js/audio.js?v=12"></script>
+<script src="js/theme-growing-tree.js?v=12"></script>
+<script src="js/themes.js?v=12"></script>
+<script src="js/timer.js?v=12"></script>
+<script src="js/ui.js?v=12"></script>
+<script src="js/inline-edit.js?v=12"></script>
+<script src="js/popout.js?v=12"></script>
+<script src="js/dialogs.js?v=12"></script>
+<script src="js/editor.js?v=12"></script>
+<script src="js/app.js?v=12"></script>
 </body>
 </html>

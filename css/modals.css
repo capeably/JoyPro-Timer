@@ -170,7 +170,8 @@
 
 .editor-segment-options {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 6px 10px;
   align-items: center;
   font-size: 12px;
   color: var(--text-muted);
@@ -202,7 +203,39 @@
   align-items: center;
   gap: 4px;
   white-space: nowrap;
+  margin-left: auto;
 }
+
+/* Editor sound picker — own row via flex basis */
+.editor-sound-picker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-basis: 100%;
+  order: 10;
+}
+.editor-sound-picker select {
+  flex: 1;
+  min-width: 0;
+}
+.editor-sound-preview,
+.editor-sound-picker .sound-upload-btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--btn-bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.editor-sound-preview:hover { color: var(--accent); background: var(--btn-hover); }
+.editor-sound-picker .sound-upload-btn:hover { color: var(--accent); background: var(--btn-hover); }
 
 .editor-remove-btn {
   width: 28px;
@@ -573,10 +606,46 @@
   font-family: inherit;
 }
 
-.seg-edit-sound-row {
-  flex-direction: row;
-  gap: 12px;
+.seg-edit-sound-picker {
+  flex-direction: column;
+  gap: 6px;
+}
+.seg-edit-sound-controls {
+  display: flex;
+  gap: 4px;
   align-items: center;
+}
+.seg-edit-sound-controls select {
+  flex: 1;
+  min-width: 0;
+}
+.seg-edit-preview-btn,
+.seg-edit-delete-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--btn-bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.1s;
+}
+.seg-edit-preview-btn:hover { background: var(--btn-hover); color: var(--accent); }
+.seg-edit-delete-btn:hover { background: var(--btn-hover); color: var(--danger); }
+.seg-edit-delete-btn.hidden { display: none; }
+.seg-edit-delete-btn.confirming {
+  width: auto;
+  padding: 0 8px;
+  font-size: 11px;
+  color: var(--danger);
+  border-color: var(--danger);
+  background: rgba(217,107,90,0.08);
 }
 .seg-edit-sound-link {
   font-size: 11px;
@@ -585,8 +654,6 @@
   cursor: pointer;
 }
 .seg-edit-sound-link:hover { color: var(--accent); }
-.seg-edit-sound-link.remove:hover { color: var(--danger); }
-.seg-edit-sound-link.hidden { display: none; }
 
 .seg-edit-footer {
   padding: 8px 14px 10px;
