@@ -121,7 +121,7 @@
 
   resetBtn.addEventListener('click', () => {
     playing = false;
-    playPauseBtn.innerHTML = '&#9654;';
+    playPauseBtn.innerHTML = '<span class="icon-play"></span>';
     playPauseBtn.classList.remove('active');
     // Reset bonsai state fully
     resetBonsaiForSegment();
@@ -132,7 +132,7 @@
   playPauseBtn.addEventListener('click', () => {
     playing = !playing;
     if (playing) {
-      playPauseBtn.innerHTML = '&#9646;&#9646;';
+      playPauseBtn.innerHTML = '<span class="icon-pause"></span>';
       playPauseBtn.classList.add('active');
       lastFrameTime = performance.now();
       // If at end, restart
@@ -142,7 +142,7 @@
       }
       playbackLoop();
     } else {
-      playPauseBtn.innerHTML = '&#9654;';
+      playPauseBtn.innerHTML = '<span class="icon-play"></span>';
       playPauseBtn.classList.remove('active');
     }
   });
@@ -161,7 +161,7 @@
     if (newProgress >= 1) {
       setProgress(1);
       playing = false;
-      playPauseBtn.innerHTML = '&#9654;';
+      playPauseBtn.innerHTML = '<span class="icon-play"></span>';
       playPauseBtn.classList.remove('active');
       return;
     }

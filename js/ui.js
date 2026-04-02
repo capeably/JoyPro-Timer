@@ -48,8 +48,8 @@ function renderSessionPanel() {
     const isCompleted = i < state.currentSegmentIndex;
     let iconHtml = '';
     if (isCompleted) iconHtml = '<span class="segment-icon completed">&#10003;</span>';
-    else if (isActive && running) iconHtml = '<span class="segment-icon playing">&#9654;</span>';
-    else if (isActive) iconHtml = '<span class="segment-icon playing">&#9646;&#9646;</span>';
+    else if (isActive && running) iconHtml = '<span class="segment-icon playing"><span class="icon-play-sm"></span></span>';
+    else if (isActive) iconHtml = '<span class="segment-icon playing"><span class="icon-pause-sm"></span></span>';
     else iconHtml = '<span class="segment-icon"></span>';
 
     const dur = segmentTotalSeconds(s);
@@ -113,7 +113,10 @@ function renderTimer() {
   const fraction = state.timerTotal > 0 ? state.timerSeconds / state.timerTotal : 1;
   progressFill.style.width = (fraction * 100) + '%';
 
-  playBtn.innerHTML = running ? '&#9646;&#9646;' : '&#9654;';
+  const playIcon = playBtn.querySelector('span');
+  if (playIcon) {
+    playIcon.className = running ? 'icon-pause' : 'icon-play';
+  }
 
   const sess = getCurrentSession();
   if (sess && sess.segments[state.currentSegmentIndex]) {

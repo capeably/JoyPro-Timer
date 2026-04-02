@@ -90,7 +90,14 @@ function playCustomSound(dataUrl) {
 }
 
 function updateMuteBtn() {
-  muteToggle.innerHTML = state.globalMute ? '&#128264;' : '&#128276;';
+  const muteIcon = muteToggle.querySelector('.mute-icon');
+  if (muteIcon) {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+      || document.documentElement.getAttribute('data-bg-theme') === 'starry-night';
+    const color = isDark ? 'white' : 'black';
+    muteIcon.src = state.globalMute ? `files/mute_${color}.png` : `files/unmute_${color}.png`;
+    muteIcon.alt = state.globalMute ? 'Muted' : 'Sound';
+  }
   muteToggle.classList.toggle('muted', state.globalMute);
 }
 

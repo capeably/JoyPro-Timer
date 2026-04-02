@@ -8,13 +8,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@600&family=DM+Mono:wght@400;500&family=Rethink+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/tokens.css?v=16">
-<link rel="stylesheet" href="css/layout.css?v=16">
-<link rel="stylesheet" href="css/timer.css?v=16">
-<link rel="stylesheet" href="css/modals.css?v=16">
-<link rel="stylesheet" href="css/bonsai.css?v=16">
-<link rel="stylesheet" href="css/theme-picker.css?v=16">
-<link rel="stylesheet" href="css/utilities.css?v=16">
+<link rel="stylesheet" href="css/tokens.css?v=22">
+<link rel="stylesheet" href="css/layout.css?v=22">
+<link rel="stylesheet" href="css/timer.css?v=22">
+<link rel="stylesheet" href="css/modals.css?v=22">
+<link rel="stylesheet" href="css/bonsai.css?v=22">
+<link rel="stylesheet" href="css/theme-picker.css?v=22">
+<link rel="stylesheet" href="css/utilities.css?v=22">
 </head>
 <body>
 
@@ -24,7 +24,7 @@
     <div class="header-title"><img src="joypro-logo-dark.png" alt="JoyPro" class="header-logo">JoyPro Timer</div>
     <div class="header-actions">
       <button class="header-btn" id="themeToggle" title="Toggle theme">&#9789;</button>
-      <button class="header-btn" id="muteToggle" title="Toggle sound (M)">&#128276;</button>
+      <button class="header-btn" id="muteToggle" title="Toggle sound (M)"><img class="mute-icon" src="files/unmute_black.png" alt="Sound"></button>
       <button class="header-btn" id="popoutBtn" title="Open popout window">&#10064;</button>
       <button class="header-btn" id="helpBtn" title="Help & tips">?</button>
     </div>
@@ -43,9 +43,9 @@
         </div>
 
       <div class="timer-controls">
-        <button class="ctrl-btn" id="resetBtn" title="Reset session (R)">&#8634;</button>
-        <button class="ctrl-btn primary" id="playBtn" title="Play/Pause (Space)">&#9654;</button>
-        <button class="ctrl-btn" id="skipBtn" title="Next segment (N)">&#9197;</button>
+        <button class="ctrl-btn" id="resetBtn" title="Reset session (R)"><span class="icon-reset"></span></button>
+        <button class="ctrl-btn primary" id="playBtn" title="Play/Pause (Space)"><span class="icon-play"></span></button>
+        <button class="ctrl-btn" id="skipBtn" title="Next segment (N)"><span class="icon-skip"></span></button>
       </div>
 
       <!-- Complete overlay -->
@@ -297,17 +297,17 @@
 <input type="file" id="soundFileInput" accept="audio/*" style="display:none">
 <input type="file" id="importFileInput" accept=".json" style="display:none">
 
-<script src="js/state.js?v=16"></script>
-<script src="js/audio.js?v=16"></script>
-<script src="js/theme-growing-tree.js?v=16"></script>
-<script src="js/themes.js?v=16"></script>
-<script src="js/timer.js?v=16"></script>
-<script src="js/ui.js?v=16"></script>
-<script src="js/inline-edit.js?v=16"></script>
-<script src="js/popout.js?v=16"></script>
-<script src="js/dialogs.js?v=16"></script>
-<script src="js/editor.js?v=16"></script>
-<script src="js/onboarding.js?v=16"></script>
-<script src="js/app.js?v=16"></script>
+<script src="js/state.js?v=22"></script>
+<script src="js/audio.js?v=22"></script>
+<script src="js/theme-growing-tree.js?v=22"></script>
+<script src="js/themes.js?v=22"></script>
+<script src="js/timer.js?v=22"></script>
+<script src="js/ui.js?v=22"></script>
+<script src="js/inline-edit.js?v=22"></script>
+<script src="js/popout.js?v=22"></script>
+<script src="js/dialogs.js?v=22"></script>
+<script src="js/editor.js?v=22"></script>
+<script src="js/onboarding.js?v=22"></script>
+<script src="js/app.js?v=22"></script>
 </body>
 </html>

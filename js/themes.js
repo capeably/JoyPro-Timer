@@ -321,6 +321,8 @@ function applyThemeVisual(themeName) {
   document.documentElement.setAttribute('data-theme', theme.colorMode);
   document.documentElement.setAttribute('data-bg-theme', themeName);
   themeToggle.innerHTML = theme.colorMode === 'dark' ? '&#9788;' : '&#9789;';
+  // Update mute icon color variant for new theme
+  if (typeof updateMuteBtn === 'function') updateMuteBtn();
 
   // Handle background layers
   if (theme.background !== activeBackground) {

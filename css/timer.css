@@ -108,6 +108,107 @@
 }
 .ctrl-btn.primary:hover, .ctrl-btn.primary:active { background: #e8884f; }
 
+/* ── CSS icons for timer controls (flat, cross-platform) ── */
+.icon-play {
+  display: block;
+  width: 0; height: 0;
+  border-style: solid;
+  border-width: 5px 0 5px 9px;
+  border-color: transparent transparent transparent currentColor;
+  margin-left: 2px; /* optical center */
+}
+.icon-pause {
+  display: flex;
+  gap: 2.5px;
+  width: 10px; height: 10px;
+}
+.icon-pause::before,
+.icon-pause::after {
+  content: '';
+  flex: 1;
+  background: currentColor;
+  border-radius: 1px;
+}
+.icon-reset {
+  display: block;
+  width: 10px; height: 10px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  position: relative;
+}
+.icon-reset::after {
+  content: '';
+  position: absolute;
+  top: -2px; right: -1px;
+  width: 0; height: 0;
+  border-style: solid;
+  border-width: 0 4px 4px 0;
+  border-color: transparent currentColor transparent transparent;
+}
+.icon-skip {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+.icon-skip::before {
+  content: '';
+  width: 0; height: 0;
+  border-style: solid;
+  border-width: 4.5px 0 4.5px 7px;
+  border-color: transparent transparent transparent currentColor;
+}
+.icon-skip::after {
+  content: '';
+  width: 2px; height: 9px;
+  background: currentColor;
+  border-radius: 0.5px;
+}
+
+/* Small segment-list icons */
+.icon-play-sm {
+  display: block;
+  width: 0; height: 0;
+  border-style: solid;
+  border-width: 3.5px 0 3.5px 6px;
+  border-color: transparent transparent transparent currentColor;
+  margin-left: 1px;
+}
+.icon-pause-sm {
+  display: flex;
+  gap: 2px;
+  width: 7px; height: 8px;
+}
+.icon-pause-sm::before,
+.icon-pause-sm::after {
+  content: '';
+  flex: 1;
+  background: currentColor;
+  border-radius: 0.5px;
+}
+
+/* ── Mute/unmute icon ── */
+.mute-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  transition: opacity 0.2s;
+}
+.header-btn.muted .mute-icon { opacity: 0.5; }
+
+/* Bigger touch targets on touch devices */
+@media (hover: none) {
+  .ctrl-btn { width: 40px; height: 40px; font-size: 14px; }
+  .ctrl-btn.primary { width: 46px; height: 46px; font-size: 15px; }
+  .ctrl-btn.primary .icon-play {
+    border-width: 7px 0 7px 12px;
+  }
+  .ctrl-btn.primary .icon-pause {
+    width: 13px; height: 13px;
+  }
+  .timer-controls { gap: 12px; }
+}
+
 /* ── Main timer HH:MM:SS editor ── */
 .timer-edit-wrapper {
   display: inline-flex;

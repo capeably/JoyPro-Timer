@@ -134,8 +134,7 @@ input { font-family: inherit; color: inherit; }
 /* Tab-style expand/collapse button */
 .panel-tab-btn {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 12px;
   height: 22px;
   padding: 0 12px;
   border-radius: 8px 8px 0 0;
@@ -189,6 +188,11 @@ input { font-family: inherit; color: inherit; }
   padding: 0 10px;
 }
 .panel-collapse-tab .tab-label { display: none; }
+
+/* Hide "Segments" label on very narrow screens */
+@media (max-width: 324px) {
+  .session-expand-btn .tab-label { display: none; }
+}
 
 /* Panel header */
 .session-header {
