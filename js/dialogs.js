@@ -1,63 +1,37 @@
 /* ═══════════════════════════════════════════════════
-   TRANSITION & COMPLETE OVERLAYS
-   NOTE: showTransitionOverlay is currently unused — auto-advance
-   in timer.js skips the overlay. Kept for potential future use.
+   COMPLETE OVERLAY
    ═══════════════════════════════════════════════════ */
-function showTransitionOverlay(nextTitle, nextIndex, autoStart) {
-  transitionTitle.textContent = nextTitle;
-  transitionOverlay.classList.add('visible');
-
-  if (autoStart) {
-    let count = AUTO_ADVANCE_DELAY;
-    transitionCountdown.textContent = `Starting in ${count}...`;
-    transitionCountdown.style.display = '';
-
-    transitionTimer = setInterval(() => {
-      count--;
-      if (count <= 0) {
-        clearInterval(transitionTimer);
-        transitionTimer = null;
-        advanceToSegment(nextIndex);
-        startTimer();
-      } else {
-        transitionCountdown.textContent = `Starting in ${count}...`;
-      }
-    }, 1000);
-  } else {
-    transitionCountdown.style.display = 'none';
-  }
-
-  transitionStart.onclick = () => {
-    clearInterval(transitionTimer);
-    transitionTimer = null;
-    advanceToSegment(nextIndex);
-    startTimer();
-  };
-
-  transitionSkipBtn.onclick = () => {
-    clearInterval(transitionTimer);
-    transitionTimer = null;
-    const sess = getCurrentSession();
-    if (sess && nextIndex + 1 < sess.segments.length) {
-      advanceToSegment(nextIndex + 1);
-      startTimer();
-    } else {
-      advanceToSegment(nextIndex);
-      startTimer();
-    }
-  };
-}
+const COMPLETE_MESSAGES = [
+  'Great session. Take a moment to breathe.',
+  'Well done. You showed up and stayed focused.',
+  'Another session in the books. Nice work.',
+  'You did it. Time for a well-earned break.',
+  'Focus achieved. Give yourself a moment.',
+  'Session complete. Celebrate the small wins.'
+];
 
 function showCompleteOverlay() {
   completeOverlay.classList.add('visible');
   document.title = 'Complete! | JoyPro Timer';
+
+  // Populate stats
+  const sess = getCurrentSession();
+  const statsEl = document.getElementById('completeStats');
+  const subEl = document.getElementById('completeSub');
+  if (sess && statsEl) {
+    const totalMins = Math.round(sessionTotalMinutes(sess));
+    const segCount = sess.segments.length;
+    statsEl.textContent = `${totalMins} minutes across ${segCount} segment${segCount !== 1 ? 's' : ''}`;
+  }
+
+  // Random encouraging message
+  if (subEl) {
+    subEl.textContent = COMPLETE_MESSAGES[Math.floor(Math.random() * COMPLETE_MESSAGES.length)];
+  }
 }
 
 function hideOverlays() {
-  transitionOverlay.classList.remove('visible');
   completeOverlay.classList.remove('visible');
-  clearInterval(transitionTimer);
-  transitionTimer = null;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -128,7 +102,7 @@ function doSaveCurrentSession() {
 
   saveSessions();
   takeSnapshot();
-  showToast('Session saved');
+  showToast('Session saved', 'success');
 }
 
 function doSaveAsSession(newName) {
@@ -145,7 +119,7 @@ function doSaveAsSession(newName) {
   saveState();
   takeSnapshot();
   renderSessionPanel();
-  showToast(`Saved as "${newName}"`);
+  showToast(`Saved as "${newName}"`, 'success');
 }
 
 function revertCurrentSession() {
@@ -170,10 +144,10 @@ function guardUnsavedChanges(proceed) {
 /* ═══════════════════════════════════════════════════
    TOAST
    ═══════════════════════════════════════════════════ */
-function showToast(msg) {
+function showToast(msg, type) {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
-  toast.className = 'toast';
+  toast.className = 'toast' + (type ? ' toast-' + type : '');
   toast.textContent = msg;
   container.appendChild(toast);
   requestAnimationFrame(() => toast.classList.add('show'));

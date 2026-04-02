@@ -8,39 +8,39 @@ const AUTO_ADVANCE_DELAY = 3; // seconds
 
 const DEFAULT_SESSIONS = [
   {
-    name: "60m JoyPro Coworking Session",
+    name: "Focus Session (60 min)",
     segments: [
-      { title: "Intention Setting \u{1F9D8}\u200D\u2642\uFE0F", durationMinutes: 3, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u{1F64F} Closing", durationMinutes: 2, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: false }
+      { title: "Set Intentions", durationMinutes: 3, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Focus Block", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Break", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Focus Block", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Wrap Up", durationMinutes: 2, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: false }
     ]
   },
   {
-    name: "90m JoyPro Coworking Session",
+    name: "Focus Session (90 min)",
     segments: [
-      { title: "Intention Setting \u{1F9D8}\u200D\u2642\uFE0F", durationMinutes: 3, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u{1F64F} Closing", durationMinutes: 2, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: false }
+      { title: "Set Intentions", durationMinutes: 3, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Focus Block", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Break", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Focus Block", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Break", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Focus Block", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Wrap Up", durationMinutes: 2, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: false }
     ]
   },
   {
-    name: "120m JoyPro Coworking Session",
+    name: "Deep Focus (120 min)",
     segments: [
-      { title: "Intention Setting \u{1F9D8}\u200D\u2642\uFE0F", durationMinutes: 3, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u26A1 Energy Reboot \u26A1", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u262E\uFE0F Joyful Productivity \u{1F333}", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
-      { title: "\u{1F64F} Closing", durationMinutes: 2, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: false }
+      { title: "Set Intentions", durationMinutes: 3, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Focus Block", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Break", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Focus Block", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Break", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Focus Block", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Break", durationMinutes: 5, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Focus Block", durationMinutes: 25, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: true },
+      { title: "Wrap Up", durationMinutes: 2, durationSeconds: 0, soundEnabled: true, soundKey: "default", autoAdvance: false }
     ]
   }
 ];
@@ -65,7 +65,6 @@ let running = false;
 let timerInterval = null;
 let timerStartedAt = null;
 let timerSecondsAtStart = null;
-let transitionTimer = null;
 let audioCtx = null;
 let dirtyTimeout = null;
 let currentEditSoundIndex = -1;

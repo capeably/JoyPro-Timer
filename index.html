@@ -8,13 +8,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@600&family=DM+Mono:wght@400;500&family=Rethink+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/tokens.css?v=12">
-<link rel="stylesheet" href="css/layout.css?v=12">
-<link rel="stylesheet" href="css/timer.css?v=12">
-<link rel="stylesheet" href="css/modals.css?v=12">
-<link rel="stylesheet" href="css/bonsai.css?v=12">
-<link rel="stylesheet" href="css/theme-picker.css?v=12">
-<link rel="stylesheet" href="css/utilities.css?v=12">
+<link rel="stylesheet" href="css/tokens.css?v=16">
+<link rel="stylesheet" href="css/layout.css?v=16">
+<link rel="stylesheet" href="css/timer.css?v=16">
+<link rel="stylesheet" href="css/modals.css?v=16">
+<link rel="stylesheet" href="css/bonsai.css?v=16">
+<link rel="stylesheet" href="css/theme-picker.css?v=16">
+<link rel="stylesheet" href="css/utilities.css?v=16">
 </head>
 <body>
 
@@ -26,6 +26,7 @@
       <button class="header-btn" id="themeToggle" title="Toggle theme">&#9789;</button>
       <button class="header-btn" id="muteToggle" title="Toggle sound (M)">&#128276;</button>
       <button class="header-btn" id="popoutBtn" title="Open popout window">&#10064;</button>
+      <button class="header-btn" id="helpBtn" title="Help & tips">?</button>
     </div>
   </header>
 
@@ -47,22 +48,12 @@
         <button class="ctrl-btn" id="skipBtn" title="Next segment (N)">&#9197;</button>
       </div>
 
-      <!-- Transition overlay -->
-      <div class="transition-overlay" id="transitionOverlay">
-        <div class="transition-label">Next up</div>
-        <div class="transition-title" id="transitionTitle"></div>
-        <div class="transition-countdown" id="transitionCountdown">Starting in 3...</div>
-        <div class="transition-actions">
-          <button class="transition-btn start" id="transitionStart">Start Now</button>
-          <button class="transition-btn skip" id="transitionSkipBtn">Skip</button>
-        </div>
-      </div>
-
       <!-- Complete overlay -->
       <div class="complete-overlay" id="completeOverlay">
         <div class="complete-icon">&#10003;</div>
         <div class="complete-title">Session Complete!</div>
-        <div class="complete-sub">Great session. Take a moment to breathe.</div>
+        <div class="complete-stats" id="completeStats"></div>
+        <div class="complete-sub" id="completeSub">Great session. Take a moment to breathe.</div>
         <button class="modal-btn primary complete-restart-btn" id="restartBtn">Start Over</button>
       </div>
     </div><!-- /.timer-area -->
@@ -70,6 +61,7 @@
 
     <!-- Expand tab (visible when panel collapsed) -->
     <button class="panel-tab-btn session-expand-btn" id="sessionExpandBtn" title="Show segments">
+      <span class="tab-label">Segments</span>
       <div class="tab-arrow up"></div>
     </button>
 
@@ -83,7 +75,7 @@
       <div class="session-actions-menu" id="sessionActionsMenu">
         <button class="menu-item" id="menuSaveBtn">&#128190; Save</button>
         <button class="menu-item" id="menuSaveAsBtn">&#128203; Save As...</button>
-        <button class="menu-item" id="menuAdvEditBtn">&#9998; Advanced Edit...</button>
+        <button class="menu-item" id="menuAdvEditBtn">&#9998; Edit Session...</button>
       </div>
       <div class="session-panel-inner">
         <div class="session-header">
@@ -218,6 +210,81 @@
 </div>
 <div class="seg-edit-backdrop" id="segEditBackdrop"></div>
 
+<!-- ONBOARDING OVERLAY -->
+<div class="modal-overlay" id="onboardingModal">
+  <div class="modal onboarding-modal">
+    <div class="onboarding-slide" data-slide="0">
+      <div class="onboarding-icon">&#9201;</div>
+      <div class="onboarding-heading">Welcome to JoyPro Timer</div>
+      <div class="onboarding-text">A focus timer with customizable sessions, beautiful themes, and sounds to keep you in flow.</div>
+    </div>
+    <div class="onboarding-slide" data-slide="1" style="display:none">
+      <div class="onboarding-icon">&#9654;</div>
+      <div class="onboarding-heading">How It Works</div>
+      <div class="onboarding-text">Each session is made of segments that count down one by one. Press <kbd>Space</kbd> to start, and the timer handles the rest.</div>
+    </div>
+    <div class="onboarding-slide" data-slide="2" style="display:none">
+      <div class="onboarding-icon">&#9998;</div>
+      <div class="onboarding-heading">Make It Yours</div>
+      <div class="onboarding-text">Double-click any title or time to edit it. Drag segments to reorder. Choose a theme and set per-segment sounds.</div>
+    </div>
+    <div class="onboarding-slide" data-slide="3" style="display:none">
+      <div class="onboarding-icon">&#127794;</div>
+      <div class="onboarding-heading">Watch It Grow</div>
+      <div class="onboarding-text">Try the Growing Tree theme: a bonsai tree grows as your timer runs, and the sky transitions from day to night.</div>
+    </div>
+    <div class="onboarding-footer">
+      <div class="onboarding-dots" id="onboardingDots"></div>
+      <div class="onboarding-actions">
+        <button class="modal-btn secondary" id="onboardingSkip">Skip</button>
+        <button class="modal-btn primary" id="onboardingNext">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HELP MODAL -->
+<div class="modal-overlay" id="helpModal">
+  <div class="modal help-modal">
+    <div class="modal-header">
+      <div class="modal-title">Help & Tips</div>
+      <button class="modal-close" id="helpClose">&times;</button>
+    </div>
+    <div class="modal-body help-body">
+      <div class="help-section">
+        <div class="help-section-title">Keyboard Shortcuts</div>
+        <div class="help-shortcuts">
+          <div class="help-shortcut"><kbd>Space</kbd><span>Play / Pause</span></div>
+          <div class="help-shortcut"><kbd>N</kbd><span>Next segment</span></div>
+          <div class="help-shortcut"><kbd>M</kbd><span>Mute / Unmute</span></div>
+          <div class="help-shortcut"><kbd>E</kbd><span>Edit session</span></div>
+          <div class="help-shortcut"><kbd>R</kbd><span>Reset session</span></div>
+          <div class="help-shortcut"><kbd>Esc</kbd><span>Close dialogs</span></div>
+        </div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">Editing</div>
+        <div class="help-detail">Double-click any segment title or the timer display to edit inline. Drag the handles in the segment list to reorder. Use the segment edit button (pencil icon) for full options including sound and theme.</div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">Sessions</div>
+        <div class="help-detail">Create new sessions, save changes, or load saved ones. Export your sessions as JSON to back up or share, and import them on another device.</div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">Themes</div>
+        <div class="help-detail"><strong>Light</strong> and <strong>Dark</strong> are clean, minimal themes. <strong>Starry Night</strong> features animated twinkling stars and shooting stars. <strong>Growing Tree</strong> grows a bonsai tree as your timer runs, with a full day-to-night sky cycle.</div>
+      </div>
+      <div class="help-section">
+        <div class="help-section-title">Sounds</div>
+        <div class="help-detail">Each segment can play a sound when it completes. Choose from 5 built-in sounds or upload your own (up to 500KB). Set per-segment sounds via the segment edit popover.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" id="helpCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -230,16 +297,17 @@
 <input type="file" id="soundFileInput" accept="audio/*" style="display:none">
 <input type="file" id="importFileInput" accept=".json" style="display:none">
 
-<script src="js/state.js?v=12"></script>
-<script src="js/audio.js?v=12"></script>
-<script src="js/theme-growing-tree.js?v=12"></script>
-<script src="js/themes.js?v=12"></script>
-<script src="js/timer.js?v=12"></script>
-<script src="js/ui.js?v=12"></script>
-<script src="js/inline-edit.js?v=12"></script>
-<script src="js/popout.js?v=12"></script>
-<script src="js/dialogs.js?v=12"></script>
-<script src="js/editor.js?v=12"></script>
-<script src="js/app.js?v=12"></script>
+<script src="js/state.js?v=16"></script>
+<script src="js/audio.js?v=16"></script>
+<script src="js/theme-growing-tree.js?v=16"></script>
+<script src="js/themes.js?v=16"></script>
+<script src="js/timer.js?v=16"></script>
+<script src="js/ui.js?v=16"></script>
+<script src="js/inline-edit.js?v=16"></script>
+<script src="js/popout.js?v=16"></script>
+<script src="js/dialogs.js?v=16"></script>
+<script src="js/editor.js?v=16"></script>
+<script src="js/onboarding.js?v=16"></script>
+<script src="js/app.js?v=16"></script>
 </body>
 </html>

@@ -31,6 +31,9 @@
   pointer-events: auto;
 }
 .toast.show { opacity: 1; transform: translateY(0); }
+.toast-success { border-left: 3px solid #2a7c3a; }
+.toast-warning { border-left: 3px solid #e88a3a; }
+.toast-tip { border-left: 3px solid #5b8dd9; }
 
 /* ═══════════════════════════════════════════════════
    KEYBOARD HINT
@@ -41,7 +44,12 @@
   right: 12px;
   font-size: 11px;
   color: var(--text-muted);
-  opacity: 0.5;
+  background: var(--bg-panel, var(--bg));
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  opacity: 0.75;
+  z-index: 2;
 }
 .keyboard-hint kbd {
   font-family: 'DM Mono', monospace;

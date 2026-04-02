@@ -120,6 +120,13 @@ function renderTimer() {
     currentTitle.textContent = sess.segments[state.currentSegmentIndex].title;
   }
 
+  // Edit affordances: show cursor + tooltip hint when timer is paused
+  const canEdit = !running;
+  currentTitle.classList.toggle('editable', canEdit);
+  timerDigits.classList.toggle('editable', canEdit);
+  currentTitle.title = canEdit ? 'Double-click to edit' : '';
+  timerDigits.title = canEdit ? 'Double-click to edit time' : '';
+
   if (!sizeRafId) {
     sizeRafId = requestAnimationFrame(() => { sizeTimerContent(); sizeRafId = null; });
   }

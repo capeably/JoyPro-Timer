@@ -58,6 +58,10 @@ input { font-family: inherit; color: inherit; }
   width: 20px;
   height: 20px;
   object-fit: contain;
+  transition: filter 0.3s;
+}
+[data-theme="dark"] .header-logo {
+  filter: invert(1) brightness(1.2);
 }
 
 .header-actions { display: flex; gap: 2px; }
@@ -132,12 +136,13 @@ input { font-family: inherit; color: inherit; }
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  width: 48px;
-  height: 18px;
+  height: 22px;
+  padding: 0 12px;
   border-radius: 8px 8px 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   background: var(--border);
   border: 1px solid var(--border);
   border-bottom: none;
@@ -145,6 +150,15 @@ input { font-family: inherit; color: inherit; }
   cursor: pointer;
   transition: background 0.15s, opacity 0.2s;
 }
+.tab-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+.panel-tab-btn:hover .tab-label,
+.panel-tab-btn:active .tab-label { color: white; }
 .panel-tab-btn:hover, .panel-tab-btn:active { background: var(--accent); }
 .panel-tab-btn:hover .tab-arrow, .panel-tab-btn:active .tab-arrow { border-color: white; }
 .tab-arrow {
@@ -171,8 +185,10 @@ input { font-family: inherit; color: inherit; }
 
 /* Collapse tab — sits above the panel border */
 .panel-collapse-tab {
-  top: -18px;
+  top: -22px;
+  padding: 0 10px;
 }
+.panel-collapse-tab .tab-label { display: none; }
 
 /* Panel header */
 .session-header {

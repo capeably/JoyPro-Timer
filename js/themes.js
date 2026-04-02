@@ -350,6 +350,7 @@ function createThemePicker() {
   themePickerEl.innerHTML = Object.entries(THEMES).map(([key, t]) =>
     `<button class="theme-swatch ${state.theme === key ? 'active' : ''}" data-theme="${key}" title="${t.label}">
       <span class="swatch-color" style="background:${t.swatch}"></span>
+      <span class="swatch-label">${t.label}</span>
     </button>`
   ).join('');
   themePickerEl.addEventListener('click', e => {

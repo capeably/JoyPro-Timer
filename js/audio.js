@@ -21,10 +21,6 @@ for (const snd of BUILT_IN_SOUNDS) {
   snd.audio.preload = 'auto';
 }
 
-function loadDefaultChime() {
-  // All built-in sounds preloaded above
-}
-
 function playChime() {
   if (state.globalMute) return;
 

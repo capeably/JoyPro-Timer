@@ -239,17 +239,16 @@ function enterMainTimerEdit() {
     setupHold(upBtn, 1);
     setupHold(downBtn, -1);
 
-    // ── Mouse wheel: snap to nearest multiple of 5 ──
+    // ── Mouse wheel: snap to nearest multiple of 5, with wrapping ──
     input.addEventListener('wheel', e => {
       e.preventDefault();
       let v = parseInt(input.value) || 0;
       if (e.deltaY < 0) {
-        // scroll up — next multiple of 5
-        v = Math.min(max, (Math.floor(v / 5) + 1) * 5);
+        v = (Math.floor(v / 5) + 1) * 5;
         if (v > max) v = 0;
       } else {
-        // scroll down — previous multiple of 5
-        v = Math.max(0, (Math.ceil(v / 5) - 1) * 5);
+        v = (Math.ceil(v / 5) - 1) * 5;
+        if (v < 0) v = Math.floor(max / 5) * 5;
       }
       input.value = String(v).padStart(2, '0');
     }, { passive: false });

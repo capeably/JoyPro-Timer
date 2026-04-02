@@ -24,11 +24,6 @@ const panelNewBtn = $('panelNewBtn');
 const panelMenuBtn = $('panelMenuBtn');
 const panelCollapseBtn = $('panelCollapseBtn');
 const timerArea = $('timerArea');
-const transitionOverlay = $('transitionOverlay');
-const transitionTitle = $('transitionTitle');
-const transitionCountdown = $('transitionCountdown');
-const transitionStart = $('transitionStart');
-const transitionSkipBtn = $('transitionSkipBtn');
 const completeOverlay = $('completeOverlay');
 const restartBtn = $('restartBtn');
 const editorModal = $('editorModal');
@@ -63,6 +58,10 @@ const popoutBtn = $('popoutBtn');
 const savedImportBtn = $('savedImportBtn');
 const savedExportBtn = $('savedExportBtn');
 const importFileInput = $('importFileInput');
+const helpBtn = $('helpBtn');
+const helpModal = $('helpModal');
+const helpClose = $('helpClose');
+const helpCloseBtn = $('helpCloseBtn');
 const segEditPopover = $('segEditPopover');
 const segEditBackdrop = $('segEditBackdrop');
 const segEditClose = $('segEditClose');
@@ -295,6 +294,12 @@ function setupEventListeners() {
 
   // Popout
   popoutBtn.addEventListener('click', openPopout);
+
+  // Help
+  helpBtn.addEventListener('click', openHelpModal);
+  helpClose.addEventListener('click', closeHelpModal);
+  helpCloseBtn.addEventListener('click', closeHelpModal);
+  helpModal.addEventListener('click', e => { if (e.target === helpModal) closeHelpModal(); });
 
   // Panel collapse/expand (click only)
   panelCollapseBtn.addEventListener('click', () => {
@@ -614,7 +619,9 @@ function setupEventListeners() {
       confirmOverlay.classList.contains('open') ||
       savePromptOverlay.classList.contains('open') ||
       namePromptOverlay.classList.contains('open') ||
-      segEditPopover.classList.contains('open');
+      segEditPopover.classList.contains('open') ||
+      helpModal.classList.contains('open') ||
+      document.getElementById('onboardingModal').classList.contains('open');
 
     if (e.code === 'Space' && !anyModalOpen && !hasModifier) {
       e.preventDefault();
@@ -628,7 +635,9 @@ function setupEventListeners() {
     } else if (e.code === 'KeyR' && !anyModalOpen && !hasModifier) {
       resetBtn.click();
     } else if (e.code === 'Escape') {
-      if (segEditPopover.classList.contains('open')) { closeSegEditPopover(); }
+      if (document.getElementById('onboardingModal').classList.contains('open')) { closeOnboarding(); }
+      else if (helpModal.classList.contains('open')) { closeHelpModal(); }
+      else if (segEditPopover.classList.contains('open')) { closeSegEditPopover(); }
       else if (sessionActionsMenu.classList.contains('open')) { sessionActionsMenu.classList.remove('open'); }
       else if (namePromptOverlay.classList.contains('open')) { namePromptOverlay.classList.remove('open'); namePromptCallback = null; }
       else if (savePromptOverlay.classList.contains('open')) { savePromptOverlay.classList.remove('open'); savePromptCallbacks = null; }
@@ -656,7 +665,6 @@ function setupEventListeners() {
    ═══════════════════════════════════════════════════ */
 function init() {
   loadAll();
-  loadDefaultChime();
   applyTheme();
   updateMuteBtn();
   updatePanelCollapse();
@@ -691,6 +699,10 @@ function init() {
   });
 
   window.addEventListener('resize', () => sizeTimerContent());
+
+  // Onboarding & contextual hints
+  setupContextualHints();
+  checkOnboarding();
 }
 
 setupEventListeners();
