@@ -187,14 +187,13 @@
   border-radius: 0.5px;
 }
 
-/* ── Mute/unmute icon ── */
-.mute-icon {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
+/* ── Sound icon (inline SVG) ── */
+.sound-icon {
+  display: block;
   transition: opacity 0.2s;
 }
-.header-btn.muted .mute-icon { opacity: 0.5; }
+.header-btn.muted .sound-icon { opacity: 0.5; }
+.header-btn.muted .sound-wave { display: none; }
 
 /* Bigger touch targets on touch devices */
 @media (hover: none) {
