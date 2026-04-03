@@ -580,14 +580,21 @@ function setupEventListeners() {
         customSounds[key] = { data: dataUrl, name: name || defaultName };
         saveSounds();
         showToast('Custom sound added');
-        // Update sound dropdown if popover is open
+        // Update sound dropdown and soundKey if popover is open
         if (segEditPopover.classList.contains('open')) {
           segEditSoundKey.innerHTML = buildSoundOptionsHTML('custom:' + key, currentEditSoundIndex, state.currentSessionName);
           segEditSoundKey.value = 'custom:' + key;
           segEditDeleteCustom.classList.remove('hidden');
+          // Also update the segment's soundKey immediately
+          const sess = getCurrentSession();
+          if (sess && sess.segments[currentEditSoundIndex]) {
+            sess.segments[currentEditSoundIndex].soundKey = 'custom:' + key;
+            saveSessions();
+          }
         }
         // Update editor dropdown if editor is open
         if (editorModal.classList.contains('open')) {
+          editorData[currentEditSoundIndex].soundKey = 'custom:' + key;
           renderEditorSegments();
         }
       });

@@ -32,6 +32,7 @@ function enterTitleEdit(segmentEl) {
       const val = input.value.trim();
       if (val && val !== original) {
         sess.segments[idx].title = val;
+        saveSessions();
         if (idx === state.currentSegmentIndex) renderTimer();
       }
     }
@@ -115,6 +116,7 @@ function enterDurationEdit(segmentEl, clickEvent) {
       if (total >= 1 && total !== originalTotal) {
         seg.durationMinutes = mins;
         seg.durationSeconds = secs;
+        saveSessions();
         if (idx === state.currentSegmentIndex && !running) {
           state.timerTotal = total;
           state.timerSeconds = total;
@@ -310,6 +312,7 @@ function enterMainTimerEdit() {
       if (total >= 1) {
         seg.durationMinutes = newHH * 60 + newMM;
         seg.durationSeconds = newSS;
+        saveSessions();
         state.timerTotal = total;
         state.timerSeconds = total;
       } else {
@@ -382,6 +385,7 @@ function enterMainTitleEdit() {
       const val = input.value.trim();
       if (val && val !== original) {
         seg.title = val;
+        saveSessions();
       }
     }
     currentTitle.textContent = '';
@@ -444,6 +448,7 @@ function enterSessionNameEdit() {
         } else {
           sess.name = val;
           state.currentSessionName = val;
+          saveSessions();
           saveState();
         }
       }
@@ -539,6 +544,7 @@ function addSegmentInline() {
     theme: "default"
   });
 
+  saveSessions();
   renderSessionPanel();
 
   // Scroll to bottom and auto-enter title edit on the new segment
@@ -578,6 +584,7 @@ function deleteSegmentInline(idx, anchorEl) {
       }
     }
 
+    saveSessions();
     renderSessionPanel();
     renderTimer();
   }, anchorEl);
@@ -610,12 +617,10 @@ function openSegEditPopover(idx, anchorEl) {
     ).join('');
 
   // Populate sound dropdown
-  const customKey = idx + '_' + state.currentSessionName;
-  const hasCustom = !!customSounds[customKey];
-  const selectedSoundKey = hasCustom ? ('custom:' + customKey) : (seg.soundKey || 'default');
+  const selectedSoundKey = seg.soundKey || 'default';
   const soundKeySelect = document.getElementById('segEditSoundKey');
   soundKeySelect.innerHTML = buildSoundOptionsHTML(selectedSoundKey, idx, state.currentSessionName);
-  if (hasCustom) soundKeySelect.value = 'custom:' + customKey;
+  soundKeySelect.value = selectedSoundKey;
 
   // Show/hide sound picker based on sound enabled, and delete btn based on selection
   const soundPicker = document.getElementById('segEditSoundPicker');
@@ -675,8 +680,7 @@ function saveSegEditPopover() {
   seg.soundEnabled = document.getElementById('segEditSound').checked;
   seg.autoAdvance = document.getElementById('segEditAuto').checked;
   seg.theme = document.getElementById('segEditTheme').value;
-  const soundVal = document.getElementById('segEditSoundKey').value;
-  seg.soundKey = soundVal.startsWith('custom:') ? 'default' : soundVal;
+  seg.soundKey = document.getElementById('segEditSoundKey').value;
 
   // Update timer if editing the active segment while stopped
   if (segEditIdx === state.currentSegmentIndex && !running) {
@@ -684,6 +688,7 @@ function saveSegEditPopover() {
     state.timerSeconds = total;
   }
 
+  saveSessions();
   closeSegEditPopover();
   renderSessionPanel();
   renderTimer();
@@ -744,6 +749,7 @@ function setupPanelDragReorder() {
           state.currentSegmentIndex++;
         }
 
+        saveSessions();
         renderSessionPanel();
       }
     });

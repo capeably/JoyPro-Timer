@@ -28,17 +28,19 @@ function playChime() {
   const segment = sess?.segments[state.currentSegmentIndex];
   if (segment && !segment.soundEnabled) return;
 
-  // Check for custom sound first (per-segment upload)
-  const customKey = state.currentSegmentIndex + '_' + state.currentSessionName;
-  const customData = getCustomSoundData(customKey);
-  if (customData) {
-    ensureAudioCtx();
-    playCustomSound(customData);
-    return;
+  const soundKey = segment?.soundKey || 'default';
+
+  // Custom sound — soundKey starts with "custom:"
+  if (soundKey.startsWith('custom:')) {
+    const customData = getCustomSoundData(soundKey.slice(7));
+    if (customData) {
+      ensureAudioCtx();
+      playCustomSound(customData);
+      return;
+    }
   }
 
-  // Play built-in sound by key
-  const soundKey = segment?.soundKey || 'default';
+  // Built-in sound
   const builtin = BUILT_IN_SOUNDS.find(s => s.key === soundKey);
   if (builtin && builtin.audio) {
     builtin.audio.currentTime = 0;
@@ -108,8 +110,9 @@ function buildSoundOptionsHTML(selectedKey, segIdx, sessName) {
     html += '<optgroup label="Custom Sounds">';
     for (const ck of customKeys) {
       const label = getCustomSoundName(ck);
-      const sel = ck === (segIdx + '_' + sessName) ? ' selected' : '';
-      html += `<option value="custom:${ck}"${sel}>${escHtml(label)}</option>`;
+      const optVal = 'custom:' + ck;
+      const sel = optVal === selectedKey ? ' selected' : '';
+      html += `<option value="${optVal}"${sel}>${escHtml(label)}</option>`;
     }
     html += '</optgroup>';
   }

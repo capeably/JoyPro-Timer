@@ -92,8 +92,7 @@ function renderEditorSegments() {
       });
     } else if (el.dataset.field === 'soundKey') {
       el.addEventListener('change', () => {
-        const val = el.value;
-        editorData[idx].soundKey = val.startsWith('custom:') ? 'default' : val;
+        editorData[idx].soundKey = el.value;
       });
     } else if (el.dataset.field === 'preview') {
       el.addEventListener('click', (e) => {
