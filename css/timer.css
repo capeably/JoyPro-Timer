@@ -102,7 +102,7 @@
   width: 34px;
   height: 34px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   font-size: 13px;
 }
@@ -363,7 +363,7 @@
   font-size: 13px;
   font-weight: 500;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 .empty-state-btn:hover, .empty-state-btn:active { background: #e8884f; }
 .empty-state.compact { padding: 20px; }

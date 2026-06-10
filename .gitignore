@@ -1,0 +1,2 @@
+# Claude Code local overrides (machine-specific permissions/paths)
+.claude/settings.local.json

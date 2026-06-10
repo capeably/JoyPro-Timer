@@ -8,13 +8,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@600&family=DM+Mono:wght@400;500&family=Rethink+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/tokens.css?v=26">
-<link rel="stylesheet" href="css/layout.css?v=26">
-<link rel="stylesheet" href="css/timer.css?v=26">
-<link rel="stylesheet" href="css/modals.css?v=26">
-<link rel="stylesheet" href="css/bonsai.css?v=26">
-<link rel="stylesheet" href="css/theme-picker.css?v=26">
-<link rel="stylesheet" href="css/utilities.css?v=26">
+<link rel="stylesheet" href="css/tokens.css?v=28">
+<link rel="stylesheet" href="css/layout.css?v=28">
+<link rel="stylesheet" href="css/timer.css?v=28">
+<link rel="stylesheet" href="css/modals.css?v=28">
+<link rel="stylesheet" href="css/bonsai.css?v=28">
+<link rel="stylesheet" href="css/theme-picker.css?v=28">
+<link rel="stylesheet" href="css/utilities.css?v=28">
 </head>
 <body>
 
@@ -23,10 +23,10 @@
   <header class="header">
     <div class="header-title"><img src="joypro-logo-dark.png" alt="JoyPro" class="header-logo">JoyPro Timer</div>
     <div class="header-actions">
-      <button class="header-btn" id="themeToggle" title="Toggle theme">&#9789;</button>
-      <button class="header-btn" id="muteToggle" title="Toggle sound (M)"><svg class="sound-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path class="sound-wave" d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
-      <button class="header-btn" id="popoutBtn" title="Open popout window">&#10064;</button>
-      <button class="header-btn" id="helpBtn" title="Help & tips">?</button>
+      <button class="header-btn" id="themeToggle" title="Choose theme" aria-label="Choose theme"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg></button>
+      <button class="header-btn" id="muteToggle" title="Toggle sound (M)" aria-label="Toggle sound"><svg class="sound-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path class="sound-wave" d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+      <button class="header-btn" id="popoutBtn" title="Open popout window" aria-label="Open popout window">&#10064;</button>
+      <button class="header-btn" id="helpBtn" title="Help & tips" aria-label="Help and tips">?</button>
     </div>
   </header>
 
@@ -73,19 +73,19 @@
       </button>
       <!-- Menu lives outside session-panel-inner to avoid overflow:hidden clipping -->
       <div class="session-actions-menu" id="sessionActionsMenu">
-        <button class="menu-item" id="menuSaveBtn">&#128190; Save</button>
-        <button class="menu-item" id="menuSaveAsBtn">&#128203; Save As...</button>
-        <button class="menu-item" id="menuAdvEditBtn">&#9998; Edit Session...</button>
+        <button class="menu-item" id="menuSaveBtn"><svg class="menu-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save</button>
+        <button class="menu-item" id="menuSaveAsBtn"><svg class="menu-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Save As...</button>
+        <button class="menu-item" id="menuAdvEditBtn"><svg class="menu-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit Session...</button>
       </div>
       <div class="session-panel-inner">
         <div class="session-header">
           <div class="session-actions-wrapper">
-            <button class="session-btn" id="sessionActionsBtn" title="Session actions">&#8942;</button>
+            <button class="session-btn" id="sessionActionsBtn" title="Session actions" aria-label="Session actions">&#8942;</button>
           </div>
           <div class="session-name" id="sessionName"></div>
           <div class="session-toolbar">
-            <button class="session-btn" id="panelNewBtn" title="New session">&#43;</button>
-            <button class="session-btn" id="panelMenuBtn" title="Load saved session">&#9776;</button>
+            <button class="session-btn" id="panelNewBtn" title="New session" aria-label="New session">&#43;</button>
+            <button class="session-btn" id="panelMenuBtn" title="Load saved session" aria-label="Load saved session">&#9776;</button>
           </div>
         </div>
         <div class="session-segments" id="sessionSegments"></div>
@@ -99,7 +99,7 @@
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title" id="editorModalTitle">Edit Session</div>
-      <button class="modal-close" id="editorClose">&times;</button>
+      <button class="modal-close" id="editorClose" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body" id="editorBody">
       <input type="text" class="editor-session-name" id="editorSessionName" placeholder="Session name" spellcheck="false">
@@ -118,7 +118,7 @@
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title">Saved Sessions</div>
-      <button class="modal-close" id="savedClose">&times;</button>
+      <button class="modal-close" id="savedClose" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body" id="savedBody"></div>
     <div class="modal-footer">
@@ -170,7 +170,7 @@
 <div class="seg-edit-popover" id="segEditPopover">
   <div class="seg-edit-header">
     <div class="seg-edit-title">Edit Segment</div>
-    <button class="seg-edit-close" id="segEditClose">&times;</button>
+    <button class="seg-edit-close" id="segEditClose" aria-label="Close">&times;</button>
   </div>
   <div class="seg-edit-body">
     <div class="seg-edit-row">
@@ -193,10 +193,10 @@
       <label class="seg-edit-label">Sound</label>
       <div class="seg-edit-sound-controls">
         <select class="seg-edit-select" id="segEditSoundKey"></select>
-        <button class="seg-edit-preview-btn" id="segEditPreview" title="Preview sound">&#9654;</button>
-        <button class="seg-edit-delete-btn hidden" id="segEditDeleteCustom" title="Delete custom sound">&times;</button>
+        <button class="seg-edit-preview-btn" id="segEditPreview" title="Preview sound" aria-label="Preview sound">&#9654;</button>
+        <button class="seg-edit-delete-btn hidden" id="segEditDeleteCustom" title="Delete custom sound" aria-label="Delete custom sound">&times;</button>
       </div>
-      <span class="seg-edit-sound-link" id="segEditUploadSound">+ Upload custom sound</span>
+      <span class="seg-edit-sound-link" id="segEditManageSounds">Manage Sounds...</span>
     </div>
     <div class="seg-edit-row">
       <label class="seg-edit-label">Theme</label>
@@ -248,7 +248,7 @@
   <div class="modal help-modal">
     <div class="modal-header">
       <div class="modal-title">Help & Tips</div>
-      <button class="modal-close" id="helpClose">&times;</button>
+      <button class="modal-close" id="helpClose" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body help-body">
       <div class="help-section">
@@ -276,11 +276,27 @@
       </div>
       <div class="help-section">
         <div class="help-section-title">Sounds</div>
-        <div class="help-detail">Each segment can play a sound when it completes. Choose from 5 built-in sounds or upload your own (up to 500KB). Set per-segment sounds via the segment edit popover.</div>
+        <div class="help-detail">Each segment can play a sound when it completes. Choose from 5 built-in sounds or upload your own to the Sound Library (MP3/WAV, up to 2MB each). Manage your sounds from any sound dropdown.</div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="modal-btn secondary" id="helpCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- SOUND LIBRARY MODAL -->
+<div class="modal-overlay" id="soundLibraryOverlay">
+  <div class="modal sound-library-modal">
+    <div class="modal-header">
+      <div class="modal-title">Sound Library</div>
+      <button class="modal-close" id="soundLibClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="soundLibList"></div>
+    <div class="modal-footer" id="soundLibFooter">
+      <span class="sound-lib-budget"></span>
+      <span class="flex-spacer"></span>
+      <button class="modal-btn primary" id="soundLibUploadBtn">Upload Sound</button>
     </div>
   </div>
 </div>
@@ -293,21 +309,24 @@
   <kbd>Space</kbd> play &nbsp; <kbd>N</kbd> next &nbsp; <kbd>M</kbd> mute &nbsp; <kbd>E</kbd> edit
 </div>
 
-<!-- Hidden file input for custom sound upload -->
+<!-- Hidden file inputs -->
 <input type="file" id="soundFileInput" accept="audio/*" style="display:none">
+<input type="file" id="soundLibraryFileInput" accept=".mp3,.wav,audio/mpeg,audio/wav" multiple style="display:none">
 <input type="file" id="importFileInput" accept=".json" style="display:none">
 
-<script src="js/state.js?v=26"></script>
-<script src="js/audio.js?v=26"></script>
-<script src="js/theme-growing-tree.js?v=26"></script>
-<script src="js/themes.js?v=26"></script>
-<script src="js/timer.js?v=26"></script>
-<script src="js/ui.js?v=26"></script>
-<script src="js/inline-edit.js?v=26"></script>
-<script src="js/popout.js?v=26"></script>
-<script src="js/dialogs.js?v=26"></script>
-<script src="js/editor.js?v=26"></script>
-<script src="js/onboarding.js?v=26"></script>
-<script src="js/app.js?v=26"></script>
+<script src="js/state.js?v=28"></script>
+<script src="js/sound-store.js?v=28"></script>
+<script src="js/audio.js?v=28"></script>
+<script src="js/sound-library.js?v=28"></script>
+<script src="js/theme-growing-tree.js?v=28"></script>
+<script src="js/themes.js?v=28"></script>
+<script src="js/timer.js?v=28"></script>
+<script src="js/ui.js?v=28"></script>
+<script src="js/inline-edit.js?v=28"></script>
+<script src="js/popout.js?v=28"></script>
+<script src="js/dialogs.js?v=28"></script>
+<script src="js/editor.js?v=28"></script>
+<script src="js/onboarding.js?v=28"></script>
+<script src="js/app.js?v=28"></script>
 </body>
 </html>

@@ -75,15 +75,22 @@ function showSavePrompt(onProceed) {
 }
 
 /* ═══════════════════════════════════════════════════
-   NAME PROMPT (for Save As)
+   NAME PROMPT (shared by Save As and sound uploads)
    ═══════════════════════════════════════════════════ */
 let namePromptCallback = null;
+let namePromptValidate = null;
 
-function showNamePrompt(defaultName, onOk) {
+// validate (optional): name => error string to show, or null if OK
+function showNamePrompt(defaultName, onOk, validate) {
   namePromptInput.value = defaultName;
   namePromptCallback = onOk;
+  namePromptValidate = validate || null;
   namePromptOverlay.classList.add('open');
   setTimeout(() => { namePromptInput.focus(); namePromptInput.select(); }, 100);
+}
+
+function sessionNameValidator(name) {
+  return sessions.some(s => s.name === name) ? 'A session with that name already exists' : null;
 }
 
 /* ═══════════════════════════════════════════════════

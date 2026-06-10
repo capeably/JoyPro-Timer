@@ -4,6 +4,19 @@
 .flex-spacer { flex: 1; }
 
 /* ═══════════════════════════════════════════════════
+   KEYBOARD FOCUS
+   Visible indicator for keyboard navigation only —
+   mouse/touch interaction stays outline-free.
+   ═══════════════════════════════════════════════════ */
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════
    TOAST
    ═══════════════════════════════════════════════════ */
 .toast-container {
@@ -93,9 +106,12 @@
   .header { padding: 4px 8px; }
   .header-title { font-size: 14px; }
 
-  /* Panel toolbar */
+  /* Panel toolbar — only shrink on narrow hover-capable (desktop) windows;
+     touch devices get larger targets from the hover:none rules instead */
   .session-toolbar { gap: 0; }
-  .session-btn { width: 26px; height: 24px; }
+  @media (hover: hover) {
+    .session-btn { width: 26px; height: 24px; }
+  }
 
   /* Editor segments tighter */
   .editor-segment { padding: 8px; gap: 6px; }

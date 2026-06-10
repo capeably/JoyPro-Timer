@@ -12,11 +12,15 @@
   --track-light: #e8e4de;
   --track-dark: #2a3a4a;
 
+  /* Text color used ON accent-colored surfaces (buttons etc.).
+     White on coral is only 2.6:1 — navy passes 4.5:1 on every theme accent. */
+  --on-accent: var(--navy);
+
   /* Light theme (default) */
   --bg: var(--cream);
   --bg-panel: #eee9e2;
   --text: var(--charcoal);
-  --text-muted: #8a9099;
+  --text-muted: #566069;
   --accent: var(--coral);
   --ring-track: var(--track-light);
   --completed: var(--teal);
@@ -38,7 +42,7 @@
   --bg: var(--navy);
   --bg-panel: #0a2e47;
   --text: var(--cream);
-  --text-muted: #8a9aaa;
+  --text-muted: #9fb0c1;
   --accent: var(--coral);
   --ring-track: var(--track-dark);
   --completed: var(--light-teal);
@@ -82,7 +86,7 @@
   --bg: #87CEEB;
   --bg-panel: rgba(210, 190, 160, 0.85);
   --text: #2d3a1e;
-  --text-muted: #5a6e42;
+  --text-muted: #3a4a28;
   --accent: #e88a3a;
   --ring-track: rgba(0,0,0,0.08);
   --completed: #2a7c3a;

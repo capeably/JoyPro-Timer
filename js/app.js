@@ -4,7 +4,6 @@
 const $ = id => document.getElementById(id);
 const sessionPanel = $('sessionPanel');
 const sessionSegments = $('sessionSegments');
-const sessionName = $('sessionName');
 const sessionExpandBtn = $('sessionExpandBtn');
 const timerDigits = $('timerDigits');
 const progressFill = $('progressFill');
@@ -67,17 +66,39 @@ const segEditBackdrop = $('segEditBackdrop');
 const segEditClose = $('segEditClose');
 const segEditCancel = $('segEditCancel');
 const segEditSave = $('segEditSave');
-const segEditUploadSound = $('segEditUploadSound');
+const segEditManageSounds = $('segEditManageSounds');
 const segEditSoundKey = $('segEditSoundKey');
 const segEditPreview = $('segEditPreview');
 const segEditDeleteCustom = $('segEditDeleteCustom');
 const segEditSoundPicker = $('segEditSoundPicker');
+const soundLibraryOverlay = $('soundLibraryOverlay');
+const soundLibClose = $('soundLibClose');
+const soundLibUploadBtn = $('soundLibUploadBtn');
+const soundLibraryFileInput = $('soundLibraryFileInput');
 
 /* ═══════════════════════════════════════════════════
    THEME
    ═══════════════════════════════════════════════════ */
 function applyTheme() {
   applyFullTheme(state.theme);
+}
+
+/* ─── Refresh any open sound dropdowns after library changes ─── */
+function refreshSoundDropdowns() {
+  // Segment edit popover
+  if (segEditPopover.classList.contains('open')) {
+    const prev = segEditSoundKey.value;
+    segEditSoundKey.innerHTML = buildSoundOptionsHTML(prev);
+    // If previous selection was deleted, fall back to default
+    if (!segEditSoundKey.querySelector(`option[value="${prev}"]`)) {
+      segEditSoundKey.value = 'default';
+    }
+    segEditDeleteCustom.classList.toggle('hidden', !segEditSoundKey.value.startsWith('custom:'));
+  }
+  // Editor modal
+  if (editorModal.classList.contains('open')) {
+    renderEditorSegments();
+  }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -108,9 +129,9 @@ function renderSavedList() {
         <div class="saved-sess-meta">${segCount} segment${segCount !== 1 ? 's' : ''} &middot; ${totalMins} min</div>
       </div>
       <div class="saved-sess-actions">
-        <button class="saved-sess-action-btn" data-action="copy" data-index="${i}" title="Duplicate">&#128203;</button>
-        <button class="saved-sess-action-btn" data-action="edit" data-index="${i}" title="Edit">&#9998;</button>
-        <button class="saved-sess-action-btn delete-btn" data-action="delete" data-index="${i}" title="Delete">&times;</button>
+        <button class="saved-sess-action-btn" data-action="copy" data-index="${i}" title="Duplicate" aria-label="Duplicate &quot;${escHtml(sess.name)}&quot;">${ICON_COPY}</button>
+        <button class="saved-sess-action-btn" data-action="edit" data-index="${i}" title="Edit" aria-label="Edit &quot;${escHtml(sess.name)}&quot;">${ICON_PENCIL}</button>
+        <button class="saved-sess-action-btn delete-btn" data-action="delete" data-index="${i}" title="Delete" aria-label="Delete &quot;${escHtml(sess.name)}&quot;">&times;</button>
       </div>
     </div>`;
   }).join('');
@@ -218,6 +239,23 @@ function exportSessions() {
   showToast('Sessions exported');
 }
 
+/** Coerce an imported segment to a known-safe shape; null if unusable. */
+function sanitizeImportedSegment(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const mins = Math.max(0, Math.min(999, parseInt(raw.durationMinutes, 10) || 0));
+  const secs = Math.max(0, Math.min(59, parseInt(raw.durationSeconds, 10) || 0));
+  if (mins * 60 + secs < 1) return null;
+  return {
+    title: (typeof raw.title === 'string' && raw.title.trim()) ? raw.title.trim().slice(0, 200) : 'Segment',
+    durationMinutes: mins,
+    durationSeconds: secs,
+    soundEnabled: !!raw.soundEnabled,
+    soundKey: (typeof raw.soundKey === 'string' && /^[\w:-]{1,64}$/.test(raw.soundKey)) ? raw.soundKey : 'default',
+    autoAdvance: !!raw.autoAdvance,
+    theme: (typeof raw.theme === 'string' && (raw.theme === 'default' || THEMES[raw.theme])) ? raw.theme : 'default'
+  };
+}
+
 function importSessions(file) {
   const reader = new FileReader();
   reader.onload = () => {
@@ -230,15 +268,17 @@ function importSessions(file) {
       let added = 0;
       let skipped = 0;
       for (const item of data) {
-        if (!item.name || !Array.isArray(item.segments)) {
+        if (!item || typeof item.name !== 'string' || !item.name.trim() || !Array.isArray(item.segments)) {
           skipped++;
           continue;
         }
-        if (sessions.some(s => s.name === item.name)) {
+        const name = item.name.trim().slice(0, 100);
+        const segments = item.segments.map(sanitizeImportedSegment).filter(Boolean);
+        if (!segments.length || sessions.some(s => s.name === name)) {
           skipped++;
           continue;
         }
-        sessions.push(JSON.parse(JSON.stringify(item)));
+        sessions.push({ name, segments });
         added++;
       }
       if (added > 0) {
@@ -390,7 +430,7 @@ function setupEventListeners() {
     showNamePrompt(state.currentSessionName + ' (copy)', (newName) => {
       doSaveAsSession(newName);
       if (cb) cb();
-    });
+    }, sessionNameValidator);
   });
 
   savePromptDiscard.addEventListener('click', () => {
@@ -409,13 +449,14 @@ function setupEventListeners() {
   namePromptOk.addEventListener('click', () => {
     const name = namePromptInput.value.trim();
     if (!name) { showToast('Please enter a name'); return; }
-    if (sessions.some(s => s.name === name)) {
-      showToast('A session with that name already exists');
-      return;
+    if (namePromptValidate) {
+      const err = namePromptValidate(name);
+      if (err) { showToast(err); return; }
     }
     namePromptOverlay.classList.remove('open');
     if (namePromptCallback) namePromptCallback(name);
     namePromptCallback = null;
+    namePromptValidate = null;
   });
 
   namePromptCancel.addEventListener('click', () => {
@@ -441,7 +482,7 @@ function setupEventListeners() {
   });
   menuSaveAsBtn.addEventListener('click', () => {
     sessionActionsMenu.classList.remove('open');
-    showNamePrompt(state.currentSessionName + ' (copy)', (newName) => { doSaveAsSession(newName); });
+    showNamePrompt(state.currentSessionName + ' (copy)', (newName) => { doSaveAsSession(newName); }, sessionNameValidator);
   });
   menuAdvEditBtn.addEventListener('click', () => {
     sessionActionsMenu.classList.remove('open');
@@ -457,44 +498,44 @@ function setupEventListeners() {
     if (e.key === 'Escape') { e.stopPropagation(); closeSegEditPopover(); }
     if (e.key === 'Enter' && e.target.tagName !== 'SELECT') { e.preventDefault(); saveSegEditPopover(); }
   });
-  segEditUploadSound.addEventListener('click', () => {
-    if (segEditIdx < 0) return;
-    currentEditSoundIndex = segEditIdx;
-    soundFileInput.click();
+  segEditManageSounds.addEventListener('click', () => {
+    openSoundLibrary();
+  });
+  document.getElementById('segEditSound').addEventListener('change', function() {
+    segEditSoundPicker.style.display = this.checked ? '' : 'none';
   });
   segEditPreview.addEventListener('click', () => {
-    const val = segEditSoundKey.value;
-    if (val.startsWith('custom:')) {
-      const ck = val.slice(7);
-      if (customSounds[ck]) previewSound(ck);
-    } else {
-      previewSound(val);
+    previewSound(segEditSoundKey.value);
+  });
+  segEditSoundKey.addEventListener('change', () => {
+    if (segEditSoundKey.value === '__manage__') {
+      // Revert to previous selection and open library
+      const seg = getCurrentSession()?.segments[segEditIdx];
+      segEditSoundKey.value = seg?.soundKey || 'default';
+      openSoundLibrary();
+      return;
     }
+    segEditDeleteCustom.classList.toggle('hidden', !segEditSoundKey.value.startsWith('custom:'));
   });
   segEditDeleteCustom.addEventListener('click', () => {
     const val = segEditSoundKey.value;
     if (!val.startsWith('custom:')) return;
+    const id = val.slice(7);
 
-    // If already showing confirm, do the delete
     if (segEditDeleteCustom.dataset.confirming === 'true') {
-      const ck = val.slice(7);
-      delete customSounds[ck];
-      saveSounds();
-      segEditSoundKey.innerHTML = buildSoundOptionsHTML('default', segEditIdx, state.currentSessionName);
+      deleteSoundFromLibrary(id);
+      segEditSoundKey.innerHTML = buildSoundOptionsHTML('default');
       segEditSoundKey.value = 'default';
       segEditDeleteCustom.classList.add('hidden');
       segEditDeleteCustom.textContent = '\u00D7';
       segEditDeleteCustom.dataset.confirming = '';
       segEditDeleteCustom.classList.remove('confirming');
-      showToast('Custom sound removed');
       return;
     }
 
-    // Show inline "Delete?" confirmation
     segEditDeleteCustom.textContent = 'Delete?';
     segEditDeleteCustom.dataset.confirming = 'true';
     segEditDeleteCustom.classList.add('confirming');
-    // Auto-reset after 3 seconds if not clicked
     setTimeout(() => {
       if (segEditDeleteCustom.dataset.confirming === 'true') {
         segEditDeleteCustom.textContent = '\u00D7';
@@ -503,8 +544,41 @@ function setupEventListeners() {
       }
     }, 3000);
   });
-  segEditSoundKey.addEventListener('change', () => {
-    segEditDeleteCustom.classList.toggle('hidden', !segEditSoundKey.value.startsWith('custom:'));
+
+  // Sound Library modal
+  soundLibClose.addEventListener('click', closeSoundLibrary);
+  soundLibUploadBtn.addEventListener('click', () => { soundLibraryFileInput.click(); });
+  soundLibraryFileInput.addEventListener('change', e => {
+    handleSoundLibraryUpload(e.target.files);
+    soundLibraryFileInput.value = '';
+  });
+  soundLibraryOverlay.addEventListener('click', e => { if (e.target === soundLibraryOverlay) closeSoundLibrary(); });
+
+  // Delegated events inside Sound Library list
+  document.getElementById('soundLibList').addEventListener('click', e => {
+    const item = e.target.closest('.sound-lib-item');
+    if (!item) return;
+    const id = item.dataset.id;
+
+    if (e.target.closest('.sound-lib-preview-btn')) {
+      previewSound(id);
+    } else if (e.target.closest('.sound-lib-name')) {
+      startSoundRename(e.target.closest('.sound-lib-name'));
+    } else if (e.target.closest('.sound-lib-delete-btn')) {
+      const btn = e.target.closest('.sound-lib-delete-btn');
+      if (btn.classList.contains('confirming')) {
+        deleteSoundFromLibrary(id);
+      } else {
+        btn.textContent = 'Delete?';
+        btn.classList.add('confirming');
+        setTimeout(() => {
+          if (btn.classList.contains('confirming')) {
+            btn.textContent = '\u00D7';
+            btn.classList.remove('confirming');
+          }
+        }, 3000);
+      }
+    }
   });
 
   // Right-side navigation buttons
@@ -548,11 +622,35 @@ function setupEventListeners() {
       showToast('New session created');
     } else {
       const sess = getCurrentSession();
+      // Renaming onto another existing session would create ambiguous duplicates
+      if (sessions.some(s => s.name === name && s !== sess)) {
+        showToast('A session with that name already exists');
+        return;
+      }
+      const prevTotal = state.timerTotal;
+      const prevRemaining = state.timerSeconds;
+
       sess.name = name;
       sess.segments = editorData.map(s => ({ ...s }));
-      const idx = sessions.findIndex(s => s === sess);
-      if (idx >= 0) sessions[idx] = sess;
-      activateSession(sess);
+      state.currentSessionName = name;
+
+      // Preserve the user's position instead of restarting the session
+      const idx = Math.min(state.currentSegmentIndex, sess.segments.length - 1);
+      state.currentSegmentIndex = idx;
+      const newTotal = segmentTotalSeconds(sess.segments[idx]);
+      if (newTotal === prevTotal) {
+        // Active segment length unchanged — keep remaining time (and keep running)
+        state.timerSeconds = Math.min(prevRemaining, newTotal);
+      } else {
+        // Active segment length changed — reset its clock, paused
+        if (running) pauseTimer();
+        state.timerTotal = newTotal;
+        state.timerSeconds = newTotal;
+      }
+
+      saveSessions(); saveState(); takeSnapshot();
+      applySegmentTheme(sess.segments[idx]);
+      renderSessionPanel(); renderTimer(); closeEditor();
       showToast('Session saved');
     }
   });
@@ -560,46 +658,9 @@ function setupEventListeners() {
   editorCancel.addEventListener('click', closeEditor);
   editorClose.addEventListener('click', closeEditor);
 
-  // Custom sound file
+  // Legacy sound file input (kept for backward compat, redirects to library)
   soundFileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 500000) {
-      showToast('Sound file too large (max 500KB)');
-      soundFileInput.value = '';
-      return;
-    }
-    // Default name from filename (strip extension)
-    const defaultName = file.name.replace(/\.[^.]+$/, '') || 'Custom Sound';
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result;
-      // Prompt for a name
-      showNamePrompt(defaultName, (name) => {
-        const key = currentEditSoundIndex + '_' + state.currentSessionName;
-        customSounds[key] = { data: dataUrl, name: name || defaultName };
-        saveSounds();
-        showToast('Custom sound added');
-        // Update sound dropdown and soundKey if popover is open
-        if (segEditPopover.classList.contains('open')) {
-          segEditSoundKey.innerHTML = buildSoundOptionsHTML('custom:' + key, currentEditSoundIndex, state.currentSessionName);
-          segEditSoundKey.value = 'custom:' + key;
-          segEditDeleteCustom.classList.remove('hidden');
-          // Also update the segment's soundKey immediately
-          const sess = getCurrentSession();
-          if (sess && sess.segments[currentEditSoundIndex]) {
-            sess.segments[currentEditSoundIndex].soundKey = 'custom:' + key;
-            saveSessions();
-          }
-        }
-        // Update editor dropdown if editor is open
-        if (editorModal.classList.contains('open')) {
-          editorData[currentEditSoundIndex].soundKey = 'custom:' + key;
-          renderEditorSegments();
-        }
-      });
-    };
-    reader.readAsDataURL(file);
+    handleSoundLibraryUpload(e.target.files);
     soundFileInput.value = '';
   });
 
@@ -628,6 +689,7 @@ function setupEventListeners() {
       namePromptOverlay.classList.contains('open') ||
       segEditPopover.classList.contains('open') ||
       helpModal.classList.contains('open') ||
+      soundLibraryOverlay.classList.contains('open') ||
       document.getElementById('onboardingModal').classList.contains('open');
 
     if (e.code === 'Space' && !anyModalOpen && !hasModifier) {
@@ -643,6 +705,7 @@ function setupEventListeners() {
       resetBtn.click();
     } else if (e.code === 'Escape') {
       if (document.getElementById('onboardingModal').classList.contains('open')) { closeOnboarding(); }
+      else if (soundLibraryOverlay.classList.contains('open')) { closeSoundLibrary(); }
       else if (helpModal.classList.contains('open')) { closeHelpModal(); }
       else if (segEditPopover.classList.contains('open')) { closeSegEditPopover(); }
       else if (sessionActionsMenu.classList.contains('open')) { sessionActionsMenu.classList.remove('open'); }
@@ -670,8 +733,10 @@ function setupEventListeners() {
 /* ═══════════════════════════════════════════════════
    INIT
    ═══════════════════════════════════════════════════ */
-function init() {
+async function init() {
   loadAll();
+  await SoundStore.init();
+  await migrateLegacySounds();
   applyTheme();
   updateMuteBtn();
   updatePanelCollapse();

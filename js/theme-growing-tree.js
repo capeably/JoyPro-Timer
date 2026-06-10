@@ -637,6 +637,8 @@ function initBonsaiPaths() {
   bonsaiBranchState = {};
   bonsaiFoliageState = {};
   bonsaiRootPaths = [];
+  lastBonsaiProgress = -1;
+  lastBonsaiColorProgress = -1;
 
   bonsaiSvgEl.querySelectorAll('.bonsai-foliage-pad').forEach(el => {
     el.classList.remove('visible');
@@ -762,8 +764,15 @@ function buildTaperedTrunkPath(refPath, drawnLen, baseHalfW, tipHalfW) {
   return d;
 }
 
+// Skip per-frame SVG geometry work (≈70 getPointAtLength calls) when progress
+// hasn't moved — e.g. while paused. The sway/canvas animations are unaffected.
+let lastBonsaiProgress = -1;
+let lastBonsaiColorProgress = -1;
+
 function updateBonsaiProgress(progress) {
   if (!bonsaiSvgEl) return;
+  if (progress === lastBonsaiProgress) return;
+  lastBonsaiProgress = progress;
 
   // ── Pot ──
   const pot = bonsaiSvgEl.querySelector('.bonsai-pot');
@@ -881,6 +890,8 @@ function updateBonsaiColors(progress) {
   if (!bonsaiSvgEl) return;
   // Darken bonsai colors during sunset/night (progress > 0.80)
   if (progress <= 0.78) return; // nothing to do during daytime
+  if (progress === lastBonsaiColorProgress) return;
+  lastBonsaiColorProgress = progress;
 
   const trunk = multiLerp([
     [0.78, [109, 76, 46]],   // #6D4C2E
@@ -972,8 +983,4 @@ function drawGrassTufts(W, H, groundY, time, progress) {
       bgCtx.stroke();
     }
   }
-}
-
-function easeOutQuart(t) {
-  return 1 - Math.pow(1 - t, 4);
 }

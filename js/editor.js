@@ -38,25 +38,25 @@ function closeEditor() {
 function renderEditorSegments() {
   editorSegments.innerHTML = editorData.map((s, i) => `
     <div class="editor-segment" data-index="${i}">
-      <span class="drag-handle" draggable="true">&#9776;</span>
+      <span class="drag-handle" draggable="true" aria-hidden="true">&#9776;</span>
       <div class="move-btns">
-        <button class="move-btn" data-action="move-up" data-index="${i}" ${i === 0 ? 'disabled' : ''}>&#9650;</button>
-        <button class="move-btn" data-action="move-down" data-index="${i}" ${i === editorData.length - 1 ? 'disabled' : ''}>&#9660;</button>
+        <button class="move-btn" data-action="move-up" data-index="${i}" aria-label="Move segment ${i + 1} up" ${i === 0 ? 'disabled' : ''}>&#9650;</button>
+        <button class="move-btn" data-action="move-down" data-index="${i}" aria-label="Move segment ${i + 1} down" ${i === editorData.length - 1 ? 'disabled' : ''}>&#9660;</button>
       </div>
       <div class="editor-segment-fields">
         <div class="editor-row">
-          <input type="text" value="${escHtml(s.title)}" data-field="title" placeholder="Segment name">
-          <input type="number" value="${s.durationMinutes || 0}" data-field="min" min="0" max="999" title="Minutes">
+          <input type="text" value="${escHtml(s.title)}" data-field="title" placeholder="Segment name" aria-label="Segment name">
+          <input type="number" value="${s.durationMinutes || 0}" data-field="min" min="0" max="999" title="Minutes" aria-label="Minutes">
           <span class="editor-time-sep">:</span>
-          <input type="number" value="${String(s.durationSeconds || 0).padStart(2,'0')}" data-field="sec" min="0" max="59" title="Seconds">
+          <input type="number" value="${String(s.durationSeconds || 0).padStart(2,'0')}" data-field="sec" min="0" max="59" title="Seconds" aria-label="Seconds">
         </div>
         <div class="editor-segment-options">
           <label><input type="checkbox" data-field="sound" ${s.soundEnabled ? 'checked' : ''}> Sound</label>
           <label><input type="checkbox" data-field="auto" ${s.autoAdvance ? 'checked' : ''}> Auto-advance</label>
           <div class="editor-sound-picker" data-index="${i}" style="${s.soundEnabled ? '' : 'display:none'}">
-            <select data-field="soundKey">${buildSoundOptionsHTML(s.soundKey || 'default', i, state.currentSessionName)}</select>
-            <button class="editor-sound-preview" data-field="preview" title="Preview">&#9654;</button>
-            <span class="sound-upload-btn" data-field="upload" data-index="${i}" title="Upload custom">+</span>
+            <select data-field="soundKey" aria-label="Completion sound">${buildSoundOptionsHTML(s.soundKey || 'default')}</select>
+            <button class="editor-sound-preview" data-field="preview" title="Preview" aria-label="Preview sound">&#9654;</button>
+            <button class="sound-upload-btn" data-field="manage" title="Manage Sounds" aria-label="Manage sounds">&#9835;</button>
           </div>
           <label class="theme-select-label">Theme:
             <select data-field="theme">
@@ -68,12 +68,12 @@ function renderEditorSegments() {
           </label>
         </div>
       </div>
-      <button class="editor-remove-btn" data-action="remove" data-index="${i}">&times;</button>
+      <button class="editor-remove-btn" data-action="remove" data-index="${i}" aria-label="Remove segment ${i + 1}">&times;</button>
     </div>
   `).join('');
 
   // Input listeners
-  editorSegments.querySelectorAll('input, select, .sound-upload-btn').forEach(el => {
+  editorSegments.querySelectorAll('input, select, .sound-upload-btn, [data-field="manage"]').forEach(el => {
     const segment = el.closest('.editor-segment');
     if (!segment) return;
     const idx = parseInt(segment.dataset.index);
@@ -92,31 +92,25 @@ function renderEditorSegments() {
       });
     } else if (el.dataset.field === 'soundKey') {
       el.addEventListener('change', () => {
+        if (el.value === '__manage__') {
+          el.value = editorData[idx].soundKey || 'default';
+          openSoundLibrary();
+          return;
+        }
         editorData[idx].soundKey = el.value;
       });
     } else if (el.dataset.field === 'preview') {
       el.addEventListener('click', (e) => {
         e.preventDefault();
         const sel = segment.querySelector('[data-field="soundKey"]');
-        if (sel) {
-          const val = sel.value;
-          if (val.startsWith('custom:')) {
-            const ck = val.slice(7);
-            if (customSounds[ck]) previewSound(ck);
-          } else {
-            previewSound(val);
-          }
-        }
+        if (sel) previewSound(sel.value);
       });
     } else if (el.dataset.field === 'auto') {
       el.addEventListener('change', () => { editorData[idx].autoAdvance = el.checked; });
     } else if (el.dataset.field === 'theme') {
       el.addEventListener('change', () => { editorData[idx].theme = el.value; });
-    } else if (el.dataset.field === 'upload') {
-      el.addEventListener('click', () => {
-        currentEditSoundIndex = parseInt(el.dataset.index);
-        soundFileInput.click();
-      });
+    } else if (el.dataset.field === 'manage') {
+      el.addEventListener('click', () => { openSoundLibrary(); });
     }
   });
 

@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════
    SOUND SYSTEM
+   Decoupled playback utility — any component can call
+   playSound(soundKey) without knowing about sessions.
    ═══════════════════════════════════════════════════ */
 function ensureAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -21,23 +23,18 @@ for (const snd of BUILT_IN_SOUNDS) {
   snd.audio.preload = 'auto';
 }
 
-function playChime() {
+/* ─── Core playback utility (decoupled from sessions) ─── */
+function playSound(soundKey) {
   if (state.globalMute) return;
 
-  const sess = getCurrentSession();
-  const segment = sess?.segments[state.currentSegmentIndex];
-  if (segment && !segment.soundEnabled) return;
-
-  const soundKey = segment?.soundKey || 'default';
-
-  // Custom sound — soundKey starts with "custom:"
+  // Custom sound — key starts with "custom:"
   if (soundKey.startsWith('custom:')) {
-    const customData = getCustomSoundData(soundKey.slice(7));
-    if (customData) {
-      ensureAudioCtx();
-      playCustomSound(customData);
-      return;
-    }
+    const id = soundKey.slice(7);
+    ensureAudioCtx();
+    SoundStore.load(id).then(dataUrl => {
+      if (dataUrl) playCustomSound(dataUrl);
+    }).catch(() => {});
+    return;
   }
 
   // Built-in sound
@@ -48,35 +45,43 @@ function playChime() {
   }
 }
 
+/* ─── Session-aware wrapper (reads current segment) ─── */
+function playChime() {
+  if (state.globalMute) return;
+
+  const sess = getCurrentSession();
+  const segment = sess?.segments[state.currentSegmentIndex];
+  if (segment && !segment.soundEnabled) return;
+
+  const soundKey = segment?.soundKey || 'default';
+  playSound(soundKey);
+}
+
 function previewSound(soundKey) {
-  // Preview a built-in sound by key
+  // Built-in
   const builtin = BUILT_IN_SOUNDS.find(s => s.key === soundKey);
   if (builtin && builtin.audio) {
     builtin.audio.currentTime = 0;
     builtin.audio.play().catch(() => {});
     return;
   }
-  // Try custom sound
-  const customData = getCustomSoundData(soundKey);
-  if (customData) {
+  // Custom sound via SoundStore
+  if (soundKey.startsWith('custom:')) {
+    const id = soundKey.slice(7);
     ensureAudioCtx();
-    playCustomSound(customData);
+    SoundStore.load(id).then(dataUrl => {
+      if (dataUrl) playCustomSound(dataUrl);
+    }).catch(() => {});
+    return;
   }
+  // Try bare ID (preview from library)
+  ensureAudioCtx();
+  SoundStore.load(soundKey).then(dataUrl => {
+    if (dataUrl) playCustomSound(dataUrl);
+  }).catch(() => {});
 }
 
-/* ─── Custom sound helpers (backward compat: value can be string or {data,name}) ─── */
-function getCustomSoundData(key) {
-  const val = customSounds[key];
-  if (!val) return null;
-  return typeof val === 'string' ? val : val.data;
-}
-
-function getCustomSoundName(key) {
-  const val = customSounds[key];
-  if (!val) return 'Custom Sound';
-  return (typeof val === 'object' && val.name) ? val.name : 'Custom Sound';
-}
-
+/* ─── Custom sound helpers ─── */
 function playCustomSound(dataUrl) {
   ensureAudioCtx();
   fetch(dataUrl)
@@ -96,7 +101,7 @@ function updateMuteBtn() {
 }
 
 /* ─── Helper: build sound dropdown options HTML ─── */
-function buildSoundOptionsHTML(selectedKey, segIdx, sessName) {
+function buildSoundOptionsHTML(selectedKey) {
   let html = '<optgroup label="Default Sounds">';
   for (const snd of BUILT_IN_SOUNDS) {
     const sel = snd.key === selectedKey ? ' selected' : '';
@@ -104,18 +109,20 @@ function buildSoundOptionsHTML(selectedKey, segIdx, sessName) {
   }
   html += '</optgroup>';
 
-  // Custom sounds for this session
-  const customKeys = Object.keys(customSounds).filter(k => k.endsWith('_' + sessName));
-  if (customKeys.length > 0) {
-    html += '<optgroup label="Custom Sounds">';
-    for (const ck of customKeys) {
-      const label = getCustomSoundName(ck);
-      const optVal = 'custom:' + ck;
+  // Global custom sounds from the sound library
+  const audioSounds = soundLibrary.filter(s => s.type === 'audio');
+  if (audioSounds.length > 0) {
+    html += '<optgroup label="My Sounds">';
+    for (const snd of audioSounds) {
+      const optVal = 'custom:' + snd.id;
       const sel = optVal === selectedKey ? ' selected' : '';
-      html += `<option value="${optVal}"${sel}>${escHtml(label)}</option>`;
+      html += `<option value="${optVal}"${sel}>${escHtml(snd.name)}</option>`;
     }
     html += '</optgroup>';
   }
+
+  // Action option to open Sound Library
+  html += '<optgroup label=""><option value="__manage__">Manage Sounds\u2026</option></optgroup>';
 
   return html;
 }

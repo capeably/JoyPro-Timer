@@ -3,7 +3,8 @@
    ═══════════════════════════════════════════════════ */
 const STORAGE_STATE = 'joypro_state';
 const STORAGE_SESSIONS = 'joypro_sessions';
-const STORAGE_SOUNDS = 'joypro_custom_sounds';
+const STORAGE_SOUNDS = 'joypro_custom_sounds';       // legacy — migrated to sound library
+const STORAGE_SOUND_LIBRARY = 'joypro_sound_library'; // global sound metadata
 const AUTO_ADVANCE_DELAY = 3; // seconds
 
 const DEFAULT_SESSIONS = [
@@ -59,7 +60,8 @@ let state = {
 };
 
 let sessions = JSON.parse(JSON.stringify(DEFAULT_SESSIONS));
-let customSounds = {};
+let customSounds = {};       // legacy — kept for migration only
+let soundLibrary = [];       // global sound metadata array
 
 let running = false;
 let timerInterval = null;
@@ -67,7 +69,6 @@ let timerStartedAt = null;
 let timerSecondsAtStart = null;
 let audioCtx = null;
 let dirtyTimeout = null;
-let currentEditSoundIndex = -1;
 
 // Dirty tracking
 let savedSnapshot = null;
@@ -101,7 +102,9 @@ function sessionTotalMinutes(sess) {
 function escHtml(str) {
   const d = document.createElement('div');
   d.textContent = str;
-  return d.innerHTML;
+  // innerHTML escaping covers & < > only; quotes must be escaped too because
+  // callers interpolate into double-quoted attributes (e.g. value="...")
+  return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 /* ═══════════════════════════════════════════════════
@@ -115,9 +118,9 @@ function saveSessions() {
   try { localStorage.setItem(STORAGE_SESSIONS, JSON.stringify(sessions)); } catch(e) {}
 }
 
-function saveSounds() {
-  try { localStorage.setItem(STORAGE_SOUNDS, JSON.stringify(customSounds)); }
-  catch(e) { showToast('Sound too large to save locally'); }
+function saveSoundLibrary() {
+  try { localStorage.setItem(STORAGE_SOUND_LIBRARY, JSON.stringify(soundLibrary)); }
+  catch(e) {}
 }
 
 function loadAll() {
@@ -151,6 +154,8 @@ function loadAll() {
     }
     const snd = localStorage.getItem(STORAGE_SOUNDS);
     if (snd) customSounds = JSON.parse(snd);
+    const lib = localStorage.getItem(STORAGE_SOUND_LIBRARY);
+    if (lib) soundLibrary = JSON.parse(lib);
   } catch(e) {}
   if (!sessions.length) sessions = JSON.parse(JSON.stringify(DEFAULT_SESSIONS));
 }

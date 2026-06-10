@@ -167,6 +167,9 @@ function enterMainTimerEdit() {
 
   mainTimerEditActive = true;
   const totalSecs = state.timerSeconds;
+  // Fresh segment: the display shows the full duration, so edits redefine it.
+  // Mid-segment: the display shows remaining time, so edits adjust only that.
+  const wasFresh = state.timerSeconds === state.timerTotal;
   const hh = Math.floor(totalSecs / 3600);
   const mm = Math.floor((totalSecs % 3600) / 60);
   const ss = totalSecs % 60;
@@ -310,11 +313,20 @@ function enterMainTimerEdit() {
       const newSS = Math.min(59, Math.max(0, parseInt(allInputs[2].value) || 0));
       const total = newHH * 3600 + newMM * 60 + newSS;
       if (total >= 1) {
-        seg.durationMinutes = newHH * 60 + newMM;
-        seg.durationSeconds = newSS;
-        saveSessions();
-        state.timerTotal = total;
-        state.timerSeconds = total;
+        if (wasFresh) {
+          // Segment not started — editing redefines its duration
+          seg.durationMinutes = newHH * 60 + newMM;
+          seg.durationSeconds = newSS;
+          saveSessions();
+          state.timerTotal = total;
+          state.timerSeconds = total;
+        } else {
+          // Mid-segment — the display shows remaining time, so only adjust
+          // the running countdown; the segment's stored duration is untouched
+          state.timerSeconds = total;
+          if (total > state.timerTotal) state.timerTotal = total;
+          saveState();
+        }
       } else {
         showToast('Minimum duration is 1 second');
       }
@@ -398,22 +410,6 @@ function enterMainTitleEdit() {
     if (e.key === 'Escape') { e.preventDefault(); finish(false); }
   });
   input.addEventListener('blur', () => finish(true));
-}
-
-function parseDuration(str) {
-  str = str.trim();
-  // MM:SS format
-  const match = str.match(/^(\d+):(\d{1,2})$/);
-  if (match) {
-    const mins = parseInt(match[1]);
-    const secs = parseInt(match[2]);
-    if (secs > 59) return null;
-    return mins * 60 + secs;
-  }
-  // Plain number → treat as minutes
-  const num = parseInt(str);
-  if (!isNaN(num) && num > 0) return num * 60;
-  return null;
 }
 
 /* ── Session Name Editing ──────────────────────── */
@@ -619,18 +615,14 @@ function openSegEditPopover(idx, anchorEl) {
   // Populate sound dropdown
   const selectedSoundKey = seg.soundKey || 'default';
   const soundKeySelect = document.getElementById('segEditSoundKey');
-  soundKeySelect.innerHTML = buildSoundOptionsHTML(selectedSoundKey, idx, state.currentSessionName);
+  soundKeySelect.innerHTML = buildSoundOptionsHTML(selectedSoundKey);
   soundKeySelect.value = selectedSoundKey;
 
   // Show/hide sound picker based on sound enabled, and delete btn based on selection
+  // (checkbox→picker visibility listener is registered once in setupEventListeners)
   const soundPicker = document.getElementById('segEditSoundPicker');
   soundPicker.style.display = seg.soundEnabled ? '' : 'none';
   document.getElementById('segEditDeleteCustom').classList.toggle('hidden', !soundKeySelect.value.startsWith('custom:'));
-
-  // Toggle sound picker visibility when checkbox changes
-  document.getElementById('segEditSound').addEventListener('change', function() {
-    soundPicker.style.display = this.checked ? '' : 'none';
-  });
 
   // Position near the anchor button
   const rect = anchorEl.getBoundingClientRect();

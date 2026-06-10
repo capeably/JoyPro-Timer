@@ -150,16 +150,16 @@ input { font-family: inherit; color: inherit; }
   transition: background 0.15s, opacity 0.2s;
 }
 .tab-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.03em;
-  color: var(--text-muted);
+  color: var(--text);
   transition: color 0.15s;
 }
 .panel-tab-btn:hover .tab-label,
-.panel-tab-btn:active .tab-label { color: white; }
+.panel-tab-btn:active .tab-label { color: var(--on-accent); }
 .panel-tab-btn:hover, .panel-tab-btn:active { background: var(--accent); }
-.panel-tab-btn:hover .tab-arrow, .panel-tab-btn:active .tab-arrow { border-color: white; }
+.panel-tab-btn:hover .tab-arrow, .panel-tab-btn:active .tab-arrow { border-color: var(--on-accent); }
 .tab-arrow {
   width: 8px;
   height: 8px;
@@ -263,7 +263,7 @@ input { font-family: inherit; color: inherit; }
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   transition: background 0.1s;
   white-space: nowrap;
@@ -291,7 +291,7 @@ input { font-family: inherit; color: inherit; }
 
 .segment-num {
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
   width: 14px;
   text-align: center;
@@ -320,7 +320,7 @@ input { font-family: inherit; color: inherit; }
 
 .segment-duration {
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
   flex-shrink: 0;
 }
@@ -362,7 +362,7 @@ input { font-family: inherit; color: inherit; }
 /* Inline edit input (replaces span temporarily) */
 .segment-inline-input {
   font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
   padding: 1px 4px;
   border: 1px solid var(--accent);
   border-radius: 4px;
@@ -390,14 +390,14 @@ input { font-family: inherit; color: inherit; }
 }
 .duration-edit-wrapper .duration-sep {
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
   padding: 0 1px;
 }
 .segment-inline-input.duration-mm,
 .segment-inline-input.duration-ss {
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   text-align: center;
   padding: 1px 2px;
 }
@@ -474,11 +474,30 @@ input { font-family: inherit; color: inherit; }
 }
 .menu-item:hover { background: var(--hover-bg); }
 
+/* Inline SVG icons inside menu items and small action buttons */
+.menu-icon {
+  vertical-align: -2px;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.segment-edit-btn .menu-icon,
+.saved-sess-action-btn .menu-icon {
+  margin-right: 0;
+  vertical-align: middle;
+}
+
 /* Touch devices: always show edit/delete buttons, hide drag handles */
 @media (hover: none) {
   .segment-drag-handle { display: none; }
   .segment-edit-btn { opacity: 0.5; }
   .segment-delete-btn { opacity: 0.5; }
+
+  /* Larger touch targets */
+  .segment-item { padding: 8px 10px; }
+  .segment-edit-btn, .segment-delete-btn { width: 30px; height: 30px; font-size: 15px; }
+  .session-btn { width: 36px; height: 32px; font-size: 15px; }
+  .panel-tab-btn { height: 30px; }
+  .panel-collapse-tab { top: -30px; }
 }
 
 /* ═══════════════════════════════════════════════════

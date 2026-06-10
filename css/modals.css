@@ -78,7 +78,7 @@
   font-weight: 500;
   transition: background 0.15s;
 }
-.modal-btn.primary { background: var(--accent); color: #fff; }
+.modal-btn.primary { background: var(--accent); color: var(--on-accent); }
 .modal-btn.primary:hover, .modal-btn.primary:active { background: #e8884f; }
 .modal-btn.secondary { background: var(--btn-bg); border: 1px solid var(--border); }
 .modal-btn.secondary:hover, .modal-btn.secondary:active { background: var(--btn-hover); }
@@ -466,6 +466,14 @@
 @media (hover: none) {
   .drag-handle { display: none; }
   .move-btns { display: flex; }
+
+  /* Larger touch targets (small buttons are hard to hit on phones) */
+  .modal-close { width: 36px; height: 36px; }
+  .saved-sess-action-btn { width: 36px; height: 36px; font-size: 15px; }
+  .editor-remove-btn { width: 36px; height: 36px; }
+  .move-btn { width: 30px; height: 26px; font-size: 12px; }
+  .seg-edit-close { width: 36px; height: 36px; }
+  .seg-edit-preview-btn, .seg-edit-delete-btn { width: 36px; height: 36px; }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -800,4 +808,165 @@
   font-size: 12px;
   line-height: 1.6;
   color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════
+   SOUND LIBRARY MODAL
+   ═══════════════════════════════════════════════════ */
+.sound-library-modal {
+  max-width: 480px;
+}
+
+.sound-library-modal .modal-body {
+  min-height: 120px;
+  padding: 8px 16px;
+}
+
+/* ─── Empty state ─── */
+.sound-lib-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 16px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.sound-lib-empty-icon {
+  font-size: 32px;
+  opacity: 0.4;
+}
+
+.sound-lib-empty p {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* ─── List items ─── */
+.sound-lib-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sound-lib-item:last-child {
+  border-bottom: none;
+}
+
+.sound-lib-preview-btn {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--hover-bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sound-lib-preview-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.sound-lib-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sound-lib-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 0.15s;
+}
+
+.sound-lib-name:hover {
+  border-color: var(--text-muted);
+}
+
+.sound-lib-name-input {
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--accent);
+  outline: none;
+  padding: 0;
+  width: 100%;
+}
+
+.sound-lib-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.sound-lib-delete-btn {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+
+.sound-lib-delete-btn:hover {
+  opacity: 1;
+  color: var(--danger, #e74c3c);
+  background: var(--hover-bg);
+}
+
+.sound-lib-delete-btn.confirming {
+  opacity: 1;
+  color: #fff;
+  background: var(--danger, #e74c3c);
+  font-size: 10px;
+  font-weight: 600;
+  width: auto;
+  padding: 0 8px;
+}
+
+/* ─── Footer budget display ─── */
+.sound-lib-budget {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ─── Mobile ─── */
+@media (hover: none) {
+  .sound-lib-delete-btn {
+    opacity: 0.6;
+  }
+  .sound-lib-preview-btn {
+    width: 40px;
+    height: 40px;
+  }
 }
